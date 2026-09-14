@@ -1,0 +1,298 @@
+/* =========================
+   HEADER
+========================= */
+
+.header {
+  width: 100%;
+  background: #0d162b;
+  color: white;
+}
+
+.header-container {
+    max-width: 1400px;
+    width: calc(100% - 40px);
+    margin: 0 auto;
+}
+
+/* =========================
+   HÀNG 1
+========================= */
+
+.header-top {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Logo */
+
+.logo {
+  width: 160px;
+  display: flex;
+  align-items: center;
+}
+.logo img {
+  width: 100%;
+    height: auto;
+    display: block;
+}
+.logo-icon {
+  width: 52px;
+  height: 52px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(
+    135deg,
+    #f7b733,
+    #e91e63,
+    #2979ff
+  );
+
+  color: white;
+  font-size: 27px;
+}
+
+.logo span span {
+  color: #ffffff;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.header-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.header-btn {
+  height: 36px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.booking-btn {
+  background: linear-gradient(
+    135deg,
+    #6936ad,
+    #396fd2
+  );
+}
+
+.food-btn {
+  background: #6936ad;
+}
+
+.header-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+/* =========================
+   SEARCH
+========================= */
+
+.search-box {
+  margin-left: auto;
+
+  width: 300px;
+  height: 48px;
+
+  background: white;
+
+  border-radius: 30px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 18px;
+}
+
+.search-box input {
+  flex: 1;
+
+  border: none;
+  outline: none;
+
+  font-size: 16px;
+  color: #333;
+}
+
+.search-box input::placeholder {
+  color: #9b9b9b;
+}
+
+.search-icon {
+  color: #17233b;
+  font-size: 20px;
+}
+
+/* =========================
+   LOGIN
+========================= */
+
+.login {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+}
+
+.login svg {
+  font-size: 30px;
+}
+
+/* =========================
+   LANGUAGE
+========================= */
+
+.language {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  font-size: 16px;
+
+  white-space: nowrap;
+}
+
+.language svg {
+  font-size: 11px;
+}
+
+.flag {
+  width: 30px;
+  height: 30px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #e60012;
+
+  color: #ffd700;
+}
+
+/* =========================
+   HÀNG 2
+========================= */
+
+.header-bottom {
+  height: 65px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-left,
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 38px;
+}
+
+.header-bottom a {
+  color: white;
+
+  text-decoration: none;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  transition: 0.2s;
+}
+
+.header-bottom a:hover {
+  color: #b77cff;
+}
+
+.nav-left svg {
+  font-size: 18px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1100px) {
+
+  .header-container {
+    padding: 0 20px;
+  }
+
+  .logo {
+    min-width: auto;
+  }
+
+  .search-box {
+    width: 220px;
+  }
+
+  .nav-right {
+    gap: 20px;
+  }
+
+}
+
+@media (max-width: 850px) {
+
+  .header-top {
+    height: auto;
+    padding: 20px 0;
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    width: 100%;
+  }
+
+  .search-box {
+    order: 5;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .header-bottom {
+    height: auto;
+    padding: 15px 0;
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .nav-right {
+    flex-wrap: wrap;
+  }
+
+}
