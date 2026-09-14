@@ -1,3 +1,58 @@
-.movie-section h2{
-    color: white;
+.home {
+  min-height: 100vh;
+  background: #0d162b;
+  padding: 50px 5%;
+}
+
+.movie-section h2 {
+  text-align: center;
+  color: white;
+  font-size: 42px;
+  margin-bottom: 40px;
+}
+
+/* Khung khi chưa có phim */
+.movie-empty {
+  width: 100%;
+  min-height: 400px;
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      rgba(13, 22, 43, 0.85),
+      rgba(13, 22, 43, 0.95)
+    ),
+    url("../assets/hero.png");
+
+  background-size: cover;
+  background-position: center;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Nội dung */
+.movie-empty-content {
+  text-align: center;
+  color: white;
+}
+
+.movie-empty-icon {
+  font-size: 65px;
+  margin-bottom: 15px;
+}
+
+.movie-empty-content h2 {
+  font-size: 32px;
+  margin: 10px 0;
+}
+
+.movie-empty-content p {
+  color: #bfc5d3;
+  font-size: 16px;
+  line-height: 1.7;
 }
