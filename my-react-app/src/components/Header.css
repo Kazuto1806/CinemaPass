@@ -4,144 +4,219 @@
 
 .header {
   width: 100%;
+
   background: #0d162b;
+
   color: white;
+
+  position: relative;
+
+  z-index: 1000;
 }
 
-.header-container {
-    max-width: 1400px;
-    width: calc(100% - 40px);
-    margin: 0 auto;
-}
 
 /* =========================
-   HÀNG 1
+   HEADER CONTAINER
+========================= */
+
+.header-container {
+  width: 100%;
+
+  max-width: 1400px;
+
+  margin: 0 auto;
+
+  padding: 0 20px;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================
+   HEADER TOP
 ========================= */
 
 .header-top {
-  height: 80px;
+  min-height: 80px;
+
   display: flex;
+
   align-items: center;
+
   gap: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Logo */
-
-.logo {
-  width: 160px;
-  display: flex;
-  align-items: center;
-}
-.logo img {
-  width: 100%;
-    height: auto;
-    display: block;
-}
-.logo-icon {
-  width: 52px;
-  height: 52px;
-
-  border-radius: 50%;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: linear-gradient(
-    135deg,
-    #f7b733,
-    #e91e63,
-    #2979ff
-  );
-
-  color: white;
-  font-size: 27px;
-}
-
-.logo span span {
-  color: #ffffff;
-}
 
 /* =========================
-   BUTTONS
+   LOGO
+========================= */
+
+.logo {
+  width: 155px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  text-decoration: none;
+}
+
+.logo img {
+  width: 100%;
+
+  height: auto;
+
+  display: block;
+}
+
+
+/* =========================
+   HEADER BUTTONS
 ========================= */
 
 .header-buttons {
   display: flex;
+
+  align-items: center;
+
   gap: 12px;
+
+  flex-shrink: 0;
 }
 
+
 .header-btn {
-  height: 36px;
-  padding: 0 18px;
+  height: 40px;
+
   border: none;
+
   border-radius: 4px;
-  color: white;
-  font-size: 14px;
-  font-weight: 700;
+
+  padding: 0 17px;
+
   display: flex;
+
   align-items: center;
-  gap: 9px;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  color: white;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
   cursor: pointer;
+
+  white-space: nowrap;
+
   transition: 0.2s;
 }
 
-.booking-btn {
-  background: linear-gradient(
-    135deg,
-    #6936ad,
-    #396fd2
-  );
+
+.header-btn svg {
+  font-size: 14px;
 }
+
+
+/* ĐẶT VÉ */
+
+.booking-btn {
+  background:
+    linear-gradient(
+      135deg,
+      #6936ad,
+      #396fd2
+    );
+}
+
+
+/* BẮP NƯỚC */
 
 .food-btn {
   background: #6936ad;
 }
 
+
 .header-btn:hover {
   transform: translateY(-2px);
-  opacity: 0.9;
+
+  box-shadow:
+    0 5px 15px rgba(105, 54, 173, 0.3);
 }
+
 
 /* =========================
    SEARCH
 ========================= */
 
 .search-box {
+  width: 300px;
+
+  height: 46px;
+
   margin-left: auto;
 
-  width: 300px;
-  height: 48px;
+  display: flex;
+
+  align-items: center;
+
+  position: relative;
 
   background: white;
 
-  border-radius: 30px;
+  border-radius: 25px;
 
-  display: flex;
-  align-items: center;
-
-  padding: 0 18px;
+  box-sizing: border-box;
 }
+
 
 .search-box input {
-  flex: 1;
+  width: 100%;
+
+  height: 100%;
+
+  padding: 0 45px 0 18px;
 
   border: none;
+
   outline: none;
 
-  font-size: 16px;
-  color: #333;
+  background: transparent;
+
+  border-radius: 25px;
+
+  color: #222;
+
+  font-size: 14px;
+
+  box-sizing: border-box;
 }
+
 
 .search-box input::placeholder {
-  color: #9b9b9b;
+  color: #888;
 }
 
+
 .search-icon {
+  position: absolute;
+
+  right: 16px;
+
   color: #17233b;
-  font-size: 20px;
+
+  font-size: 18px;
+
+  pointer-events: none;
 }
+
 
 /* =========================
    LOGIN
@@ -149,97 +224,181 @@
 
 .login {
   display: flex;
+
   align-items: center;
+
   gap: 8px;
 
-  font-size: 16px;
+  color: white;
+
+  text-decoration: none;
+
+  font-size: 15px;
+
   font-weight: 600;
 
   white-space: nowrap;
 
   cursor: pointer;
+
+  padding: 8px 5px;
+
+  border-radius: 5px;
+
+  transition: 0.2s;
 }
 
+
 .login svg {
-  font-size: 30px;
+  font-size: 29px;
+
+  color: #6936ad;
 }
+
+
+.login:hover {
+  color: #b77cff;
+
+  background: rgba(255, 255, 255, 0.05);
+}
+
 
 /* =========================
    LANGUAGE
 ========================= */
 
-.language {
+.language-wrapper {
+  position: relative;
+
   display: flex;
+
   align-items: center;
+
+  flex-shrink: 0;
+}
+
+
+.language {
+  height: 40px;
+
+  display: flex;
+
+  align-items: center;
+
   gap: 7px;
 
-  font-size: 16px;
+  padding: 0 8px;
 
-  white-space: nowrap;
+  border: none;
+
+  outline: none;
+
+  background: transparent;
+
+  color: white;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  border-radius: 5px;
 }
+
+
+.language:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 
 .language svg {
-  font-size: 11px;
+  font-size: 10px;
 }
 
+
+/* =========================
+   FLAG
+========================= */
+
 .flag {
-  width: 30px;
-  height: 30px;
+  width: 27px;
+
+  height: 27px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
 
   border-radius: 50%;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: #e60012;
+  background: #e31b23;
 
   color: #ffd700;
+
+  font-size: 14px;
 }
+
 
 /* =========================
-   HÀNG 2
+   LANGUAGE MENU
 ========================= */
 
-.header-bottom {
-  height: 65px;
+.language-menu {
+  position: absolute;
 
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  top: 48px;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  right: 0;
+
+  width: 170px;
+
+  padding: 6px 0;
+
+  background: white;
+
+  border-radius: 8px;
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.35);
+
+  overflow: hidden;
+
+  z-index: 9999;
 }
 
-.nav-left,
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 38px;
-}
 
-.header-bottom a {
-  color: white;
+.language-menu button {
+  width: 100%;
 
-  text-decoration: none;
+  min-height: 42px;
 
-  font-size: 16px;
-  font-weight: 600;
+  padding: 10px 15px;
 
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  border: none;
+
+  background: white;
+
+  color: #222;
+
+  text-align: left;
+
+  font-size: 14px;
+
+  cursor: pointer;
 
   transition: 0.2s;
 }
 
-.header-bottom a:hover {
-  color: #b77cff;
+
+.language-menu button:hover {
+  background: #f2f2f2;
+
+  color: #6936ad;
 }
 
-.nav-left svg {
-  font-size: 18px;
-}
 
 /* =========================
    RESPONSIVE
@@ -247,52 +406,110 @@
 
 @media (max-width: 1100px) {
 
-  .header-container {
-    padding: 0 20px;
+  .header-top {
+    gap: 10px;
   }
 
   .logo {
-    min-width: auto;
+    width: 130px;
+  }
+
+  .header-buttons {
+    gap: 7px;
+  }
+
+  .header-btn {
+    padding: 0 10px;
+
+    font-size: 12px;
   }
 
   .search-box {
     width: 220px;
   }
 
-  .nav-right {
-    gap: 20px;
+  .login span {
+    font-size: 13px;
   }
-
 }
+
 
 @media (max-width: 850px) {
 
   .header-top {
-    height: auto;
-    padding: 20px 0;
     flex-wrap: wrap;
+
+    padding: 12px 0;
   }
 
   .logo {
-    width: 100%;
+    width: 140px;
+  }
+
+  .header-buttons {
+    order: 2;
   }
 
   .search-box {
-    order: 5;
+    order: 3;
+
     width: 100%;
+
     margin-left: 0;
+
+    margin-top: 5px;
   }
 
-  .header-bottom {
-    height: auto;
-    padding: 15px 0;
-    flex-direction: column;
-    gap: 15px;
-    align-items: flex-start;
+  .login {
+    margin-left: auto;
   }
 
-  .nav-right {
-    flex-wrap: wrap;
+  .language-wrapper {
+    order: 1;
+  }
+}
+
+
+@media (max-width: 600px) {
+
+  .header-container {
+    padding: 0 12px;
   }
 
+  .header-top {
+    gap: 8px;
+  }
+
+  .logo {
+    width: 120px;
+  }
+
+  .header-btn {
+    height: 36px;
+
+    padding: 0 8px;
+
+    font-size: 11px;
+  }
+
+  .header-btn svg {
+    display: none;
+  }
+
+  .login span {
+    display: none;
+  }
+
+  .login svg {
+    font-size: 25px;
+  }
+
+  .language {
+    padding: 0 4px;
+  }
+
+  .flag {
+    width: 25px;
+    height: 25px;
+  }
 }
