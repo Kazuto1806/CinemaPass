@@ -4,10 +4,11 @@ npm run dev
 cd D:\DoAn\Cinema\my-react-app
 npm run dev
 
-update code:
+update code lên github:
 git add .
 git commit -m "Update code"
 git push
-git pull
+
+Lấy code từ github về: git pull
 
 chạy code: Start-Process ".\Start.bat"
