@@ -1,0 +1,5 @@
+CREATE DATABASE CinemaDB;
+GO
+
+USE CinemaDB;
+GO

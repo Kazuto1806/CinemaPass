@@ -1,0 +1,3 @@
+UPDATE Users
+SET Phone = '0901234567'
+WHERE UserID = 1;

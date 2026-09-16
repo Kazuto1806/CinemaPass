@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
 
+const API_URL = "http://localhost:5000/api/auth";
+
 function Login() {
   const navigate = useNavigate();
 
@@ -31,7 +33,7 @@ function Login() {
   // LOGIN
   // =========================
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
     if (!loginAccount.trim()) {
@@ -44,25 +46,49 @@ function Login() {
       return;
     }
 
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("userEmail", loginAccount);
+    try {
+      const res = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          Email: loginAccount,
+          Password: loginPassword,
+        }),
+      });
 
-    if (rememberLogin) {
-      localStorage.setItem("rememberLogin", "true");
-    } else {
-      localStorage.removeItem("rememberLogin");
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Đăng nhập thất bại!");
+        return;
+      }
+
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("userId", data.userId);
+      localStorage.setItem("userEmail", data.email);
+      localStorage.setItem("fullName", data.fullName);
+      localStorage.setItem("phone", data.phone);
+      localStorage.setItem("role", data.role);
+
+      if (rememberLogin) {
+        localStorage.setItem("rememberLogin", "true");
+      } else {
+        localStorage.removeItem("rememberLogin");
+      }
+
+      alert("Đăng nhập thành công!");
+
+      navigate("/");
+    } catch (err) {
+      alert("Không kết nối được server!");
     }
-
-    alert("Đăng nhập thành công!");
-
-    navigate("/");
   };
 
   // =========================
   // REGISTER
   // =========================
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
     if (!registerName.trim()) {
@@ -100,17 +126,39 @@ function Login() {
       return;
     }
 
-    alert("Đăng ký thành công!");
+    try {
+      const res = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          FullName: registerName,
+          Email: registerEmail,
+          Phone: registerPhone,
+          PasswordHash: registerPassword,
+        }),
+      });
 
-    // Sau khi đăng ký thành công
-    // chuyển về màn hình đăng nhập
-    setIsRegister(false);
+      const data = await res.json();
 
-    setRegisterName("");
-    setRegisterEmail("");
-    setRegisterPhone("");
-    setRegisterPassword("");
-    setRegisterConfirmPassword("");
+      if (!res.ok) {
+        alert(data.message || "Đăng ký thất bại!");
+        return;
+      }
+
+      alert("Đăng ký thành công!");
+
+      // Sau khi đăng ký thành công
+      // chuyển về màn hình đăng nhập
+      setIsRegister(false);
+
+      setRegisterName("");
+      setRegisterEmail("");
+      setRegisterPhone("");
+      setRegisterPassword("");
+      setRegisterConfirmPassword("");
+    } catch (err) {
+      alert("Không kết nối được server!");
+    }
   };
 
   return (
