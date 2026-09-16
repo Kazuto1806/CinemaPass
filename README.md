@@ -9,3 +9,5 @@ git add .
 git commit -m "Update code"
 git push
 git pull
+
+chạy code: Start-Process ".\Start.bat"
