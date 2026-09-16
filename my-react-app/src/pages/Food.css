@@ -1,0 +1,928 @@
+/* =====================================================
+   FOOD PAGE
+===================================================== */
+
+.food-page {
+  min-height: 100vh;
+
+  padding: 25px 0 120px;
+
+  background:
+    radial-gradient(
+      circle at 50% 20%,
+      rgba(75, 55, 170, 0.2),
+      transparent 45%
+    ),
+    linear-gradient(
+      180deg,
+      #0d1738 0%,
+      #09142e 55%,
+      #071026 100%
+    );
+
+  color: white;
+}
+
+
+/* =====================================================
+   CHỌN RẠP
+===================================================== */
+
+.cinema-selector {
+  width: min(1280px, 90%);
+
+  margin: 0 auto 42px;
+
+  padding: 20px 22px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #142957,
+      #0d1d42
+    );
+
+  border:
+    1px solid
+    rgba(74, 112, 213, 0.6);
+
+  border-radius: 14px;
+
+  box-shadow:
+    0 10px 30px
+    rgba(0, 0, 0, 0.25);
+}
+
+
+.selector-icon {
+  width: 56px;
+  height: 56px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 13px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #7431e8,
+      #a43aff
+    );
+
+  color: white;
+
+  font-size: 22px;
+}
+
+
+.selector-info {
+  min-width: 280px;
+}
+
+
+.selector-info h2 {
+  margin: 0;
+
+  font-size: 20px;
+
+  font-weight: 900;
+}
+
+
+.selector-info p {
+  margin: 5px 0 0;
+
+  color: #aab5ce;
+
+  font-size: 13px;
+}
+
+
+.select-wrapper {
+  flex: 1;
+
+  position: relative;
+}
+
+
+.select-wrapper select {
+  width: 100%;
+  height: 52px;
+
+  padding: 0 45px;
+
+  border:
+    1px solid
+    rgba(85, 119, 211, 0.7);
+
+  border-radius: 9px;
+
+  outline: none;
+
+  background: #101f45;
+
+  color: white;
+
+  font-size: 14px;
+
+  cursor: pointer;
+
+  appearance: none;
+}
+
+
+.select-wrapper select:focus {
+  border-color: #9c55ff;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(137, 61, 240, 0.18);
+}
+
+
+.select-wrapper select option {
+  background: #101f45;
+
+  color: white;
+}
+
+
+.select-location-icon {
+  position: absolute;
+
+  left: 16px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  z-index: 2;
+
+  color: #b66aff;
+
+  pointer-events: none;
+}
+
+
+/* =====================================================
+   PRODUCT SECTION
+===================================================== */
+
+.products-section {
+  width: min(1280px, 90%);
+
+  margin: 0 auto;
+}
+
+
+/* =====================================================
+   CHỌN RẠP MESSAGE
+===================================================== */
+
+.choose-cinema-message {
+  min-height: 300px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  border:
+    1px solid
+    rgba(78, 110, 202, 0.35);
+
+  border-radius: 16px;
+
+  background:
+    rgba(255, 255, 255, 0.025);
+}
+
+
+.choose-cinema-icon {
+  font-size: 65px;
+
+  margin-bottom: 10px;
+}
+
+
+.choose-cinema-message h3 {
+  margin: 5px 0;
+
+  font-size: 24px;
+}
+
+
+.choose-cinema-message p {
+  margin: 5px 0;
+
+  color: #9ba7c0;
+
+  font-size: 14px;
+}
+
+
+/* =====================================================
+   CATEGORY
+===================================================== */
+
+.food-category {
+  margin-top: 65px;
+}
+
+
+.first-category {
+  margin-top: 0;
+}
+
+
+.category-title {
+  display: flex;
+  align-items: center;
+
+  gap: 15px;
+
+  margin-bottom: 24px;
+}
+
+
+.category-title > span {
+  width: 52px;
+  height: 52px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #7131e6,
+      #a63cff
+    );
+
+  color: white;
+
+  font-size: 22px;
+
+  box-shadow:
+    0 8px 22px
+    rgba(108, 44, 226, 0.3);
+}
+
+
+.category-title h2 {
+  margin: 0;
+
+  font-size: 29px;
+
+  font-weight: 900;
+
+  letter-spacing: 0.3px;
+}
+
+
+.category-title p {
+  margin: 4px 0 0;
+
+  color: #9ca8c2;
+
+  font-size: 13px;
+}
+
+
+/* =====================================================
+   GRID
+===================================================== */
+
+.products-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 20px;
+}
+
+
+/* COMBO 3 CỘT */
+
+.combo-grid {
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+}
+
+
+/* =====================================================
+   PRODUCT CARD
+===================================================== */
+
+.product-card {
+  position: relative;
+
+  overflow: hidden;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #142b5b 0%,
+      #0c1c3e 100%
+    );
+
+  border:
+    1px solid
+    rgba(72, 108, 205, 0.6);
+
+  box-shadow:
+    0 12px 30px
+    rgba(0, 0, 0, 0.22);
+
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+
+.product-card:hover {
+  transform: translateY(-6px);
+
+  border-color: #8c50ff;
+
+  box-shadow:
+    0 18px 40px
+    rgba(91, 46, 190, 0.32);
+}
+
+
+/* =====================================================
+   BADGE
+===================================================== */
+
+.product-badge {
+  position: absolute;
+
+  top: 12px;
+  right: 12px;
+
+  z-index: 10;
+
+  padding: 7px 10px;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #7431ed,
+      #a53cff
+    );
+
+  color: white;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  box-shadow:
+    0 5px 15px
+    rgba(110, 43, 230, 0.4);
+}
+
+
+/* =====================================================
+   ẢNH SẢN PHẨM
+===================================================== */
+
+.product-image-wrapper {
+  width: 100%;
+
+  height: 285px;
+
+  padding: 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(71, 102, 180, 0.16),
+      transparent 70%
+    );
+
+  overflow: hidden;
+}
+
+
+/*
+   QUAN TRỌNG:
+   KHÔNG dùng mix-blend-mode.
+   Nó làm ảnh JPG bị đen.
+*/
+
+.product-image {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  object-position: center;
+
+  display: block;
+
+  filter:
+    drop-shadow(
+      0 12px 15px
+      rgba(0, 0, 0, 0.35)
+    );
+
+  transition:
+    transform 0.3s ease;
+}
+
+
+.product-card:hover .product-image {
+  transform: scale(1.05);
+}
+
+
+/* =====================================================
+   COMBO JPG
+===================================================== */
+
+/*
+   Combo của ông là JPG.
+   Vì vậy giữ ảnh nguyên bản.
+*/
+
+.combo-grid .product-image {
+  mix-blend-mode: normal;
+
+  opacity: 1;
+}
+
+
+/* =====================================================
+   CONTENT
+===================================================== */
+
+.product-content {
+  padding: 17px 18px 18px;
+
+  border-top:
+    1px solid
+    rgba(255, 255, 255, 0.05);
+}
+
+
+.product-content h3 {
+  margin: 0 0 7px;
+
+  color: white;
+
+  font-size: 17px;
+
+  font-weight: 800;
+}
+
+
+.product-description {
+  min-height: 38px;
+
+  margin: 0;
+
+  color: #aab6ce;
+
+  font-size: 11px;
+
+  line-height: 1.55;
+}
+
+
+/* =====================================================
+   BOTTOM
+===================================================== */
+
+.product-bottom {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin-top: 13px;
+}
+
+
+/* =====================================================
+   PRICE
+===================================================== */
+
+.product-price {
+  color: #c25cff;
+
+  font-size: 20px;
+
+  font-weight: 900;
+
+  white-space: nowrap;
+}
+
+
+/* =====================================================
+   QUANTITY
+===================================================== */
+
+.quantity-control {
+  width: 105px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(107, 63, 212, 0.7);
+
+  border-radius: 8px;
+
+  background:
+    rgba(6, 17, 40, 0.85);
+}
+
+
+.quantity-control button {
+  width: 34px;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+
+  background: transparent;
+
+  color: white;
+
+  cursor: pointer;
+
+  font-size: 11px;
+}
+
+
+.quantity-control button:hover {
+  background:
+    rgba(126, 60, 236, 0.35);
+}
+
+
+.quantity-control span {
+  color: white;
+
+  font-size: 13px;
+
+  font-weight: 800;
+}
+
+
+/* =====================================================
+   ADD CART
+===================================================== */
+
+.add-cart-btn {
+  width: 100%;
+  height: 42px;
+
+  margin-top: 11px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #6d30e5,
+      #a43aff
+    );
+
+  color: white;
+
+  font-size: 11px;
+
+  font-weight: 900;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+
+
+.add-cart-btn:hover {
+  transform: translateY(-2px);
+
+  filter: brightness(1.12);
+}
+
+
+/* =====================================================
+   IMAGE ERROR
+===================================================== */
+
+.image-error {
+  color: #ff7599;
+
+  font-size: 12px;
+
+  text-align: center;
+}
+
+
+/* =====================================================
+   CART
+===================================================== */
+
+.cart-summary {
+  width: min(1280px, 90%);
+
+  min-height: 75px;
+
+  margin: 40px auto 0;
+
+  padding: 12px 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  position: sticky;
+
+  bottom: 15px;
+
+  z-index: 50;
+
+  background:
+    rgba(10, 25, 57, 0.97);
+
+  backdrop-filter: blur(14px);
+
+  border:
+    1px solid
+    rgba(78, 112, 210, 0.55);
+
+  border-radius: 12px;
+
+  box-shadow:
+    0 12px 35px
+    rgba(0, 0, 0, 0.45);
+}
+
+
+.cart-info {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+
+.cart-info > svg {
+  color: #bd70ff;
+
+  font-size: 23px;
+}
+
+
+.cart-info div {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+}
+
+
+.cart-info span {
+  color: white;
+
+  font-size: 13px;
+
+  font-weight: 800;
+}
+
+
+.cart-info small {
+  color: #8995af;
+
+  font-size: 11px;
+}
+
+
+.cart-info strong {
+  margin-left: 18px;
+
+  color: #c35cff;
+
+  font-size: 20px;
+
+  font-weight: 900;
+}
+
+
+.order-btn {
+  min-width: 210px;
+
+  height: 47px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #7130e7,
+      #a33aff
+    );
+
+  color: white;
+
+  font-size: 12px;
+
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+
+.order-btn:hover {
+  filter: brightness(1.1);
+
+  transform: translateY(-1px);
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 1100px) {
+
+  .products-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+
+  .combo-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+
+  .product-image-wrapper {
+    height: 260px;
+  }
+
+}
+
+
+/* =====================================================
+   TABLET NHỎ
+===================================================== */
+
+@media (max-width: 850px) {
+
+  .cinema-selector {
+    flex-wrap: wrap;
+  }
+
+
+  .selector-info {
+    flex: 1;
+  }
+
+
+  .select-wrapper {
+    flex-basis: 100%;
+  }
+
+
+  .products-grid,
+  .combo-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 600px) {
+
+  .food-page {
+    padding-top: 15px;
+
+    padding-bottom: 150px;
+  }
+
+
+  .cinema-selector {
+    width: 94%;
+
+    padding: 16px;
+
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+
+  .selector-info {
+    min-width: 0;
+  }
+
+
+  .products-section {
+    width: 94%;
+  }
+
+
+  .products-grid,
+  .combo-grid {
+    grid-template-columns: 1fr;
+  }
+
+
+  .product-image-wrapper {
+    height: 330px;
+
+    padding: 20px 30px;
+  }
+
+
+  .category-title h2 {
+    font-size: 24px;
+  }
+
+
+  .cart-summary {
+    width: 94%;
+
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+
+  .cart-info {
+    justify-content: center;
+  }
+
+
+  .order-btn {
+    width: 100%;
+  }
+
+}

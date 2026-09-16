@@ -7,37 +7,54 @@ import {
 } from "react-icons/fa";
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import "./Header.css";
 import CinemaPass from "../assets/Cinema_Pass.png";
 
 function Header() {
-  // Ngôn ngữ hiện tại
+  const navigate = useNavigate();
+
   const [language, setLanguage] = useState(
     localStorage.getItem("language") || "VN"
   );
 
-  // Hiện / ẩn menu ngôn ngữ
   const [showLanguage, setShowLanguage] = useState(false);
 
-  // Đổi ngôn ngữ
+  // =========================
+  // ĐỔI NGÔN NGỮ
+  // =========================
   const changeLanguage = (lang) => {
     setLanguage(lang);
+
     localStorage.setItem("language", lang);
+
+    // Báo cho các trang khác biết ngôn ngữ đã thay đổi
+    window.dispatchEvent(new Event("languageChanged"));
+
     setShowLanguage(false);
+  };
+
+  // =========================
+  // LẤY CỜ THEO NGÔN NGỮ
+  // =========================
+  const getFlag = () => {
+    if (language === "VN") {
+      return "https://flagcdn.com/w40/vn.png";
+    }
+
+    return "https://flagcdn.com/w40/us.png";
   };
 
   return (
     <header className="header">
       <div className="header-container">
 
-        {/* =========================
-            HÀNG TRÊN
-        ========================= */}
         <div className="header-top">
 
-          {/* LOGO */}
+          {/* =========================
+              LOGO
+          ========================= */}
           <Link to="/" className="logo">
             <img
               src={CinemaPass}
@@ -45,14 +62,17 @@ function Header() {
             />
           </Link>
 
+
           {/* =========================
               BUTTONS
           ========================= */}
           <div className="header-buttons">
 
+            {/* ĐẶT VÉ */}
             <button
               type="button"
               className="header-btn booking-btn"
+              onClick={() => navigate("/")}
             >
               <FaTicketAlt />
 
@@ -63,9 +83,12 @@ function Header() {
               </span>
             </button>
 
+
+            {/* ĐẶT BẮP NƯỚC */}
             <button
               type="button"
               className="header-btn food-btn"
+              onClick={() => navigate("/food")}
             >
               <FaFilm />
 
@@ -77,6 +100,7 @@ function Header() {
             </button>
 
           </div>
+
 
           {/* =========================
               SEARCH
@@ -96,6 +120,7 @@ function Header() {
 
           </div>
 
+
           {/* =========================
               LOGIN
           ========================= */}
@@ -112,6 +137,7 @@ function Header() {
             </span>
           </Link>
 
+
           {/* =========================
               LANGUAGE
           ========================= */}
@@ -124,38 +150,79 @@ function Header() {
                 setShowLanguage(!showLanguage)
               }
             >
-              <span className="flag">
-                ★
-              </span>
 
-              <span>
+              {/* CỜ HIỆN TẠI */}
+              <img
+                src={getFlag()}
+                alt={
+                  language === "VN"
+                    ? "Vietnam"
+                    : "United States"
+                }
+                className="flag-image"
+              />
+
+              {/* MÃ NGÔN NGỮ */}
+              <span className="language-code">
                 {language}
-                
               </span>
 
               <FaChevronDown />
+
             </button>
 
-            {/* MENU NGÔN NGỮ */}
+
+            {/* =========================
+                MENU NGÔN NGỮ
+            ========================= */}
             {showLanguage && (
               <div className="language-menu">
 
+                {/* TIẾNG VIỆT */}
                 <button
                   type="button"
                   onClick={() =>
                     changeLanguage("VN")
                   }
+                  className={
+                    language === "VN"
+                      ? "language-active"
+                      : ""
+                  }
                 >
-                  🇻🇳 Tiếng Việt
+                  <img
+                    src="https://flagcdn.com/w40/vn.png"
+                    alt="Vietnam"
+                    className="menu-flag"
+                  />
+
+                  <span>
+                    Tiếng Việt
+                  </span>
                 </button>
 
+
+                {/* ENGLISH */}
                 <button
                   type="button"
                   onClick={() =>
                     changeLanguage("EN")
                   }
+                  className={
+                    language === "EN"
+                      ? "language-active"
+                      : ""
+                  }
                 >
-                  🇬🇧 English
+                  <img
+                    src="https://flagcdn.com/w40/us.png"
+                    alt="United States"
+                    className="menu-flag"
+                  />
+
+                  <span>
+                    English
+                  </span>
                 </button>
 
               </div>
