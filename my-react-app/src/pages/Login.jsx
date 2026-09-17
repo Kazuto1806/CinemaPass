@@ -9,13 +9,19 @@ function Login() {
 
   const [isRegister, setIsRegister] = useState(false);
 
-  // Login
+  // =========================
+  // LOGIN
+  // =========================
+
   const [loginAccount, setLoginAccount] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [rememberLogin, setRememberLogin] = useState(false);
 
-  // Register
+  // =========================
+  // REGISTER
+  // =========================
+
   const [registerName, setRegisterName] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPhone, setRegisterPhone] = useState("");
@@ -49,7 +55,9 @@ function Login() {
     try {
       const res = await fetch(`${API_URL}/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           Email: loginAccount,
           Password: loginPassword,
@@ -63,12 +71,24 @@ function Login() {
         return;
       }
 
+      // =========================
+      // LƯU THÔNG TIN USER
+      // =========================
+
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userId", data.userId);
       localStorage.setItem("userEmail", data.email);
-      localStorage.setItem("fullName", data.fullName);
-      localStorage.setItem("phone", data.phone);
+
+      // QUAN TRỌNG:
+      // Header.jsx đang lấy localStorage "userName"
+      localStorage.setItem("userName", data.fullName);
+
+      localStorage.setItem("phone", data.phone || "");
       localStorage.setItem("role", data.role);
+
+      // =========================
+      // LƯU ĐĂNG NHẬP
+      // =========================
 
       if (rememberLogin) {
         localStorage.setItem("rememberLogin", "true");
@@ -76,10 +96,17 @@ function Login() {
         localStorage.removeItem("rememberLogin");
       }
 
+      // =========================
+      // BÁO CHO HEADER CẬP NHẬT
+      // =========================
+
+      window.dispatchEvent(new Event("userLogin"));
+
       alert("Đăng nhập thành công!");
 
       navigate("/");
     } catch (err) {
+      console.error(err);
       alert("Không kết nối được server!");
     }
   };
@@ -129,7 +156,9 @@ function Login() {
     try {
       const res = await fetch(`${API_URL}/register`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           FullName: registerName,
           Email: registerEmail,
@@ -147,22 +176,24 @@ function Login() {
 
       alert("Đăng ký thành công!");
 
-      // Sau khi đăng ký thành công
-      // chuyển về màn hình đăng nhập
+      // Chuyển về đăng nhập
       setIsRegister(false);
 
+      // Xóa dữ liệu form
       setRegisterName("");
       setRegisterEmail("");
       setRegisterPhone("");
       setRegisterPassword("");
       setRegisterConfirmPassword("");
     } catch (err) {
+      console.error(err);
       alert("Không kết nối được server!");
     }
   };
 
   return (
     <main className="login-page">
+
       {/* =========================
           BACKGROUND
       ========================= */}
@@ -179,7 +210,6 @@ function Login() {
 
       <div className="login-container">
 
-       
         {/* =========================
             TABS
         ========================= */}
@@ -354,13 +384,11 @@ function Login() {
           <div className="login-box register-box">
 
             <div className="login-heading">
-
               <h1>Đăng ký</h1>
 
               <p>
                 Tạo tài khoản Cinema Pass của bạn
               </p>
-
             </div>
 
             <form onSubmit={handleRegister}>

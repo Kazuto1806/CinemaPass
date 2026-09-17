@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   FaSearch,
   FaUserCircle,
@@ -6,14 +7,46 @@ import {
   FaChevronDown,
 } from "react-icons/fa";
 
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import "./Header.css";
 import CinemaPass from "../assets/Cinema_Pass.png";
 
 function Header() {
+  // =========================
+  // USER ĐĂNG NHẬP
+  // =========================
+
+  const [userName, setUserName] = useState(
+    localStorage.getItem("userName")
+  );
+
+  useEffect(() => {
+    const updateUser = () => {
+      setUserName(localStorage.getItem("userName"));
+    };
+
+    // Khi đăng nhập
+    window.addEventListener("userLogin", updateUser);
+
+    // Khi đăng xuất
+    window.addEventListener("userLogout", updateUser);
+
+    return () => {
+      window.removeEventListener("userLogin", updateUser);
+      window.removeEventListener("userLogout", updateUser);
+    };
+  }, []);
+
+  // =========================
+  // NAVIGATE
+  // =========================
+
   const navigate = useNavigate();
+
+  // =========================
+  // NGÔN NGỮ
+  // =========================
 
   const [language, setLanguage] = useState(
     localStorage.getItem("language") || "VN"
@@ -24,20 +57,22 @@ function Header() {
   // =========================
   // ĐỔI NGÔN NGỮ
   // =========================
+
   const changeLanguage = (lang) => {
     setLanguage(lang);
 
     localStorage.setItem("language", lang);
 
-    // Báo cho các trang khác biết ngôn ngữ đã thay đổi
+    // Thông báo cho các component khác
     window.dispatchEvent(new Event("languageChanged"));
 
     setShowLanguage(false);
   };
 
   // =========================
-  // LẤY CỜ THEO NGÔN NGỮ
+  // LẤY CỜ
   // =========================
+
   const getFlag = () => {
     if (language === "VN") {
       return "https://flagcdn.com/w40/vn.png";
@@ -55,6 +90,7 @@ function Header() {
           {/* =========================
               LOGO
           ========================= */}
+
           <Link to="/" className="logo">
             <img
               src={CinemaPass}
@@ -66,6 +102,7 @@ function Header() {
           {/* =========================
               BUTTONS
           ========================= */}
+
           <div className="header-buttons">
 
             {/* ĐẶT VÉ */}
@@ -105,6 +142,7 @@ function Header() {
           {/* =========================
               SEARCH
           ========================= */}
+
           <div className="search-box">
 
             <input
@@ -122,18 +160,21 @@ function Header() {
 
 
           {/* =========================
-              LOGIN
+              LOGIN / USER
           ========================= */}
+
           <Link
-            to="/login"
+            to={userName ? "/account" : "/login"}
             className="login"
           >
             <FaUserCircle />
 
             <span>
-              {language === "VN"
-                ? "Đăng nhập"
-                : "Login"}
+              {userName
+                ? userName
+                : language === "VN"
+                  ? "Đăng nhập"
+                  : "Login"}
             </span>
           </Link>
 
@@ -141,6 +182,7 @@ function Header() {
           {/* =========================
               LANGUAGE
           ========================= */}
+
           <div className="language-wrapper">
 
             <button
@@ -175,6 +217,7 @@ function Header() {
             {/* =========================
                 MENU NGÔN NGỮ
             ========================= */}
+
             {showLanguage && (
               <div className="language-menu">
 
