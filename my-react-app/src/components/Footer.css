@@ -1,0 +1,190 @@
+/* =========================
+   FOOTER
+========================= */
+
+.footer {
+  width: 100%;
+
+  background: linear-gradient(
+    135deg,
+    #101a31 0%,
+    #151f38 50%,
+    #1b2442 100%
+  );
+
+  color: #ffffff;
+
+  padding: 0 20px 25px;
+
+  box-sizing: border-box;
+}
+
+
+/* =========================
+   TOP
+========================= */
+
+.footer-top {
+  max-width: 1500px;
+
+  margin: 0 auto;
+
+  min-height: 65px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 30px;
+}
+
+
+/* Copyright */
+
+.footer-copy {
+  font-size: 17px;
+
+  font-weight: 600;
+
+  color: #f1f3f8;
+}
+
+
+/* =========================
+   LINKS
+========================= */
+
+.footer-links {
+  display: flex;
+
+  align-items: center;
+
+  gap: 32px;
+}
+
+.footer-links a {
+  color: #e4e8f2;
+
+  text-decoration: none;
+
+  font-size: 16px;
+
+  font-weight: 600;
+
+  transition: 0.2s;
+}
+
+.footer-links a:hover {
+  color: #b77cff;
+}
+
+
+/* =========================
+   CONTENT
+========================= */
+
+.footer-content {
+  max-width: 1200px;
+
+  margin: 0 auto;
+
+  text-align: center;
+}
+
+
+/* =========================
+   BỘ CÔNG THƯƠNG
+========================= */
+
+.footer-bct {
+  display: flex;
+
+  justify-content: center;
+
+  margin: 20px 0 12px;
+}
+
+.footer-bct img {
+  width: 180px;
+
+  height: auto;
+
+  display: block;
+}
+
+
+/* =========================
+   COMPANY
+========================= */
+
+.footer-company {
+  margin-top: 10px;
+}
+
+.footer-company p {
+  margin: 5px 0;
+
+  color: #cbd2e0;
+
+  font-size: 12px;
+
+  font-weight: 500;
+
+  line-height: 1.5;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+
+  .footer-top {
+    flex-direction: column;
+
+    padding: 20px 0;
+
+    gap: 15px;
+
+    text-align: center;
+  }
+
+  .footer-links {
+    flex-wrap: wrap;
+
+    justify-content: center;
+
+    gap: 15px;
+  }
+
+  .footer-company p {
+    font-size: 11px;
+  }
+}
+
+
+@media (max-width: 500px) {
+
+  .footer-copy {
+    font-size: 14px;
+  }
+
+  .footer-links a {
+    font-size: 13px;
+  }
+
+  .footer-bct img {
+    width: 150px;
+  }
+
+  .footer-company p {
+    font-size: 10px;
+  }
+}

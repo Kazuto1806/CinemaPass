@@ -163,20 +163,60 @@ function Header() {
               LOGIN / USER
           ========================= */}
 
-          <Link
-            to={userName ? "/account" : "/login"}
-            className="login"
-          >
-            <FaUserCircle />
+          
+<div className="login-wrapper">
 
-            <span>
-              {userName
-                ? userName
-                : language === "VN"
-                  ? "Đăng nhập"
-                  : "Login"}
-            </span>
-          </Link>
+  <Link
+    to={userName ? "/account" : "/login"}
+    className="login"
+  >
+    <FaUserCircle />
+
+    <span>
+      {userName
+        ? userName
+        : language === "VN"
+          ? "Đăng nhập"
+          : "Login"}
+    </span>
+  </Link>
+
+  {/* MENU USER */}
+  {userName && (
+    <div className="user-menu">
+
+      <Link to="/Account">
+        Tài khoản
+      </Link>
+
+      <Link to="/tickets">
+        Vé của tôi
+      </Link>
+
+      <button
+        type="button"
+        onClick={() => {
+          localStorage.removeItem("isLoggedIn");
+          localStorage.removeItem("userId");
+          localStorage.removeItem("userEmail");
+          localStorage.removeItem("userName");
+          localStorage.removeItem("phone");
+          localStorage.removeItem("role");
+
+          window.dispatchEvent(
+            new Event("userLogout")
+          );
+
+          navigate("/");
+        }}
+      >
+        Đăng xuất
+      </button>
+
+    </div>
+  )}
+
+</div>
 
 
           {/* =========================
