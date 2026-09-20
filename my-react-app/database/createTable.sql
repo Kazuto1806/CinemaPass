@@ -11,3 +11,19 @@ CREATE TABLE users(
 go
 ALTER TABLE Users
 ADD Phone NVARCHAR(20) NOT NULL DEFAULT '';
+GO
+CREATE TABLE Movies
+(
+    MovieId INT IDENTITY(1,1) PRIMARY KEY,
+    Title NVARCHAR(200) NOT NULL,
+    Description NVARCHAR(MAX) NULL,
+    Genre NVARCHAR(100) NULL,
+    Duration INT NOT NULL,
+    ReleaseDate DATE NULL,
+    Director NVARCHAR(150) NULL,
+    AgeRating VARCHAR(10) NULL,
+    PosterUrl NVARCHAR(500) NULL,
+    TrailerUrl NVARCHAR(500) NULL,
+    Status VARCHAR(30) NOT NULL DEFAULT 'ComingSoon',
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE()
+);
