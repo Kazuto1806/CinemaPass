@@ -26,10 +26,7 @@ function Header() {
       setUserName(localStorage.getItem("userName"));
     };
 
-    // Khi đăng nhập
     window.addEventListener("userLogin", updateUser);
-
-    // Khi đăng xuất
     window.addEventListener("userLogout", updateUser);
 
     return () => {
@@ -55,6 +52,22 @@ function Header() {
   const [showLanguage, setShowLanguage] = useState(false);
 
   // =========================
+  // THEO DÕI THAY ĐỔI NGÔN NGỮ
+  // =========================
+
+  useEffect(() => {
+    const updateLanguage = () => {
+      setLanguage(localStorage.getItem("language") || "VN");
+    };
+
+    window.addEventListener("languageChanged", updateLanguage);
+
+    return () => {
+      window.removeEventListener("languageChanged", updateLanguage);
+    };
+  }, []);
+
+  // =========================
   // ĐỔI NGÔN NGỮ
   // =========================
 
@@ -63,7 +76,6 @@ function Header() {
 
     localStorage.setItem("language", lang);
 
-    // Thông báo cho các component khác
     window.dispatchEvent(new Event("languageChanged"));
 
     setShowLanguage(false);
@@ -79,6 +91,23 @@ function Header() {
     }
 
     return "https://flagcdn.com/w40/us.png";
+  };
+
+  // =========================
+  // ĐĂNG XUẤT
+  // =========================
+
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("phone");
+    localStorage.removeItem("role");
+
+    window.dispatchEvent(new Event("userLogout"));
+
+    navigate("/");
   };
 
   return (
@@ -98,7 +127,6 @@ function Header() {
             />
           </Link>
 
-
           {/* =========================
               BUTTONS
           ========================= */}
@@ -106,6 +134,7 @@ function Header() {
           <div className="header-buttons">
 
             {/* ĐẶT VÉ */}
+
             <button
               type="button"
               className="header-btn booking-btn"
@@ -120,8 +149,8 @@ function Header() {
               </span>
             </button>
 
-
             {/* ĐẶT BẮP NƯỚC */}
+
             <button
               type="button"
               className="header-btn food-btn"
@@ -137,7 +166,6 @@ function Header() {
             </button>
 
           </div>
-
 
           {/* =========================
               SEARCH
@@ -158,66 +186,51 @@ function Header() {
 
           </div>
 
-
           {/* =========================
               LOGIN / USER
           ========================= */}
 
-          
-<div className="login-wrapper">
+          <div className="login-wrapper">
 
-  <Link
-    to={userName ? "/account" : "/login"}
-    className="login"
-  >
-    <FaUserCircle />
+            <Link
+              to={userName ? "/account" : "/login"}
+              className="login"
+            >
+              <FaUserCircle />
 
-    <span>
-      {userName
-        ? userName
-        : language === "VN"
-          ? "Đăng nhập"
-          : "Login"}
-    </span>
-  </Link>
+              <span>
+                {userName
+                  ? userName
+                  : language === "VN"
+                    ? "Đăng nhập"
+                    : "Login"}
+              </span>
+            </Link>
 
-  {/* MENU USER */}
-  {userName && (
-    <div className="user-menu">
+            {/* MENU USER */}
 
-      <Link to="/Account">
-        Tài khoản
-      </Link>
+            {userName && (
+              <div className="user-menu">
 
-      <Link to="/tickets">
-        Vé của tôi
-      </Link>
+                <Link to="/account">
+                  Tài khoản
+                </Link>
 
-      <button
-        type="button"
-        onClick={() => {
-          localStorage.removeItem("isLoggedIn");
-          localStorage.removeItem("userId");
-          localStorage.removeItem("userEmail");
-          localStorage.removeItem("userName");
-          localStorage.removeItem("phone");
-          localStorage.removeItem("role");
+                <Link to="/tickets">
+                  Vé của tôi
+                </Link>
 
-          window.dispatchEvent(
-            new Event("userLogout")
-          );
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                >
+                  Đăng xuất
+                </button>
 
-          navigate("/");
-        }}
-      >
-        Đăng xuất
-      </button>
+              </div>
+            )}
 
-    </div>
-  )}
-
-</div>
-
+          </div>
 
           {/* =========================
               LANGUAGE
@@ -234,6 +247,7 @@ function Header() {
             >
 
               {/* CỜ HIỆN TẠI */}
+
               <img
                 src={getFlag()}
                 alt={
@@ -245,6 +259,7 @@ function Header() {
               />
 
               {/* MÃ NGÔN NGỮ */}
+
               <span className="language-code">
                 {language}
               </span>
@@ -252,7 +267,6 @@ function Header() {
               <FaChevronDown />
 
             </button>
-
 
             {/* =========================
                 MENU NGÔN NGỮ
@@ -262,6 +276,7 @@ function Header() {
               <div className="language-menu">
 
                 {/* TIẾNG VIỆT */}
+
                 <button
                   type="button"
                   onClick={() =>
@@ -284,8 +299,8 @@ function Header() {
                   </span>
                 </button>
 
-
                 {/* ENGLISH */}
+
                 <button
                   type="button"
                   onClick={() =>

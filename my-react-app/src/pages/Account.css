@@ -1,3 +1,385 @@
-.account-container h1{
-    color: white;
+/* ========================================
+   ACCOUNT PAGE
+======================================== */
+
+.account-page {
+  min-height: calc(100vh - 90px);
+  background: #0d162b;
+  color: white;
+  padding: 45px 30px 70px;
+}
+
+.account-container {
+  width: 100%;
+  max-width: 1150px;
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  gap: 25px;
+}
+
+/* ========================================
+   SIDEBAR
+======================================== */
+
+.account-sidebar {
+  background: linear-gradient(
+    180deg,
+    #5432a8 0%,
+    #713dcc 55%,
+    #49308e 100%
+  );
+
+  border-radius: 8px;
+  overflow: hidden;
+
+  height: fit-content;
+
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+.account-profile {
+  padding: 25px 15px 20px;
+
+  text-align: center;
+
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.account-avatar {
+  width: 75px;
+  height: 75px;
+
+  margin: 0 auto 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #8b5cf6;
+  color: white;
+
+  font-size: 55px;
+
+  overflow: hidden;
+}
+
+.account-avatar svg {
+  width: 75px;
+  height: 75px;
+}
+
+.account-profile h2 {
+  margin: 5px 0;
+
+  color: white;
+
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.account-profile p {
+  margin: 0;
+
+  color: #ddd6fe;
+
+  font-size: 12px;
+}
+
+/* ========================================
+   MENU
+======================================== */
+
+.account-menu {
+  padding: 10px 8px 12px;
+}
+
+.account-menu-item {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 12px 13px;
+
+  margin-bottom: 5px;
+
+  border: none;
+  border-radius: 5px;
+
+  background: transparent;
+
+  color: white;
+
+  font-size: 13px;
+
+  cursor: pointer;
+
+  text-align: left;
+
+  transition: 0.2s;
+}
+
+.account-menu-item svg {
+  width: 15px;
+  min-width: 15px;
+}
+
+.account-menu-item:hover {
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.account-menu-item.active {
+  background: #ffffff;
+
+  color: #171717;
+
+  font-weight: 700;
+}
+
+.account-menu-item.logout {
+  color: #ffd0d0;
+}
+
+.account-menu-item.logout:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ========================================
+   CONTENT
+======================================== */
+
+.account-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ========================================
+   BOX
+======================================== */
+
+.account-box {
+  background: white;
+
+  border-radius: 3px;
+
+  padding: 25px 28px;
+
+  color: #202020;
+
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.18);
+}
+
+.account-box-title {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-bottom: 22px;
+
+  padding-bottom: 13px;
+
+  border-bottom: 1px solid #e3e3e3;
+}
+
+.account-box-title svg {
+  color: #6135b8;
+
+  font-size: 17px;
+}
+
+.account-box-title h2 {
+  margin: 0;
+
+  color: #222;
+
+  font-size: 19px;
+  font-weight: 700;
+}
+
+/* ========================================
+   PERSONAL INFORMATION
+======================================== */
+
+.account-form {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  column-gap: 20px;
+  row-gap: 18px;
+}
+
+.account-field {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.account-field label {
+  color: #333;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-field input {
+  width: 100%;
+  height: 42px;
+
+  padding: 0 12px;
+
+  border: 1px solid #cfcfcf;
+  border-radius: 3px;
+
+  background: white;
+
+  color: #222;
+
+  font-size: 13px;
+
+  outline: none;
+
+  transition: 0.2s;
+}
+
+.account-field input:focus {
+  border-color: #6638c0;
+
+  box-shadow: 0 0 0 2px rgba(102, 56, 192, 0.1);
+}
+
+.account-field input::placeholder {
+  color: #999;
+}
+
+.account-field input:read-only {
+  background: #f5f5f5;
+
+  color: #555;
+
+  cursor: not-allowed;
+}
+
+/* ========================================
+   BUTTON
+======================================== */
+
+.account-save-button {
+  margin-top: 20px;
+
+  padding: 10px 18px;
+
+  border: none;
+  border-radius: 3px;
+
+  background: #6135b8;
+
+  color: white;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.account-save-button:hover {
+  background: #4f289d;
+
+  transform: translateY(-1px);
+}
+
+/* ========================================
+   PASSWORD
+======================================== */
+
+.password-box {
+  padding-bottom: 28px;
+}
+
+.password-form {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 16px;
+}
+
+.password-form .account-field input {
+  height: 42px;
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 900px) {
+  .account-container {
+    grid-template-columns: 200px 1fr;
+  }
+
+  .account-box {
+    padding: 22px;
+  }
+}
+
+@media (max-width: 700px) {
+  .account-page {
+    padding: 30px 15px 50px;
+  }
+
+  .account-container {
+    grid-template-columns: 1fr;
+
+    gap: 20px;
+  }
+
+  .account-sidebar {
+    width: 100%;
+  }
+
+  .account-profile {
+    padding: 20px;
+  }
+
+  .account-menu {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 5px;
+  }
+
+  .account-menu-item {
+    margin-bottom: 0;
+  }
+
+  .account-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 450px) {
+  .account-menu {
+    grid-template-columns: 1fr;
+  }
+
+  .account-box {
+    padding: 18px;
+  }
+
+  .account-box-title h2 {
+    font-size: 17px;
+  }
 }
