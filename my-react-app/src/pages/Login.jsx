@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import NotificationPopup from "../components/NotificationPopup";
 import "./Login.css";
 
 const API_URL = "http://localhost:5000/api/auth";
@@ -8,6 +9,33 @@ function Login() {
   const navigate = useNavigate();
 
   const [isRegister, setIsRegister] = useState(false);
+
+  // =========================
+  // POPUP
+  // =========================
+
+  const [popup, setPopup] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
+
+  const showPopup = (type, title, message) => {
+    setPopup({
+      show: true,
+      type,
+      title,
+      message,
+    });
+  };
+
+  const closePopup = () => {
+    setPopup((prev) => ({
+      ...prev,
+      show: false,
+    }));
+  };
 
   // =========================
   // LOGIN
@@ -43,12 +71,20 @@ function Login() {
     e.preventDefault();
 
     if (!loginAccount.trim()) {
-      alert("Vui lòng nhập Email, Username hoặc Số điện thoại!");
+      showPopup(
+        "warning",
+        "Thiếu thông tin",
+        "Vui lòng nhập Email, Username hoặc Số điện thoại!"
+      );
       return;
     }
 
     if (!loginPassword.trim()) {
-      alert("Vui lòng nhập mật khẩu!");
+      showPopup(
+        "warning",
+        "Thiếu thông tin",
+        "Vui lòng nhập mật khẩu!"
+      );
       return;
     }
 
@@ -67,7 +103,11 @@ function Login() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Đăng nhập thất bại!");
+        showPopup(
+          "error",
+          "Đăng nhập thất bại",
+          data.message || "Đăng nhập thất bại!"
+        );
         return;
       }
 
@@ -79,8 +119,7 @@ function Login() {
       localStorage.setItem("userId", data.userId);
       localStorage.setItem("userEmail", data.email);
 
-      // QUAN TRỌNG:
-      // Header.jsx đang lấy localStorage "userName"
+      // Header.jsx lấy userName
       localStorage.setItem("userName", data.fullName);
 
       localStorage.setItem("phone", data.phone || "");
@@ -102,12 +141,25 @@ function Login() {
 
       window.dispatchEvent(new Event("userLogin"));
 
-      alert("Đăng nhập thành công!");
+      showPopup(
+        "success",
+        "Đăng nhập thành công",
+        "Chào mừng bạn đến với Cinema Pass!"
+      );
 
-      navigate("/");
+      // Chờ popup hiển thị rồi chuyển trang
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
+
     } catch (err) {
       console.error(err);
-      alert("Không kết nối được server!");
+
+      showPopup(
+        "error",
+        "Lỗi kết nối",
+        "Không kết nối được server!"
+      );
     }
   };
 
@@ -119,37 +171,65 @@ function Login() {
     e.preventDefault();
 
     if (!registerName.trim()) {
-      alert("Vui lòng nhập họ và tên!");
+      showPopup(
+        "warning",
+        "Thiếu thông tin",
+        "Vui lòng nhập họ và tên!"
+      );
       return;
     }
 
     if (!registerEmail.trim()) {
-      alert("Vui lòng nhập Email!");
+      showPopup(
+        "warning",
+        "Thiếu thông tin",
+        "Vui lòng nhập Email!"
+      );
       return;
     }
 
     if (!registerPhone.trim()) {
-      alert("Vui lòng nhập số điện thoại!");
+      showPopup(
+        "warning",
+        "Thiếu thông tin",
+        "Vui lòng nhập số điện thoại!"
+      );
       return;
     }
 
     if (!registerPassword.trim()) {
-      alert("Vui lòng nhập mật khẩu!");
+      showPopup(
+        "warning",
+        "Thiếu thông tin",
+        "Vui lòng nhập mật khẩu!"
+      );
       return;
     }
 
     if (registerPassword.length < 6) {
-      alert("Mật khẩu phải có ít nhất 6 ký tự!");
+      showPopup(
+        "warning",
+        "Mật khẩu không hợp lệ",
+        "Mật khẩu phải có ít nhất 6 ký tự!"
+      );
       return;
     }
 
     if (!registerConfirmPassword.trim()) {
-      alert("Vui lòng xác nhận mật khẩu!");
+      showPopup(
+        "warning",
+        "Thiếu thông tin",
+        "Vui lòng xác nhận mật khẩu!"
+      );
       return;
     }
 
     if (registerPassword !== registerConfirmPassword) {
-      alert("Mật khẩu xác nhận không trùng khớp!");
+      showPopup(
+        "error",
+        "Mật khẩu không khớp",
+        "Mật khẩu xác nhận không trùng khớp!"
+      );
       return;
     }
 
@@ -170,11 +250,19 @@ function Login() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Đăng ký thất bại!");
+        showPopup(
+          "error",
+          "Đăng ký thất bại",
+          data.message || "Đăng ký thất bại!"
+        );
         return;
       }
 
-      alert("Đăng ký thành công!");
+      showPopup(
+        "success",
+        "Đăng ký thành công",
+        "Tài khoản Cinema Pass đã được tạo!"
+      );
 
       // Chuyển về đăng nhập
       setIsRegister(false);
@@ -185,9 +273,15 @@ function Login() {
       setRegisterPhone("");
       setRegisterPassword("");
       setRegisterConfirmPassword("");
+
     } catch (err) {
       console.error(err);
-      alert("Không kết nối được server!");
+
+      showPopup(
+        "error",
+        "Lỗi kết nối",
+        "Không kết nối được server!"
+      );
     }
   };
 
@@ -337,8 +431,10 @@ function Login() {
                   type="button"
                   className="forgot-password"
                   onClick={() =>
-                    alert(
-                      "Chức năng quên mật khẩu sẽ được làm sau."
+                    showPopup(
+                      "warning",
+                      "Thông báo",
+                      "Chức năng quên mật khẩu đang được phát triển."
                     )
                   }
                 >
@@ -384,11 +480,13 @@ function Login() {
           <div className="login-box register-box">
 
             <div className="login-heading">
+
               <h1>Đăng ký</h1>
 
               <p>
                 Tạo tài khoản Cinema Pass của bạn
               </p>
+
             </div>
 
             <form onSubmit={handleRegister}>
@@ -569,6 +667,19 @@ function Login() {
         )}
 
       </div>
+
+      {/* =========================
+          NOTIFICATION POPUP
+      ========================= */}
+
+      <NotificationPopup
+        show={popup.show}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        onClose={closePopup}
+      />
+
     </main>
   );
 }

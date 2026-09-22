@@ -9,6 +9,7 @@ import {
   FaLock,
 } from "react-icons/fa";
 
+import NotificationPopup from "../components/NotificationPopup";
 import "./Account.css";
 
 function Account() {
@@ -34,6 +35,35 @@ function Account() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // =========================
+  // POPUP
+  // =========================
+  const [popup, setPopup] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
+
+  const showPopup = (type, title, message) => {
+    setPopup({
+      show: true,
+      type,
+      title,
+      message,
+    });
+  };
+
+  const closePopup = () => {
+    setPopup((prev) => ({
+      ...prev,
+      show: false,
+    }));
+  };
+
+  // =========================
+  // LƯU THÔNG TIN
+  // =========================
   const handleSaveInfo = () => {
     localStorage.setItem("userName", userName);
     localStorage.setItem("phone", phone);
@@ -41,27 +71,49 @@ function Account() {
 
     window.dispatchEvent(new Event("userLogin"));
 
-    alert("Đã lưu thông tin thành công!");
+    showPopup(
+      "success",
+      "Thành công",
+      "Đã lưu thông tin thành công!"
+    );
   };
 
+  // =========================
+  // ĐỔI MẬT KHẨU
+  // =========================
   const handleChangePassword = () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
-      alert("Vui lòng nhập đầy đủ thông tin!");
+      showPopup(
+        "warning",
+        "Thiếu thông tin",
+        "Vui lòng nhập đầy đủ thông tin!"
+      );
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert("Mật khẩu xác nhận không khớp!");
+      showPopup(
+        "error",
+        "Không thành công",
+        "Mật khẩu xác nhận không khớp!"
+      );
       return;
     }
 
-    alert("Đổi mật khẩu thành công!");
+    showPopup(
+      "success",
+      "Thành công",
+      "Đổi mật khẩu thành công!"
+    );
 
     setOldPassword("");
     setNewPassword("");
     setConfirmPassword("");
   };
 
+  // =========================
+  // ĐĂNG XUẤT
+  // =========================
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("userId");
@@ -78,12 +130,14 @@ function Account() {
 
   return (
     <div className="account-page">
+
       <div className="account-container">
 
         {/* SIDEBAR */}
         <aside className="account-sidebar">
 
           <div className="account-profile">
+
             <div className="account-avatar">
               <FaUserCircle />
             </div>
@@ -95,6 +149,7 @@ function Account() {
             <p>
               Thành viên CinemaPass
             </p>
+
           </div>
 
           <div className="account-menu">
@@ -110,7 +165,13 @@ function Account() {
             <button
               type="button"
               className="account-menu-item"
-              onClick={() => alert("Chức năng thành viên đang được phát triển!")}
+              onClick={() =>
+                showPopup(
+                  "warning",
+                  "Thông báo",
+                  "Chức năng thành viên đang được phát triển!"
+                )
+              }
             >
               <FaUsers />
               <span>Thành viên CinemaPass</span>
@@ -146,7 +207,6 @@ function Account() {
 
             <div className="account-box-title">
               <FaUser />
-
               <h2>Thông tin cá nhân</h2>
             </div>
 
@@ -217,7 +277,6 @@ function Account() {
 
             <div className="account-box-title">
               <FaLock />
-
               <h2>Đổi mật khẩu</h2>
             </div>
 
@@ -277,6 +336,16 @@ function Account() {
         </main>
 
       </div>
+
+      {/* POPUP THÔNG BÁO */}
+      <NotificationPopup
+        show={popup.show}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        onClose={closePopup}
+      />
+
     </div>
   );
 }
