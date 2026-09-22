@@ -643,3 +643,4 @@ D:\DoAn\CinemaPass\my-react-app\backend\obj\Debug\net10.0\refint\CinemaBackend.d
 D:\DoAn\CinemaPass\my-react-app\backend\obj\Debug\net10.0\CinemaBackend.pdb
 D:\DoAn\CinemaPass\my-react-app\backend\obj\Debug\net10.0\CinemaBackend.genruntimeconfig.cache
 D:\DoAn\CinemaPass\my-react-app\backend\obj\Debug\net10.0\ref\CinemaBackend.dll
+D:\DoAn\CinemaPass\my-react-app\backend\bin\Debug\net10.0\CinemaBackend.staticwebassets.runtime.json

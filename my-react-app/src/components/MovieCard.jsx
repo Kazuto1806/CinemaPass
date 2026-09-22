@@ -1,4 +1,4 @@
-import './MovieCard.css';
+import "./MovieCard.css";
 
 function MovieCard({ movie }) {
   return (
@@ -6,15 +6,16 @@ function MovieCard({ movie }) {
 
       {/* Poster */}
       <img
-        src={movie.image}
-        alt={movie.alt}
-        className="movie-poster"
-      />
+  src={`http://localhost:5000${movie.posterUrl}`}
+  alt={movie.title}
+  className="movie-poster"
+/>
 
       {/* Lớp thông tin khi hover */}
       <div className="movie-overlay">
 
         <div className="movie-info">
+
           <h3>{movie.title}</h3>
 
           <p>
@@ -26,12 +27,16 @@ function MovieCard({ movie }) {
           </p>
 
           <p>
-            <strong>Khởi chiếu:</strong> {movie.releaseDate}
+            <strong>Khởi chiếu:</strong>{" "}
+            {movie.releaseDate
+              ? new Date(movie.releaseDate).toLocaleDateString("vi-VN")
+              : "Chưa cập nhật"}
           </p>
 
           <p>
             <strong>Đạo diễn:</strong> {movie.director}
           </p>
+
         </div>
 
         <button className="movie-detail-btn">
@@ -42,7 +47,7 @@ function MovieCard({ movie }) {
 
       {/* Nhãn độ tuổi */}
       <div className="movie-badge">
-        {movie.age}
+        {movie.ageRating}
       </div>
 
     </div>

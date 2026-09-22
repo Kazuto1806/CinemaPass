@@ -27,6 +27,6 @@ VALUES
     '2026-09-11',
     N'Mục Chí Dương',
     'K',
-    '/assets/battien.jpg',
+    '/assets/bat-tien.jpeg',
     'NowShowing'
 );
