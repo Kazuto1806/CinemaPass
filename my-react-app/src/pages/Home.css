@@ -11,6 +11,13 @@
   margin-bottom: 40px;
 }
 
+.movie-list {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 /* Khung khi chưa có phim */
 .movie-empty {
   width: 100%;
