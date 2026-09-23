@@ -1,11 +1,15 @@
 import { Routes, Route } from "react-router-dom";
 
 import Header from "./components/Header";
-import Footer from "./components/Footer"
+import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Food from "./pages/Food";
 import Account from "./pages/Account";
+
+import Dashboard from "./pages/Admin/Dashboard";
+import MovieAdmin from "./pages/Admin/MovieAdmin";
+
 import "./App.css";
 
 function App() {
@@ -22,8 +26,23 @@ function App() {
 
         {/* Trang đặt bắp nước */}
         <Route path="/food" element={<Food />} />
+
         {/* Trang tài khoản */}
         <Route path="/account" element={<Account />} />
+
+        {/* =========================
+            ADMIN
+        ========================= */}
+
+        {/* Admin Dashboard */}
+        <Route path="/admin" element={<Dashboard />} />
+
+        {/* Admin quản lý phim */}
+        <Route
+          path="/admin/movies"
+          element={<MovieAdmin />}
+        />
+
         {/* Trang không tồn tại */}
         <Route
           path="*"
@@ -43,7 +62,8 @@ function App() {
           }
         />
       </Routes>
-      <Footer/>
+
+      <Footer />
     </>
   );
 }

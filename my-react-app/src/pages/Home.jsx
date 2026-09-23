@@ -1,37 +1,52 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import MovieCard from "../components/MovieCard";
+import batTien from "../assets/bat-tien.jpeg";
 import "./Home.css";
 
 const Home = () => {
-  const [movies, setMovies] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [movies] = useState([
+    {
+      movieId: 1,
+      title: "Bắt Tiên!",
+      description: "Một bộ phim hoạt hình phiêu lưu.",
+      genre: "Hoạt hình, Hài",
+      duration: 120,
+      releaseDate: "2026-09-11",
+      director: "Mục Chí Dương",
+      ageRating: "K",
+      posterUrl: batTien,
+      status: "NowShowing",
+    },
+    {
+      movieId: 2,
+      title: "The Conjuring: Last Rites",
+      description: "Một câu chuyện kinh dị mới.",
+      genre: "Kinh dị",
+      duration: 135,
+      releaseDate: "2026-09-05",
+      director: "Michael Chaves",
+      ageRating: "T18",
+      posterUrl: "",
+      status: "NowShowing",
+    },
+    {
+      movieId: 3,
+      title: "Avatar: Fire and Ash",
+      description: "Phần phim mới trong thế giới Avatar.",
+      genre: "Hành động, Phiêu lưu",
+      duration: 197,
+      releaseDate: "2026-12-19",
+      director: "James Cameron",
+      ageRating: "T13",
+      posterUrl: "",
+      status: "ComingSoon",
+    },
+  ]);
 
-  useEffect(() => {
-    fetch("http://localhost:5000/api/movies")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Không thể lấy dữ liệu phim");
-        }
-
-        return response.json();
-      })
-      .then((data) => {
-        setMovies(data);
-      })
-      .catch((error) => {
-        console.error("Lỗi:", error);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
-
-  // Chỉ lấy tối đa 5 phim đang chiếu
   const nowShowingMovies = movies
     .filter((movie) => movie.status === "NowShowing")
     .slice(0, 5);
 
-  // Chỉ lấy tối đa 5 phim sắp chiếu
   const comingSoonMovies = movies
     .filter((movie) => movie.status === "ComingSoon")
     .slice(0, 5);
@@ -43,18 +58,14 @@ const Home = () => {
       <section className="movie-section">
         <h2>PHIM ĐANG CHIẾU</h2>
 
-        {loading ? (
-          <p>Đang tải phim...</p>
-        ) : (
-          <div className="movie-list">
-            {nowShowingMovies.map((movie) => (
-              <MovieCard
-                key={movie.movieId}
-                movie={movie}
-              />
-            ))}
-          </div>
-        )}
+        <div className="movie-list">
+          {nowShowingMovies.map((movie) => (
+            <MovieCard
+              key={movie.movieId}
+              movie={movie}
+            />
+          ))}
+        </div>
       </section>
 
       {/* PHIM SẮP CHIẾU */}

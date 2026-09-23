@@ -4,14 +4,20 @@ function MovieCard({ movie }) {
   return (
     <div className="movie-card">
 
-      {/* Poster */}
-      <img
-  src={`http://localhost:5000${movie.posterUrl}`}
-  alt={movie.title}
-  className="movie-poster"
-/>
+      {/* POSTER */}
+      {movie.posterUrl ? (
+        <img
+          src={movie.posterUrl}
+          alt={movie.title}
+          className="movie-poster"
+        />
+      ) : (
+        <div className="movie-poster movie-poster-placeholder">
+          🎬
+        </div>
+      )}
 
-      {/* Lớp thông tin khi hover */}
+      {/* OVERLAY KHI HOVER */}
       <div className="movie-overlay">
 
         <div className="movie-info">
@@ -19,35 +25,39 @@ function MovieCard({ movie }) {
           <h3>{movie.title}</h3>
 
           <p>
-            <strong>Thể loại:</strong> {movie.genre}
+            <strong>Thể loại:</strong>{" "}
+            {movie.genre || "Chưa cập nhật"}
           </p>
 
           <p>
-            <strong>Thời lượng:</strong> {movie.duration} phút
+            <strong>Thời lượng:</strong>{" "}
+            {movie.duration} phút
           </p>
 
           <p>
             <strong>Khởi chiếu:</strong>{" "}
-            {movie.releaseDate
-              ? new Date(movie.releaseDate).toLocaleDateString("vi-VN")
-              : "Chưa cập nhật"}
+            {movie.releaseDate || "Chưa cập nhật"}
           </p>
 
           <p>
-            <strong>Đạo diễn:</strong> {movie.director}
+            <strong>Đạo diễn:</strong>{" "}
+            {movie.director || "Chưa cập nhật"}
           </p>
+
+          <button
+            type="button"
+            className="movie-detail-btn"
+          >
+            Xem chi tiết
+          </button>
 
         </div>
 
-        <button className="movie-detail-btn">
-          Xem chi tiết
-        </button>
-
       </div>
 
-      {/* Nhãn độ tuổi */}
+      {/* ĐỘ TUỔI */}
       <div className="movie-badge">
-        {movie.ageRating}
+        {movie.ageRating || "P"}
       </div>
 
     </div>
