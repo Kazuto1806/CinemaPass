@@ -123,7 +123,9 @@ function Login() {
       localStorage.setItem("userName", data.fullName);
 
       localStorage.setItem("phone", data.phone || "");
-      localStorage.setItem("role", data.role);
+
+      // QUAN TRỌNG: LƯU ROLE
+      localStorage.setItem("userRole", data.role);
 
       // =========================
       // LƯU ĐĂNG NHẬP
@@ -147,11 +149,17 @@ function Login() {
         "Chào mừng bạn đến với Cinema Pass!"
       );
 
-      // Chờ popup hiển thị rồi chuyển trang
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
+      // =========================
+      // CHUYỂN TRANG THEO ROLE
+      // =========================
 
+      setTimeout(() => {
+        if (data.role === "Admin") {
+          navigate("/admin/movies");
+        } else {
+          navigate("/");
+        }
+      }, 1000);
     } catch (err) {
       console.error(err);
 
@@ -273,7 +281,6 @@ function Login() {
       setRegisterPhone("");
       setRegisterPassword("");
       setRegisterConfirmPassword("");
-
     } catch (err) {
       console.error(err);
 
