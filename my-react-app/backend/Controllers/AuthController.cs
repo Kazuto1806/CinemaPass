@@ -16,7 +16,10 @@ namespace CinemaBackend.Controllers
             _context = context;
         }
 
+        // =========================
         // ĐĂNG KÝ
+        // =========================
+
         [HttpPost("register")]
         public async Task<IActionResult> Register(User user)
         {
@@ -36,6 +39,7 @@ namespace CinemaBackend.Controllers
             user.Role = "Customer";
 
             _context.Users.Add(user);
+
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -49,7 +53,11 @@ namespace CinemaBackend.Controllers
             });
         }
 
+
+        // =========================
         // ĐĂNG NHẬP
+        // =========================
+
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
@@ -76,7 +84,43 @@ namespace CinemaBackend.Controllers
                 role = user.Role
             });
         }
+
+
+        // =========================
+        // LẤY THÔNG TIN USER TỪ SQL
+        // =========================
+
+        [HttpGet("user/{id}")]
+        public async Task<IActionResult> GetUser(int id)
+        {
+            // Tìm user trong SQL Server theo UserId
+            var user = await _context.Users
+                .FirstOrDefaultAsync(x => x.UserId == id);
+
+            if (user == null)
+            {
+                return NotFound(new
+                {
+                    message = "Không tìm thấy người dùng"
+                });
+            }
+
+            // Trả dữ liệu từ SQL Server về React
+            return Ok(new
+            {
+                userId = user.UserId,
+                fullName = user.FullName,
+                email = user.Email,
+                phone = user.Phone,
+                role = user.Role
+            });
+        }
     }
+
+
+    // =========================
+    // LOGIN REQUEST
+    // =========================
 
     public class LoginRequest
     {

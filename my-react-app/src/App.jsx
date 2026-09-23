@@ -2,11 +2,13 @@ import { Routes, Route } from "react-router-dom";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Food from "./pages/Food";
 import Account from "./pages/Account";
 
+import AdminLayout from "./pages/Admin/AdminLayout";
 import Dashboard from "./pages/Admin/Dashboard";
 import MovieAdmin from "./pages/Admin/MovieAdmin";
 
@@ -18,32 +20,94 @@ function App() {
       <Header />
 
       <Routes>
+
+        {/* =========================
+            USER
+        ========================= */}
+
         {/* Trang chủ */}
-        <Route path="/" element={<Home />} />
+        <Route
+          path="/"
+          element={<Home />}
+        />
 
-        {/* Trang đăng nhập */}
-        <Route path="/login" element={<Login />} />
+        {/* Đăng nhập */}
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
-        {/* Trang đặt bắp nước */}
-        <Route path="/food" element={<Food />} />
+        {/* Đặt bắp nước */}
+        <Route
+          path="/food"
+          element={<Food />}
+        />
 
-        {/* Trang tài khoản */}
-        <Route path="/account" element={<Account />} />
+        {/* Tài khoản */}
+        <Route
+          path="/account"
+          element={<Account />}
+        />
+
 
         {/* =========================
             ADMIN
         ========================= */}
 
-        {/* Admin Dashboard */}
-        <Route path="/admin" element={<Dashboard />} />
-
-        {/* Admin quản lý phim */}
         <Route
-          path="/admin/movies"
-          element={<MovieAdmin />}
-        />
+          path="/admin"
+          element={<AdminLayout />}
+        >
 
-        {/* Trang không tồn tại */}
+          {/* /admin */}
+          <Route
+            index
+            element={<Dashboard />}
+          />
+
+          {/* /admin/movies */}
+          <Route
+            path="movies"
+            element={<MovieAdmin />}
+          />
+
+          {/* /admin/users */}
+          <Route
+            path="users"
+            element={
+              <div>
+                <h1>Quản lý người dùng</h1>
+              </div>
+            }
+          />
+
+          {/* /admin/tickets */}
+          <Route
+            path="tickets"
+            element={
+              <div>
+                <h1>Quản lý vé</h1>
+              </div>
+            }
+          />
+
+          {/* /admin/food */}
+          <Route
+            path="food"
+            element={
+              <div>
+                <h1>Quản lý bắp nước</h1>
+              </div>
+            }
+          />
+
+        </Route>
+
+
+        {/* =========================
+            KHÔNG TÌM THẤY TRANG
+        ========================= */}
+
         <Route
           path="*"
           element={
@@ -61,6 +125,7 @@ function App() {
             </div>
           }
         />
+
       </Routes>
 
       <Footer />

@@ -14,16 +14,79 @@ import CinemaPass from "../assets/Cinema_Pass.png";
 
 function Header() {
   // =========================
-  // USER ĐĂNG NHẬP
+  // USER
   // =========================
 
   const [userName, setUserName] = useState(
-    localStorage.getItem("userName")
+    localStorage.getItem("userName") || ""
   );
 
+  // Role KHÔNG lấy từ localStorage
+  // Sẽ lấy trực tiếp từ Backend -> SQL Server
+  const [userRole, setUserRole] = useState("");
+
+  const [loadingUser, setLoadingUser] = useState(false);
+
+  // =========================
+  // NAVIGATE
+  // =========================
+
+  const navigate = useNavigate();
+
+  // =========================
+  // LẤY USER TỪ DATABASE
+  // =========================
+
+  const loadUserFromDatabase = async () => {
+    const userId = localStorage.getItem("userId");
+
+    // Không có userId => chưa đăng nhập
+    if (!userId) {
+      setUserName("");
+      setUserRole("");
+      return;
+    }
+
+    try {
+      setLoadingUser(true);
+
+      const response = await fetch(
+        `http://localhost:5000/api/auth/user/${userId}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Không thể lấy thông tin người dùng");
+      }
+
+      const data = await response.json();
+
+      // Lấy dữ liệu từ SQL Server thông qua API
+      setUserName(data.fullName || "");
+      setUserRole(data.role || "");
+
+      // Chỉ lưu các thông tin hiển thị phiên đăng nhập
+      // Role không lưu vào localStorage
+      localStorage.setItem("userName", data.fullName || "");
+      localStorage.setItem("userEmail", data.email || "");
+      localStorage.setItem("phone", data.phone || "");
+    } catch (error) {
+      console.error("Lỗi lấy thông tin user:", error);
+
+      setUserRole("");
+    } finally {
+      setLoadingUser(false);
+    }
+  };
+
+  // =========================
+  // THEO DÕI LOGIN / LOGOUT
+  // =========================
+
   useEffect(() => {
+    loadUserFromDatabase();
+
     const updateUser = () => {
-      setUserName(localStorage.getItem("userName"));
+      loadUserFromDatabase();
     };
 
     window.addEventListener("userLogin", updateUser);
@@ -34,12 +97,6 @@ function Header() {
       window.removeEventListener("userLogout", updateUser);
     };
   }, []);
-
-  // =========================
-  // NAVIGATE
-  // =========================
-
-  const navigate = useNavigate();
 
   // =========================
   // NGÔN NGỮ
@@ -103,11 +160,36 @@ function Header() {
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userName");
     localStorage.removeItem("phone");
+    localStorage.removeItem("birthDate");
+
+    // Xóa luôn role cũ nếu trước đây đã từng lưu
     localStorage.removeItem("role");
+
+    setUserName("");
+    setUserRole("");
 
     window.dispatchEvent(new Event("userLogout"));
 
     navigate("/");
+  };
+
+  // =========================
+  // LINK TÀI KHOẢN
+  // =========================
+
+  const getUserLink = () => {
+    // Chưa đăng nhập
+    if (!userName) {
+      return "/login";
+    }
+
+    // Admin lấy role từ Database
+    if (userRole.toLowerCase() === "admin") {
+      return "/admin";
+    }
+
+    // User thường
+    return "/account";
   };
 
   return (
@@ -193,7 +275,7 @@ function Header() {
           <div className="login-wrapper">
 
             <Link
-              to={userName ? "/account" : "/login"}
+              to={getUserLink()}
               className="login"
             >
               <FaUserCircle />
@@ -207,28 +289,33 @@ function Header() {
               </span>
             </Link>
 
-            {/* MENU USER */}
+            {/* =========================
+                MENU USER THƯỜNG
+            ========================= */}
 
-            {userName && (
-              <div className="user-menu">
+            {userName &&
+              !loadingUser &&
+              userRole.toLowerCase() !== "admin" && (
 
-                <Link to="/account">
-                  Tài khoản
-                </Link>
+                <div className="user-menu">
 
-                <Link to="/tickets">
-                  Vé của tôi
-                </Link>
+                  <Link to="/account">
+                    Tài khoản
+                  </Link>
 
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                >
-                  Đăng xuất
-                </button>
+                  <Link to="/tickets">
+                    Vé của tôi
+                  </Link>
 
-              </div>
-            )}
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                  >
+                    Đăng xuất
+                  </button>
+
+                </div>
+              )}
 
           </div>
 
