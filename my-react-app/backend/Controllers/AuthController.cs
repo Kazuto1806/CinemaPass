@@ -115,6 +115,22 @@ namespace CinemaBackend.Controllers
                 role = user.Role
             });
         }
+        // =========================
+// ĐẾM SỐ NGƯỜI DÙNG
+// GET: /api/Auth/users/count
+// =========================
+
+[HttpGet("users/count")]
+public async Task<IActionResult> GetUsersCount()
+{
+    var totalUsers =
+        await _context.Users.CountAsync();
+
+    return Ok(new
+    {
+        totalUsers = totalUsers
+    });
+}
     }
 
 
