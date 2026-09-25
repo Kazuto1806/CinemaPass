@@ -1,5 +1,29 @@
 import "./MovieCard.css";
 
+const getPosterUrl = (posterUrl) => {
+  if (!posterUrl) return "";
+
+  // Nếu đã là URL đầy đủ
+  if (
+    posterUrl.startsWith("http://") ||
+    posterUrl.startsWith("https://")
+  ) {
+    return posterUrl;
+  }
+
+  // Poster được upload lên ASP.NET Core
+  if (posterUrl.startsWith("/uploads/")) {
+    return `http://localhost:5000${posterUrl}`;
+  }
+
+  // Poster nằm trong public/assets
+  if (posterUrl.startsWith("/assets/")) {
+    return posterUrl;
+  }
+
+  return posterUrl;
+};
+
 function MovieCard({ movie }) {
   return (
     <div className="movie-card">
@@ -7,7 +31,7 @@ function MovieCard({ movie }) {
       {/* POSTER */}
       {movie.posterUrl ? (
         <img
-          src={movie.posterUrl}
+          src={getPosterUrl(movie.posterUrl)}
           alt={movie.title}
           className="movie-poster"
         />
@@ -36,7 +60,10 @@ function MovieCard({ movie }) {
 
           <p>
             <strong>Khởi chiếu:</strong>{" "}
-            {movie.releaseDate || "Chưa cập nhật"}
+            {movie.releaseDate
+              ? new Date(movie.releaseDate).toLocaleDateString("vi-VN")
+              : "Chưa cập nhật"
+            }
           </p>
 
           <p>

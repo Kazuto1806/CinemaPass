@@ -9,19 +9,21 @@ import {
   FaTimes,
 } from "react-icons/fa";
 
+import NotificationPopup from "../../components/NotificationPopup";
+
 import "./MovieAdmin.css";
 
-const API_URL = "http://localhost:5000/api/movies";
+const API_URL =
+  "http://localhost:5000/api/movies";
 
-/*
-  Lấy các file ảnh trong src/assets
-  Ví dụ:
-  src/assets/bat-tien.jpeg
-  src/assets/avatar.jpg
-  src/assets/movie.webp
-*/
+
+// =====================================================
+// LẤY ẢNH TRONG SRC/ASSETS
+// HỖ TRỢ NHIỀU ĐỊNH DẠNG
+// =====================================================
+
 const posterAssets = import.meta.glob(
-  "../../assets/*.{png,jpg,jpeg,webp}",
+  "../../assets/**/*.{png,jpg,jpeg,webp,avif,gif,svg}",
   {
     eager: true,
     query: "?url",
@@ -30,17 +32,17 @@ const posterAssets = import.meta.glob(
 );
 
 
-// =========================
+// =====================================================
 // CHUYỂN POSTER URL TỪ SQL
-// THÀNH URL ẢNH CÓ THỂ HIỂN THỊ
-// =========================
+// THÀNH URL ẢNH HIỂN THỊ ĐƯỢC
+// =====================================================
 
 const getPosterUrl = (posterUrl) => {
   if (!posterUrl) {
     return "";
   }
 
-  // Nếu SQL lưu link online
+  // URL online
   if (
     posterUrl.startsWith("http://") ||
     posterUrl.startsWith("https://")
@@ -48,51 +50,52 @@ const getPosterUrl = (posterUrl) => {
     return posterUrl;
   }
 
-  /*
-    SQL:
-    /assets/bat-tien.jpeg
+  // Poster đã được upload lên backend
+  if (
+    posterUrl.startsWith("/uploads/")
+  ) {
+    return `http://localhost:5000${posterUrl}`;
+  }
 
-    Lấy ra:
-    bat-tien.jpeg
-  */
+  // Poster cũ lưu trong SQL
+  // Ví dụ:
+  // /assets/bat-tien.jpeg
 
   const fileName = posterUrl
     .split("/")
-    .pop();
+    .pop()
+    ?.toLowerCase();
 
   if (!fileName) {
     return "";
   }
 
-  /*
-    Tìm file tương ứng trong:
-    src/assets/
-  */
-
   const asset = Object.entries(
     posterAssets
   ).find(([path]) =>
-    path.endsWith(`/${fileName}`)
+    path
+      .split("/")
+      .pop()
+      ?.toLowerCase() === fileName
   );
 
   if (asset) {
     return asset[1];
   }
 
-  /*
-    Nếu không tìm thấy trong src/assets
-    thì giữ nguyên URL SQL
-  */
-
   return posterUrl;
 };
 
 
+// =====================================================
+// COMPONENT
+// =====================================================
+
 function MovieAdmin() {
 
-  // =========================
-  // DANH SÁCH PHIM
-  // =========================
+  // =====================================================
+  // STATE DANH SÁCH PHIM
+  // =====================================================
 
   const [movies, setMovies] =
     useState([]);
@@ -113,9 +116,22 @@ function MovieAdmin() {
     useState(false);
 
 
-  // =========================
-  // FORM RỖNG
-  // =========================
+  // =====================================================
+  // STATE POPUP
+  // =====================================================
+
+  const [notification, setNotification] =
+    useState({
+      show: false,
+      type: "success",
+      title: "",
+      message: "",
+    });
+
+
+  // =====================================================
+  // FORM
+  // =====================================================
 
   const emptyForm = {
     title: "",
@@ -125,7 +141,13 @@ function MovieAdmin() {
     releaseDate: "",
     director: "",
     ageRating: "T13",
+
+    // URL hiện tại trong SQL
     posterUrl: "",
+
+    // File mới chọn từ máy
+    posterFile: null,
+
     trailerUrl: "",
     status: "ComingSoon",
   };
@@ -134,9 +156,39 @@ function MovieAdmin() {
     useState(emptyForm);
 
 
-  // =========================
-  // LẤY DỮ LIỆU TỪ SQL
-  // =========================
+  // =====================================================
+  // HIỂN THỊ POPUP
+  // =====================================================
+
+  const showNotification = (
+    type,
+    title,
+    message
+  ) => {
+    setNotification({
+      show: true,
+      type,
+      title,
+      message,
+    });
+  };
+
+
+  // =====================================================
+  // ĐÓNG POPUP
+  // =====================================================
+
+  const closeNotification = () => {
+    setNotification((prev) => ({
+      ...prev,
+      show: false,
+    }));
+  };
+
+
+  // =====================================================
+  // LẤY PHIM TỪ SQL SERVER
+  // =====================================================
 
   const loadMovies = async () => {
     try {
@@ -164,9 +216,11 @@ function MovieAdmin() {
         error
       );
 
-      alert(
+      showNotification(
+        "error",
+        "Lỗi",
         error.message ||
-        "Không thể tải danh sách phim"
+          "Không thể tải danh sách phim"
       );
 
     } finally {
@@ -177,18 +231,18 @@ function MovieAdmin() {
   };
 
 
-  // =========================
+  // =====================================================
   // LOAD KHI MỞ TRANG
-  // =========================
+  // =====================================================
 
   useEffect(() => {
     loadMovies();
   }, []);
 
 
-  // =========================
-  // MỞ FORM THÊM
-  // =========================
+  // =====================================================
+  // MỞ FORM THÊM PHIM
+  // =====================================================
 
   const openAddForm = () => {
 
@@ -202,9 +256,9 @@ function MovieAdmin() {
   };
 
 
-  // =========================
-  // MỞ FORM SỬA
-  // =========================
+  // =====================================================
+  // MỞ FORM SỬA PHIM
+  // =====================================================
 
   const openEditForm = (movie) => {
 
@@ -237,27 +291,29 @@ function MovieAdmin() {
       ageRating:
         movie.ageRating || "T13",
 
-      /*
-        Giữ nguyên PosterUrl từ SQL
-        để khi lưu không thay đổi dữ liệu
-      */
+      // Giữ PosterUrl hiện tại
       posterUrl:
         movie.posterUrl || "",
+
+      // Chưa chọn poster mới
+      posterFile:
+        null,
 
       trailerUrl:
         movie.trailerUrl || "",
 
       status:
-        movie.status || "ComingSoon",
+        movie.status ||
+        "ComingSoon",
     });
 
     setShowForm(true);
   };
 
 
-  // =========================
-  // THAY ĐỔI FORM
-  // =========================
+  // =====================================================
+  // THAY ĐỔI INPUT
+  // =====================================================
 
   const handleFormChange = (e) => {
 
@@ -273,20 +329,40 @@ function MovieAdmin() {
   };
 
 
-  // =========================
+  // =====================================================
+  // CHỌN POSTER
+  // =====================================================
+
+  const handlePosterChange = (e) => {
+
+    const file =
+      e.target.files?.[0] || null;
+
+    setForm((prev) => ({
+      ...prev,
+      posterFile: file,
+    }));
+  };
+
+
+  // =====================================================
   // THÊM / SỬA PHIM
-  // =========================
+  // =====================================================
 
   const handleSave = async (e) => {
 
     e.preventDefault();
 
 
-    // Kiểm tra tên phim
+    // ===================================================
+    // KIỂM TRA TÊN
+    // ===================================================
 
     if (!form.title.trim()) {
 
-      alert(
+      showNotification(
+        "warning",
+        "Thiếu thông tin",
         "Vui lòng nhập tên phim!"
       );
 
@@ -294,14 +370,18 @@ function MovieAdmin() {
     }
 
 
-    // Kiểm tra thời lượng
+    // ===================================================
+    // KIỂM TRA THỜI LƯỢNG
+    // ===================================================
 
     if (
       !form.duration ||
       Number(form.duration) <= 0
     ) {
 
-      alert(
+      showNotification(
+        "warning",
+        "Dữ liệu không hợp lệ",
         "Vui lòng nhập thời lượng phim hợp lệ!"
       );
 
@@ -309,56 +389,91 @@ function MovieAdmin() {
     }
 
 
-    // =========================
-    // DỮ LIỆU GỬI API
-    // =========================
+    // ===================================================
+    // TẠO FORMDATA
+    // ===================================================
 
-    const movieData = {
+    const formData =
+      new FormData();
 
-      title:
-        form.title.trim(),
 
-      description:
-        form.description.trim() ||
-        null,
+    formData.append(
+      "Title",
+      form.title.trim()
+    );
 
-      genre:
-        form.genre.trim() ||
-        null,
 
-      duration:
-        Number(form.duration),
+    formData.append(
+      "Description",
+      form.description.trim()
+    );
 
-      releaseDate:
-        form.releaseDate ||
-        null,
 
-      director:
-        form.director.trim() ||
-        null,
+    formData.append(
+      "Genre",
+      form.genre.trim()
+    );
 
-      ageRating:
-        form.ageRating ||
-        null,
 
-      /*
-        Lưu đúng PosterUrl trong SQL
-        Ví dụ:
-        /assets/bat-tien.jpeg
-      */
-      posterUrl:
-        form.posterUrl.trim() ||
-        null,
+    formData.append(
+      "Duration",
+      String(
+        Number(form.duration)
+      )
+    );
 
-      trailerUrl:
-        form.trailerUrl.trim() ||
-        null,
 
-      status:
-        form.status ||
-        "ComingSoon",
-    };
+    if (form.releaseDate) {
 
+      formData.append(
+        "ReleaseDate",
+        form.releaseDate
+      );
+
+    }
+
+
+    formData.append(
+      "Director",
+      form.director.trim()
+    );
+
+
+    formData.append(
+      "AgeRating",
+      form.ageRating
+    );
+
+
+    formData.append(
+      "TrailerUrl",
+      form.trailerUrl.trim()
+    );
+
+
+    formData.append(
+      "Status",
+      form.status
+    );
+
+
+    // ===================================================
+    // POSTER MỚI
+    // ===================================================
+
+    if (form.posterFile) {
+
+      formData.append(
+        "PosterFile",
+        form.posterFile
+      );
+
+    }
+
+
+    // ===================================================
+    // GỌI API
+    // ===================================================
 
     try {
 
@@ -367,59 +482,45 @@ function MovieAdmin() {
       let response;
 
 
-      // =========================
-      // SỬA PHIM
-      // =========================
+      // =================================================
+      // CẬP NHẬT
+      // =================================================
 
       if (editingMovie) {
 
-        response = await fetch(
-          `${API_URL}/${editingMovie.movieId}`,
-          {
-            method: "PUT",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
-
-            body: JSON.stringify(
-              movieData
-            ),
-          }
-        );
+        response =
+          await fetch(
+            `${API_URL}/${editingMovie.movieId}`,
+            {
+              method: "PUT",
+              body: formData,
+            }
+          );
 
       }
 
 
-      // =========================
-      // THÊM PHIM
-      // =========================
+      // =================================================
+      // THÊM
+      // =================================================
 
       else {
 
-        response = await fetch(
-          API_URL,
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
-
-            body: JSON.stringify(
-              movieData
-            ),
-          }
-        );
+        response =
+          await fetch(
+            API_URL,
+            {
+              method: "POST",
+              body: formData,
+            }
+          );
 
       }
 
 
-      // =========================
-      // KIỂM TRA RESPONSE
-      // =========================
+      // =================================================
+      // XỬ LÝ RESPONSE
+      // =================================================
 
       if (!response.ok) {
 
@@ -445,16 +546,24 @@ function MovieAdmin() {
       }
 
 
-      // =========================
-      // LOAD LẠI TỪ SQL
-      // =========================
+      // =================================================
+      // LOAD LẠI DỮ LIỆU TỪ SQL
+      // =================================================
 
       await loadMovies();
 
 
-      // =========================
+      // =================================================
+      // LƯU THÔNG TIN TRƯỚC KHI RESET
+      // =================================================
+
+      const wasEditing =
+        Boolean(editingMovie);
+
+
+      // =================================================
       // ĐÓNG FORM
-      // =========================
+      // =================================================
 
       setShowForm(false);
 
@@ -465,11 +574,24 @@ function MovieAdmin() {
       });
 
 
-      alert(
-        editingMovie
-          ? "Cập nhật phim thành công!"
-          : "Thêm phim thành công!"
+      // =================================================
+      // THÔNG BÁO THÀNH CÔNG
+      // =================================================
+
+      showNotification(
+
+        "success",
+
+        wasEditing
+          ? "Cập nhật thành công"
+          : "Thêm phim thành công",
+
+        wasEditing
+          ? "Thông tin phim đã được cập nhật."
+          : "Phim mới đã được thêm vào hệ thống."
+
       );
+
 
     } catch (error) {
 
@@ -478,10 +600,13 @@ function MovieAdmin() {
         error
       );
 
-      alert(
+      showNotification(
+        "error",
+        "Thao tác thất bại",
         error.message ||
-        "Không thể lưu phim"
+          "Không thể lưu phim"
       );
+
 
     } finally {
 
@@ -491,9 +616,9 @@ function MovieAdmin() {
   };
 
 
-  // =========================
+  // =====================================================
   // XÓA PHIM
-  // =========================
+  // =====================================================
 
   const handleDelete = async (id) => {
 
@@ -507,6 +632,10 @@ function MovieAdmin() {
       return;
     }
 
+
+    // ===================================================
+    // XÁC NHẬN XÓA
+    // ===================================================
 
     const confirmDelete =
       window.confirm(
@@ -528,6 +657,10 @@ function MovieAdmin() {
           }
         );
 
+
+      // =================================================
+      // KIỂM TRA
+      // =================================================
 
       if (!response.ok) {
 
@@ -553,14 +686,23 @@ function MovieAdmin() {
       }
 
 
-      // Load lại từ SQL
+      // =================================================
+      // LOAD LẠI SQL
+      // =================================================
 
       await loadMovies();
 
 
-      alert(
-        "Xóa phim thành công!"
+      // =================================================
+      // THÔNG BÁO
+      // =================================================
+
+      showNotification(
+        "success",
+        "Xóa phim thành công",
+        `Phim "${movie.title}" đã được xóa khỏi hệ thống.`
       );
+
 
     } catch (error) {
 
@@ -569,17 +711,20 @@ function MovieAdmin() {
         error
       );
 
-      alert(
+      showNotification(
+        "error",
+        "Xóa phim thất bại",
         error.message ||
-        "Không thể xóa phim"
+          "Không thể xóa phim"
       );
+
     }
   };
 
 
-  // =========================
+  // =====================================================
   // TÌM KIẾM
-  // =========================
+  // =====================================================
 
   const filteredMovies =
     movies.filter((movie) => {
@@ -610,13 +755,14 @@ function MovieAdmin() {
         movie.director
           ?.toLowerCase()
           .includes(keyword)
+
       );
     });
 
 
-  // =========================
+  // =====================================================
   // FORMAT NGÀY
-  // =========================
+  // =====================================================
 
   const formatDate = (date) => {
 
@@ -632,7 +778,9 @@ function MovieAdmin() {
         d.getTime()
       )
     ) {
+
       return date;
+
     }
 
     return d.toLocaleDateString(
@@ -641,9 +789,9 @@ function MovieAdmin() {
   };
 
 
-  // =========================
+  // =====================================================
   // TRẠNG THÁI
-  // =========================
+  // =====================================================
 
   const getStatusText =
     (status) => {
@@ -652,20 +800,27 @@ function MovieAdmin() {
         status ===
         "NowShowing"
       ) {
+
         return "Đang chiếu";
+
       }
 
       if (
         status ===
         "ComingSoon"
       ) {
+
         return "Sắp chiếu";
+
       }
 
       if (
-        status === "Ended"
+        status ===
+        "Ended"
       ) {
+
         return "Đã kết thúc";
+
       }
 
       return (
@@ -675,13 +830,18 @@ function MovieAdmin() {
     };
 
 
+  // =====================================================
+  // RENDER
+  // =====================================================
+
   return (
+
     <div className="movie-admin">
 
 
-      {/* =========================
+      {/* =================================================
           HEADER
-      ========================= */}
+      ================================================= */}
 
       <div className="movie-admin-header">
 
@@ -701,9 +861,7 @@ function MovieAdmin() {
         <button
           type="button"
           className="add-movie-button"
-          onClick={
-            openAddForm
-          }
+          onClick={openAddForm}
         >
 
           <FaPlus />
@@ -715,9 +873,9 @@ function MovieAdmin() {
       </div>
 
 
-      {/* =========================
+      {/* =================================================
           TOOLBAR
-      ========================= */}
+      ================================================= */}
 
       <div className="movie-toolbar">
 
@@ -752,9 +910,9 @@ function MovieAdmin() {
       </div>
 
 
-      {/* =========================
+      {/* =================================================
           TABLE
-      ========================= */}
+      ================================================= */}
 
       <div className="movie-table-container">
 
@@ -803,7 +961,9 @@ function MovieAdmin() {
 
           <tbody>
 
-            {/* LOADING */}
+            {/* =================================================
+                LOADING
+            ================================================= */}
 
             {loading ? (
 
@@ -813,15 +973,14 @@ function MovieAdmin() {
                   colSpan="8"
                   className="movie-empty"
                 >
+
                   Đang tải dữ liệu phim...
+
                 </td>
 
               </tr>
 
             ) : filteredMovies.length > 0 ? (
-
-
-              /* DANH SÁCH PHIM */
 
               filteredMovies.map(
                 (movie, index) => (
@@ -832,6 +991,7 @@ function MovieAdmin() {
                     }
                   >
 
+
                     {/* STT */}
 
                     <td>
@@ -839,7 +999,7 @@ function MovieAdmin() {
                     </td>
 
 
-                    {/* TÊN PHIM + POSTER */}
+                    {/* TÊN + POSTER */}
 
                     <td>
 
@@ -850,12 +1010,24 @@ function MovieAdmin() {
                           {movie.posterUrl ? (
 
                             <img
-                              src={getPosterUrl(
-                                movie.posterUrl
-                              )}
+                              src={
+                                getPosterUrl(
+                                  movie.posterUrl
+                                )
+                              }
                               alt={
                                 movie.title
                               }
+
+                              onError={(
+                                e
+                              ) => {
+
+                                e.currentTarget.style.display =
+                                  "none";
+
+                              }}
+
                             />
 
                           ) : (
@@ -897,7 +1069,7 @@ function MovieAdmin() {
                     </td>
 
 
-                    {/* NGÀY CHIẾU */}
+                    {/* KHỞI CHIẾU */}
 
                     <td>
 
@@ -934,10 +1106,14 @@ function MovieAdmin() {
                         className={`status-badge ${
                           movie.status ===
                           "NowShowing"
+
                             ? "showing"
+
                             : movie.status ===
                               "Ended"
+
                               ? "ended"
+
                               : "coming"
                         }`}
                       >
@@ -995,7 +1171,6 @@ function MovieAdmin() {
 
                         </button>
 
-
                       </div>
 
                     </td>
@@ -1003,13 +1178,9 @@ function MovieAdmin() {
                   </tr>
 
                 )
-
               )
 
             ) : (
-
-
-              /* KHÔNG CÓ PHIM */
 
               <tr>
 
@@ -1017,7 +1188,9 @@ function MovieAdmin() {
                   colSpan="8"
                   className="movie-empty"
                 >
+
                   Không có phim trong cơ sở dữ liệu.
+
                 </td>
 
               </tr>
@@ -1031,9 +1204,9 @@ function MovieAdmin() {
       </div>
 
 
-      {/* =========================
+      {/* =================================================
           FORM THÊM / SỬA
-      ========================= */}
+      ================================================= */}
 
       {showForm && (
 
@@ -1042,7 +1215,9 @@ function MovieAdmin() {
           <div className="movie-modal">
 
 
-            {/* HEADER FORM */}
+            {/* =================================================
+                HEADER FORM
+            ================================================= */}
 
             <div className="movie-modal-header">
 
@@ -1070,9 +1245,11 @@ function MovieAdmin() {
 
                   setShowForm(false);
 
-                  setEditingMovie(
-                    null
-                  );
+                  setEditingMovie(null);
+
+                  setForm({
+                    ...emptyForm,
+                  });
 
                 }}
               >
@@ -1084,7 +1261,9 @@ function MovieAdmin() {
             </div>
 
 
-            {/* FORM */}
+            {/* =================================================
+                FORM
+            ================================================= */}
 
             <form
               onSubmit={
@@ -1095,9 +1274,9 @@ function MovieAdmin() {
               <div className="movie-form-grid">
 
 
-                {/* =========================
+                {/* =================================================
                     TÊN PHIM
-                ========================= */}
+                ================================================= */}
 
                 <div className="movie-form-field full">
 
@@ -1120,9 +1299,9 @@ function MovieAdmin() {
                 </div>
 
 
-                {/* =========================
+                {/* =================================================
                     MÔ TẢ
-                ========================= */}
+                ================================================= */}
 
                 <div className="movie-form-field full">
 
@@ -1145,9 +1324,9 @@ function MovieAdmin() {
                 </div>
 
 
-                {/* =========================
+                {/* =================================================
                     THỂ LOẠI
-                ========================= */}
+                ================================================= */}
 
                 <div className="movie-form-field">
 
@@ -1170,9 +1349,9 @@ function MovieAdmin() {
                 </div>
 
 
-                {/* =========================
+                {/* =================================================
                     THỜI LƯỢNG
-                ========================= */}
+                ================================================= */}
 
                 <div className="movie-form-field">
 
@@ -1196,9 +1375,9 @@ function MovieAdmin() {
                 </div>
 
 
-                {/* =========================
+                {/* =================================================
                     NGÀY KHỞI CHIẾU
-                ========================= */}
+                ================================================= */}
 
                 <div className="movie-form-field">
 
@@ -1220,9 +1399,9 @@ function MovieAdmin() {
                 </div>
 
 
-                {/* =========================
+                {/* =================================================
                     ĐẠO DIỄN
-                ========================= */}
+                ================================================= */}
 
                 <div className="movie-form-field">
 
@@ -1245,9 +1424,9 @@ function MovieAdmin() {
                 </div>
 
 
-                {/* =========================
+                {/* =================================================
                     ĐỘ TUỔI
-                ========================= */}
+                ================================================= */}
 
                 <div className="movie-form-field">
 
@@ -1290,9 +1469,9 @@ function MovieAdmin() {
                 </div>
 
 
-                {/* =========================
+                {/* =================================================
                     TRẠNG THÁI
-                ========================= */}
+                ================================================= */}
 
                 <div className="movie-form-field">
 
@@ -1327,34 +1506,137 @@ function MovieAdmin() {
                 </div>
 
 
-                {/* =========================
-                    POSTER URL
-                ========================= */}
+                {/* =================================================
+                    POSTER
+                ================================================= */}
 
                 <div className="movie-form-field full">
 
                   <label>
-                    Poster URL
+                    Poster
                   </label>
 
-                  <input
-                    type="text"
-                    name="posterUrl"
-                    value={
-                      form.posterUrl
-                    }
-                    onChange={
-                      handleFormChange
-                    }
-                    placeholder="/assets/bat-tien.jpeg"
-                  />
+
+                  <div className="poster-upload">
+
+                    <label
+                      htmlFor="posterFile"
+                      className="poster-upload-button"
+                    >
+
+                      <FaFilm />
+
+                      <span>
+                        Chọn poster
+                      </span>
+
+                    </label>
+
+
+                    <input
+                      id="posterFile"
+                      type="file"
+                      name="posterFile"
+                      accept="image/*"
+                      className="poster-file-input"
+
+                      onChange={
+                        handlePosterChange
+                      }
+                    />
+
+
+                    <div className="poster-file-name">
+
+                      {form.posterFile
+                        ? form.posterFile.name
+                        : "Chưa chọn ảnh"}
+
+                    </div>
+
+                  </div>
+
+
+                  {/* =================================================
+                      PREVIEW POSTER MỚI
+                  ================================================= */}
+
+                  {form.posterFile && (
+
+                    <div className="poster-preview">
+
+                      <img
+                        src={
+                          URL.createObjectURL(
+                            form.posterFile
+                          )
+                        }
+                        alt="Poster preview"
+                      />
+
+
+                      <div className="poster-preview-info">
+
+                        <strong>
+                          Poster đã chọn
+                        </strong>
+
+                        <span>
+                          {
+                            form.posterFile
+                              .name
+                          }
+                        </span>
+
+                      </div>
+
+                    </div>
+
+                  )}
+
+
+                  {/* =================================================
+                      POSTER HIỆN TẠI
+                  ================================================= */}
+
+                  {!form.posterFile &&
+                    editingMovie &&
+                    form.posterUrl && (
+
+                      <div className="poster-preview">
+
+                        <img
+                          src={
+                            getPosterUrl(
+                              form.posterUrl
+                            )
+                          }
+                          alt="Poster hiện tại"
+                        />
+
+
+                        <div className="poster-preview-info">
+
+                          <strong>
+                            Poster hiện tại
+                          </strong>
+
+                          <span>
+                            Không chọn ảnh mới sẽ giữ poster này
+                          </span>
+
+                        </div>
+
+                      </div>
+
+                    )}
 
                 </div>
 
 
-                {/* =========================
+                {/* =================================================
                     TRAILER URL
-                ========================= */}
+                ================================================= */}
 
                 <div className="movie-form-field full">
 
@@ -1380,9 +1662,9 @@ function MovieAdmin() {
               </div>
 
 
-              {/* =========================
+              {/* =================================================
                   BUTTON FORM
-              ========================= */}
+              ================================================= */}
 
               <div className="movie-form-actions">
 
@@ -1392,6 +1674,7 @@ function MovieAdmin() {
                 <button
                   type="button"
                   className="cancel-movie"
+
                   onClick={() => {
 
                     setShowForm(false);
@@ -1400,12 +1683,19 @@ function MovieAdmin() {
                       null
                     );
 
+                    setForm({
+                      ...emptyForm,
+                    });
+
                   }}
+
                   disabled={
                     saving
                   }
                 >
+
                   Hủy
+
                 </button>
 
 
@@ -1427,7 +1717,6 @@ function MovieAdmin() {
 
                 </button>
 
-
               </div>
 
             </form>
@@ -1438,7 +1727,35 @@ function MovieAdmin() {
 
       )}
 
+
+      {/* =================================================
+          NOTIFICATION POPUP
+      ================================================= */}
+
+      <NotificationPopup
+        show={
+          notification.show
+        }
+
+        type={
+          notification.type
+        }
+
+        title={
+          notification.title
+        }
+
+        message={
+          notification.message
+        }
+
+        onClose={
+          closeNotification
+        }
+      />
+
     </div>
+
   );
 }
 
