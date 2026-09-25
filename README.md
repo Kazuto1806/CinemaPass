@@ -1,7 +1,7 @@
 cd D:\HeThongQuanLyvexemphim\CinemaPass\my-react-app
 npm run dev
 
-cd D:\DoAn\Cinema\my-react-app
+cd D:\DoAn\CinemaPass\my-react-app
 npm run dev
 
 update code lên github:
