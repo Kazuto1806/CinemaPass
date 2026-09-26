@@ -1,0 +1,483 @@
+.movie-detail-page {
+  min-height: 100vh;
+
+  padding: 45px 0 90px;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(88, 52, 180, 0.2),
+      transparent 45%
+    ),
+    linear-gradient(
+      180deg,
+      #0d1738 0%,
+      #09142e 55%,
+      #071026 100%
+    );
+
+  color: white;
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+}
+
+.movie-detail-container {
+  width: min(1180px, 90%);
+  margin: 0 auto;
+}
+
+
+/* =========================
+   BACK
+========================= */
+
+.movie-detail-back {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-bottom: 25px;
+
+  border: none;
+
+  background: transparent;
+
+  color: #9da9c2;
+
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+.movie-detail-back:hover {
+  color: white;
+}
+
+
+/* =========================
+   CARD
+========================= */
+
+.movie-detail-card {
+  display: grid;
+
+  grid-template-columns:
+    360px 1fr;
+
+  gap: 40px;
+
+  padding: 30px;
+
+  border:
+    1px solid
+    rgba(78, 112, 210, 0.55);
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #142957,
+      #0a1838
+    );
+
+  box-shadow:
+    0 18px 50px
+    rgba(0, 0, 0, 0.3);
+}
+
+
+/* =========================
+   POSTER
+========================= */
+
+.movie-detail-poster {
+  width: 100%;
+  height: 530px;
+
+  overflow: hidden;
+
+  border-radius: 13px;
+
+  background: #08132c;
+
+  box-shadow:
+    0 15px 35px
+    rgba(0, 0, 0, 0.35);
+}
+
+.movie-detail-poster img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+.movie-detail-poster-empty {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  color: #697797;
+}
+
+.movie-detail-poster-empty svg {
+  font-size: 55px;
+}
+
+.movie-detail-poster-empty span {
+  font-size: 13px;
+}
+
+
+/* =========================
+   INFO
+========================= */
+
+.movie-detail-info {
+  padding: 8px 0;
+}
+
+.movie-detail-status {
+  display: inline-block;
+
+  padding: 7px 11px;
+
+  margin-bottom: 15px;
+
+  border-radius: 20px;
+
+  color: white;
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.movie-detail-status.now-showing {
+  background: #7335e8;
+}
+
+.movie-detail-status.coming-soon {
+  background: #a23aff;
+}
+
+.movie-detail-info h1 {
+  margin: 0 0 8px;
+
+  color: white;
+
+  font-size: 40px;
+  font-weight: 700;
+
+  line-height: 1.15;
+}
+
+.movie-detail-genre {
+  margin: 0 0 27px;
+
+  color: #c35cff;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+/* =========================
+   META
+========================= */
+
+.movie-detail-meta {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 14px;
+
+  margin-bottom: 30px;
+}
+
+.movie-detail-meta > div {
+  min-height: 65px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 12px;
+
+  border:
+    1px solid
+    rgba(87, 119, 204, 0.3);
+
+  border-radius: 9px;
+
+  background:
+    rgba(5, 17, 40, 0.55);
+}
+
+.movie-detail-meta > div > svg {
+  flex-shrink: 0;
+
+  color: #a75aff;
+
+  font-size: 18px;
+}
+
+.movie-detail-meta span {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  color: #e0e5ef;
+
+  font-size: 12px;
+}
+
+.movie-detail-meta small {
+  color: #77849f;
+
+  font-size: 10px;
+}
+
+
+/* =========================
+   DESCRIPTION
+========================= */
+
+.movie-detail-description {
+  padding-top: 24px;
+
+  border-top:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+}
+
+.movie-detail-description h2 {
+  margin: 0 0 12px;
+
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.movie-detail-description p {
+  margin: 0;
+
+  color: #a9b5cc;
+
+  font-size: 13px;
+
+  line-height: 1.8;
+}
+
+
+/* =========================
+   ACTIONS
+========================= */
+
+.movie-detail-actions {
+  display: flex;
+
+  gap: 12px;
+
+  margin-top: 30px;
+}
+
+.movie-trailer-button,
+.movie-ticket-button {
+  min-width: 170px;
+  height: 46px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+.movie-trailer-button {
+  background:
+    rgba(255, 255, 255, 0.08);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.13);
+
+  color: white;
+}
+
+.movie-trailer-button:hover {
+  background:
+    rgba(255, 255, 255, 0.14);
+}
+
+.movie-ticket-button {
+  background:
+    linear-gradient(
+      135deg,
+      #7130e7,
+      #a43aff
+    );
+
+  color: white;
+}
+
+.movie-ticket-button:hover {
+  filter: brightness(1.1);
+}
+
+
+/* =========================
+   MESSAGE
+========================= */
+
+.movie-detail-message {
+  width: min(700px, 90%);
+
+  min-height: 400px;
+
+  margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.movie-detail-message > svg {
+  margin-bottom: 17px;
+
+  color: #8d4cf0;
+
+  font-size: 50px;
+}
+
+.movie-detail-message h2 {
+  margin: 0 0 8px;
+
+  font-size: 21px;
+}
+
+.movie-detail-message p {
+  margin: 0;
+
+  color: #8995ae;
+
+  font-size: 13px;
+}
+
+.movie-detail-message.error > svg {
+  color: #ff5d7d;
+}
+
+.movie-detail-message button {
+  margin-top: 20px;
+
+  height: 43px;
+
+  padding: 0 20px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #7130e7,
+      #a43aff
+    );
+
+  color: white;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+  .movie-detail-card {
+    grid-template-columns:
+      280px 1fr;
+
+    gap: 25px;
+
+    padding: 22px;
+  }
+
+  .movie-detail-poster {
+    height: 430px;
+  }
+
+  .movie-detail-info h1 {
+    font-size: 31px;
+  }
+}
+
+@media (max-width: 700px) {
+  .movie-detail-card {
+    grid-template-columns: 1fr;
+  }
+
+  .movie-detail-poster {
+    height: 500px;
+  }
+
+  .movie-detail-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .movie-detail-actions {
+    flex-direction: column;
+  }
+
+  .movie-trailer-button,
+  .movie-ticket-button {
+    width: 100%;
+  }
+}

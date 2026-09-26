@@ -7,6 +7,8 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Food from "./pages/Food";
 import Account from "./pages/Account";
+import MovieSearch from "./pages/MovieSearch";
+import MovieDetail from "./pages/MovieDetail";
 
 import AdminLayout from "./pages/Admin/AdminLayout";
 import Dashboard from "./pages/Admin/Dashboard";
@@ -25,30 +27,46 @@ function App() {
             USER
         ========================= */}
 
-        {/* Trang chủ */}
         <Route
           path="/"
           element={<Home />}
         />
 
-        {/* Đăng nhập */}
         <Route
           path="/login"
           element={<Login />}
         />
 
-        {/* Đặt bắp nước */}
         <Route
           path="/food"
           element={<Food />}
         />
 
-        {/* Tài khoản */}
         <Route
           path="/account"
           element={<Account />}
         />
 
+        {/* =========================
+            TÌM KIẾM PHIM
+            /search
+            /search?keyword=...
+        ========================= */}
+
+        <Route
+          path="/search"
+          element={<MovieSearch />}
+        />
+
+        {/* =========================
+            CHI TIẾT PHIM
+            /movie/1
+        ========================= */}
+
+        <Route
+          path="/movie/:id"
+          element={<MovieDetail />}
+        />
 
         {/* =========================
             ADMIN
@@ -59,50 +77,50 @@ function App() {
           element={<AdminLayout />}
         >
 
-          {/* /admin */}
           <Route
             index
             element={<Dashboard />}
           />
 
-          {/* /admin/movies */}
           <Route
             path="movies"
             element={<MovieAdmin />}
           />
 
-          {/* /admin/users */}
           <Route
             path="users"
             element={
               <div>
-                <h1>Quản lý người dùng</h1>
+                <h1>
+                  Quản lý người dùng
+                </h1>
               </div>
             }
           />
 
-          {/* /admin/tickets */}
           <Route
             path="tickets"
             element={
               <div>
-                <h1>Quản lý vé</h1>
+                <h1>
+                  Quản lý vé
+                </h1>
               </div>
             }
           />
 
-          {/* /admin/food */}
           <Route
             path="food"
             element={
               <div>
-                <h1>Quản lý bắp nước</h1>
+                <h1>
+                  Quản lý bắp nước
+                </h1>
               </div>
             }
           />
 
         </Route>
-
 
         {/* =========================
             KHÔNG TÌM THẤY TRANG
