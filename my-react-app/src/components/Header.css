@@ -73,15 +73,22 @@
   border: none;
   border-radius: 4px;
   padding: 0 17px;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   gap: 8px;
+
   color: white;
+
   font-size: 14px;
   font-weight: 700;
+
   cursor: pointer;
+
   white-space: nowrap;
+
   transition: 0.2s;
 }
 
@@ -90,7 +97,9 @@
 }
 
 
-/* ĐẶT VÉ */
+/* =========================
+   ĐẶT VÉ
+========================= */
 
 .booking-btn {
   background: linear-gradient(
@@ -101,7 +110,9 @@
 }
 
 
-/* BẮP NƯỚC */
+/* =========================
+   BẮP NƯỚC
+========================= */
 
 .food-btn {
   background: #6936ad;
@@ -111,7 +122,8 @@
   transform: translateY(-2px);
 
   box-shadow:
-    0 5px 15px rgba(105, 54, 173, 0.3);
+    0 5px 15px
+    rgba(105, 54, 173, 0.3);
 }
 
 
@@ -122,25 +134,43 @@
 .search-box {
   width: 300px;
   height: 46px;
+
   margin-left: auto;
+
   display: flex;
   align-items: center;
+
   position: relative;
+
   background: white;
+
   border-radius: 25px;
+
   box-sizing: border-box;
+
+  overflow: hidden;
 }
+
+
+/* Ô nhập */
 
 .search-box input {
   width: 100%;
   height: 100%;
-  padding: 0 45px 0 18px;
+
+  padding: 0 48px 0 18px;
+
   border: none;
   outline: none;
+
   background: transparent;
+
   border-radius: 25px;
+
   color: #222;
+
   font-size: 14px;
+
   box-sizing: border-box;
 }
 
@@ -148,11 +178,42 @@
   color: #888;
 }
 
-.search-icon {
+
+/* =========================
+   NÚT KÍNH LÚP
+========================= */
+
+.search-submit {
   position: absolute;
-  right: 16px;
+
+  right: 0;
+  top: 0;
+
+  width: 48px;
+  height: 46px;
+
+  border: none;
+
+  background: transparent;
+
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+.search-submit:hover {
+  background: rgba(23, 35, 59, 0.08);
+}
+
+.search-icon {
   color: #17233b;
+
   font-size: 18px;
+
   pointer-events: none;
 }
 
@@ -164,27 +225,40 @@
 .login {
   display: flex;
   align-items: center;
+
   gap: 8px;
+
   color: white;
+
   text-decoration: none;
+
   font-size: 15px;
   font-weight: 600;
+
   white-space: nowrap;
+
   cursor: pointer;
+
   padding: 8px 5px;
+
   border-radius: 5px;
+
   transition: 0.2s;
 }
 
 .login svg {
   font-size: 29px;
+
   color: #6936ad;
 }
 
 .login:hover {
   color: #b77cff;
-  background: rgba(255, 255, 255, 0.05);
+
+  background:
+    rgba(255, 255, 255, 0.05);
 }
+
 
 /* =========================
    USER MENU
@@ -192,11 +266,14 @@
 
 .login-wrapper {
   position: relative;
+
   display: flex;
   align-items: center;
 }
 
+
 /* Menu */
+
 .user-menu {
   position: absolute;
 
@@ -211,20 +288,27 @@
 
   padding: 8px 0;
 
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  box-shadow:
+    0 8px 25px
+    rgba(0, 0, 0, 0.25);
 
   display: none;
 
   z-index: 9999;
 }
 
+
 /* Hover vào cả vùng login + menu */
+
 .login-wrapper:hover .user-menu {
   display: flex;
+
   flex-direction: column;
 }
 
+
 /* Link và button */
+
 .user-menu a,
 .user-menu button {
   width: 100%;
@@ -234,6 +318,7 @@
   padding: 12px 16px;
 
   border: none;
+
   background: transparent;
 
   color: #333;
@@ -247,19 +332,25 @@
   cursor: pointer;
 }
 
+
 /* Hover từng item */
+
 .user-menu a:hover,
 .user-menu button:hover {
   background: #f2f2f2;
 }
+
+
 /* =========================
    LANGUAGE
 ========================= */
 
 .language-wrapper {
   position: relative;
+
   display: flex;
   align-items: center;
+
   flex-shrink: 0;
 }
 
@@ -268,6 +359,7 @@
 
   display: flex;
   align-items: center;
+
   gap: 8px;
 
   padding: 0 8px;
@@ -276,17 +368,20 @@
   outline: none;
 
   background: transparent;
+
   color: white;
 
   font-size: 14px;
   font-weight: 600;
 
   cursor: pointer;
+
   border-radius: 5px;
 }
 
 .language:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background:
+    rgba(255, 255, 255, 0.08);
 }
 
 .language svg {
@@ -309,11 +404,13 @@
   display: block;
 
   box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.35);
+    0 1px 3px
+    rgba(0, 0, 0, 0.35);
 }
 
 .language-code {
   min-width: 24px;
+
   text-align: center;
 }
 
@@ -337,7 +434,8 @@
   border-radius: 8px;
 
   box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.35);
+    0 10px 30px
+    rgba(0, 0, 0, 0.35);
 
   overflow: hidden;
 
@@ -376,6 +474,7 @@
 
 .language-menu button:hover {
   background: #f2f2f2;
+
   color: #6936ad;
 }
 
@@ -384,6 +483,7 @@
 
 .language-menu button.language-active {
   background: #eee8f7;
+
   color: #6936ad;
 }
 
@@ -401,7 +501,8 @@
   flex-shrink: 0;
 
   box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.25);
+    0 1px 3px
+    rgba(0, 0, 0, 0.25);
 }
 
 
@@ -425,6 +526,7 @@
 
   .header-btn {
     padding: 0 10px;
+
     font-size: 12px;
   }
 
@@ -442,6 +544,7 @@
 
   .header-top {
     flex-wrap: wrap;
+
     padding: 12px 0;
   }
 
@@ -455,8 +558,11 @@
 
   .search-box {
     order: 3;
+
     width: 100%;
+
     margin-left: 0;
+
     margin-top: 5px;
   }
 
@@ -486,7 +592,9 @@
 
   .header-btn {
     height: 36px;
+
     padding: 0 8px;
+
     font-size: 11px;
   }
 
@@ -509,5 +617,14 @@
   .flag-image {
     width: 25px;
     height: 17px;
+  }
+
+  .search-box {
+    height: 42px;
+  }
+
+  .search-submit {
+    height: 42px;
+    width: 44px;
   }
 }

@@ -21,8 +21,7 @@ function Header() {
     localStorage.getItem("userName") || ""
   );
 
-  // Role KHÔNG lấy từ localStorage
-  // Sẽ lấy trực tiếp từ Backend -> SQL Server
+  // Role lấy trực tiếp từ Backend -> SQL Server
   const [userRole, setUserRole] = useState("");
 
   const [loadingUser, setLoadingUser] = useState(false);
@@ -32,6 +31,12 @@ function Header() {
   // =========================
 
   const navigate = useNavigate();
+
+  // =========================
+  // SEARCH
+  // =========================
+
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   // =========================
   // LẤY USER TỪ DATABASE
@@ -55,7 +60,9 @@ function Header() {
       );
 
       if (!response.ok) {
-        throw new Error("Không thể lấy thông tin người dùng");
+        throw new Error(
+          "Không thể lấy thông tin người dùng"
+        );
       }
 
       const data = await response.json();
@@ -64,13 +71,27 @@ function Header() {
       setUserName(data.fullName || "");
       setUserRole(data.role || "");
 
-      // Chỉ lưu các thông tin hiển thị phiên đăng nhập
+      // Chỉ lưu thông tin hiển thị phiên đăng nhập
       // Role không lưu vào localStorage
-      localStorage.setItem("userName", data.fullName || "");
-      localStorage.setItem("userEmail", data.email || "");
-      localStorage.setItem("phone", data.phone || "");
+      localStorage.setItem(
+        "userName",
+        data.fullName || ""
+      );
+
+      localStorage.setItem(
+        "userEmail",
+        data.email || ""
+      );
+
+      localStorage.setItem(
+        "phone",
+        data.phone || ""
+      );
     } catch (error) {
-      console.error("Lỗi lấy thông tin user:", error);
+      console.error(
+        "Lỗi lấy thông tin user:",
+        error
+      );
 
       setUserRole("");
     } finally {
@@ -89,12 +110,26 @@ function Header() {
       loadUserFromDatabase();
     };
 
-    window.addEventListener("userLogin", updateUser);
-    window.addEventListener("userLogout", updateUser);
+    window.addEventListener(
+      "userLogin",
+      updateUser
+    );
+
+    window.addEventListener(
+      "userLogout",
+      updateUser
+    );
 
     return () => {
-      window.removeEventListener("userLogin", updateUser);
-      window.removeEventListener("userLogout", updateUser);
+      window.removeEventListener(
+        "userLogin",
+        updateUser
+      );
+
+      window.removeEventListener(
+        "userLogout",
+        updateUser
+      );
     };
   }, []);
 
@@ -106,7 +141,8 @@ function Header() {
     localStorage.getItem("language") || "VN"
   );
 
-  const [showLanguage, setShowLanguage] = useState(false);
+  const [showLanguage, setShowLanguage] =
+    useState(false);
 
   // =========================
   // THEO DÕI THAY ĐỔI NGÔN NGỮ
@@ -114,13 +150,21 @@ function Header() {
 
   useEffect(() => {
     const updateLanguage = () => {
-      setLanguage(localStorage.getItem("language") || "VN");
+      setLanguage(
+        localStorage.getItem("language") || "VN"
+      );
     };
 
-    window.addEventListener("languageChanged", updateLanguage);
+    window.addEventListener(
+      "languageChanged",
+      updateLanguage
+    );
 
     return () => {
-      window.removeEventListener("languageChanged", updateLanguage);
+      window.removeEventListener(
+        "languageChanged",
+        updateLanguage
+      );
     };
   }, []);
 
@@ -131,9 +175,14 @@ function Header() {
   const changeLanguage = (lang) => {
     setLanguage(lang);
 
-    localStorage.setItem("language", lang);
+    localStorage.setItem(
+      "language",
+      lang
+    );
 
-    window.dispatchEvent(new Event("languageChanged"));
+    window.dispatchEvent(
+      new Event("languageChanged")
+    );
 
     setShowLanguage(false);
   };
@@ -151,6 +200,26 @@ function Header() {
   };
 
   // =========================
+  // TÌM KIẾM PHIM
+  // =========================
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+
+    const keyword = searchKeyword.trim();
+
+    if (keyword) {
+      navigate(
+        `/search?keyword=${encodeURIComponent(
+          keyword
+        )}`
+      );
+    } else {
+      navigate("/search");
+    }
+  };
+
+  // =========================
   // ĐĂNG XUẤT
   // =========================
 
@@ -162,13 +231,15 @@ function Header() {
     localStorage.removeItem("phone");
     localStorage.removeItem("birthDate");
 
-    // Xóa luôn role cũ nếu trước đây đã từng lưu
+    // Xóa role cũ nếu trước đây từng lưu
     localStorage.removeItem("role");
 
     setUserName("");
     setUserRole("");
 
-    window.dispatchEvent(new Event("userLogout"));
+    window.dispatchEvent(
+      new Event("userLogout")
+    );
 
     navigate("/");
   };
@@ -184,7 +255,9 @@ function Header() {
     }
 
     // Admin lấy role từ Database
-    if (userRole.toLowerCase() === "admin") {
+    if (
+      userRole.toLowerCase() === "admin"
+    ) {
       return "/admin";
     }
 
@@ -194,6 +267,7 @@ function Header() {
 
   return (
     <header className="header">
+
       <div className="header-container">
 
         <div className="header-top">
@@ -202,7 +276,10 @@ function Header() {
               LOGO
           ========================= */}
 
-          <Link to="/" className="logo">
+          <Link
+            to="/"
+            className="logo"
+          >
             <img
               src={CinemaPass}
               alt="Cinema Pass"
@@ -220,7 +297,9 @@ function Header() {
             <button
               type="button"
               className="header-btn booking-btn"
-              onClick={() => navigate("/")}
+              onClick={() =>
+                navigate("/")
+              }
             >
               <FaTicketAlt />
 
@@ -236,7 +315,9 @@ function Header() {
             <button
               type="button"
               className="header-btn food-btn"
-              onClick={() => navigate("/food")}
+              onClick={() =>
+                navigate("/food")
+              }
             >
               <FaFilm />
 
@@ -253,10 +334,19 @@ function Header() {
               SEARCH
           ========================= */}
 
-          <div className="search-box">
+          <form
+            className="search-box"
+            onSubmit={handleSearch}
+          >
 
             <input
               type="text"
+              value={searchKeyword}
+              onChange={(e) =>
+                setSearchKeyword(
+                  e.target.value
+                )
+              }
               placeholder={
                 language === "VN"
                   ? "Tìm phim, rạp"
@@ -264,9 +354,15 @@ function Header() {
               }
             />
 
-            <FaSearch className="search-icon" />
+            <button
+              type="submit"
+              className="search-submit"
+              aria-label="Tìm kiếm"
+            >
+              <FaSearch className="search-icon" />
+            </button>
 
-          </div>
+          </form>
 
           {/* =========================
               LOGIN / USER
@@ -295,8 +391,8 @@ function Header() {
 
             {userName &&
               !loadingUser &&
-              userRole.toLowerCase() !== "admin" && (
-
+              userRole.toLowerCase() !==
+                "admin" && (
                 <div className="user-menu">
 
                   <Link to="/account">
@@ -329,7 +425,9 @@ function Header() {
               type="button"
               className="language"
               onClick={() =>
-                setShowLanguage(!showLanguage)
+                setShowLanguage(
+                  !showLanguage
+                )
               }
             >
 
@@ -418,6 +516,7 @@ function Header() {
         </div>
 
       </div>
+
     </header>
   );
 }
