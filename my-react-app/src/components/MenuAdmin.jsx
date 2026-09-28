@@ -5,6 +5,8 @@ import {
   FaTicketAlt,
   FaUtensils,
   FaSignOutAlt,
+  FaBuilding,
+  FaClock,
 } from "react-icons/fa";
 
 import { NavLink, useNavigate } from "react-router-dom";
@@ -40,6 +42,7 @@ function MenuAdmin() {
       {/* MENU */}
       <nav className="menu-admin-list">
 
+        {/* DASHBOARD */}
         <NavLink
           to="/admin"
           end
@@ -51,6 +54,7 @@ function MenuAdmin() {
           <span>Dashboard</span>
         </NavLink>
 
+        {/* QUẢN LÝ PHIM */}
         <NavLink
           to="/admin/movies"
           className={({ isActive }) =>
@@ -61,6 +65,29 @@ function MenuAdmin() {
           <span>Quản lý phim</span>
         </NavLink>
 
+        {/* QUẢN LÝ RẠP */}
+        <NavLink
+          to="/admin/cinemas"
+          className={({ isActive }) =>
+            `menu-admin-item ${isActive ? "active" : ""}`
+          }
+        >
+          <FaBuilding />
+          <span>Quản lý rạp</span>
+        </NavLink>
+
+        {/* QUẢN LÝ SUẤT CHIẾU */}
+        <NavLink
+          to="/admin/showtimes"
+          className={({ isActive }) =>
+            `menu-admin-item ${isActive ? "active" : ""}`
+          }
+        >
+          <FaClock />
+          <span>Quản lý suất chiếu</span>
+        </NavLink>
+
+        {/* QUẢN LÝ NGƯỜI DÙNG */}
         <NavLink
           to="/admin/users"
           className={({ isActive }) =>
@@ -71,6 +98,7 @@ function MenuAdmin() {
           <span>Quản lý người dùng</span>
         </NavLink>
 
+        {/* QUẢN LÝ VÉ */}
         <NavLink
           to="/admin/tickets"
           className={({ isActive }) =>
@@ -81,6 +109,7 @@ function MenuAdmin() {
           <span>Quản lý vé</span>
         </NavLink>
 
+        {/* QUẢN LÝ BẮP NƯỚC */}
         <NavLink
           to="/admin/food"
           className={({ isActive }) =>

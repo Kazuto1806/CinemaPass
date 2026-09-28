@@ -1,0 +1,678 @@
+/* =========================
+   FOOD ADMIN
+========================= */
+
+.food-admin {
+  width: 100%;
+  min-height: 100%;
+  padding: 30px;
+  box-sizing: border-box;
+  color: #ffffff;
+  background: transparent;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.food-admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.food-admin-header h1 {
+  margin: 0 0 8px;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.food-admin-header p {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.food-admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+.food-refresh-button,
+.food-add-button {
+  height: 42px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.food-refresh-button {
+  background: #263248;
+  color: #dbe3ef;
+}
+
+.food-refresh-button:hover {
+  background: #344158;
+}
+
+.food-refresh-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.food-add-button {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.food-add-button:hover {
+  background: #1d4ed8;
+}
+
+.food-refresh-icon {
+  font-size: 13px;
+}
+
+.spinning {
+  animation: food-spin 1s linear infinite;
+}
+
+@keyframes food-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================
+   TOOLBAR
+========================= */
+
+.food-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.food-search {
+  width: 420px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 0 14px;
+  box-sizing: border-box;
+
+  background: rgba(17, 28, 48, 0.35);
+  border: 1px solid #263248;
+  border-radius: 8px;
+
+  color: #8d99ae;
+}
+
+.food-search:focus-within {
+  border-color: #2563eb;
+}
+
+.food-search svg {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.food-search input {
+  width: 100%;
+  height: 100%;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+  color: #ffffff;
+
+  font-size: 14px;
+}
+
+.food-search input::placeholder {
+  color: #68758a;
+}
+
+.food-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.food-count svg {
+  color: #60a5fa;
+}
+
+/* =========================
+   TABLE
+========================= */
+
+.food-table-container {
+  width: 100%;
+  overflow-x: auto;
+
+  /* BỎ NỀN XÁM */
+  background: transparent;
+
+  /* Chỉ giữ đường viền */
+  border: 1px solid rgba(38, 50, 72, 0.7);
+  border-radius: 12px;
+}
+
+.food-table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+}
+
+/* Header bảng - không còn nền xám */
+
+.food-table thead {
+  background: transparent;
+}
+
+.food-table th {
+  padding: 15px 14px;
+
+  text-align: left;
+
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  border-bottom: 1px solid rgba(38, 50, 72, 0.7);
+}
+
+.food-table td {
+  padding: 14px;
+
+  border-bottom: 1px solid rgba(32, 45, 67, 0.65);
+
+  color: #dbe3ef;
+  font-size: 14px;
+
+  vertical-align: middle;
+}
+
+.food-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Hover nhẹ, không tạo mảng xám */
+
+.food-table tbody tr:hover {
+  background: rgba(37, 99, 235, 0.04);
+}
+
+/* =========================
+   IMAGE
+========================= */
+
+.food-image {
+  width: 60px;
+  height: 60px;
+
+  border-radius: 8px;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(32, 45, 67, 0.45);
+
+  color: #6b7a91;
+  font-size: 20px;
+}
+
+.food-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* =========================
+   FOOD INFO
+========================= */
+
+.food-name {
+  display: block;
+
+  max-width: 200px;
+
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.food-description {
+  display: block;
+
+  max-width: 230px;
+
+  color: #8d99ae;
+  line-height: 1.4;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.food-price {
+  color: #60a5fa;
+  white-space: nowrap;
+}
+
+.food-category {
+  display: inline-block;
+
+  padding: 5px 10px;
+
+  border-radius: 6px;
+
+  background: rgba(32, 45, 67, 0.5);
+
+  color: #cbd5e1;
+
+  font-size: 12px;
+}
+
+/* =========================
+   STATUS
+========================= */
+
+.food-status {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 5px 10px;
+
+  border-radius: 20px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.food-status.active {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+}
+
+.food-status.inactive {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+
+/* =========================
+   ACTIONS
+========================= */
+
+.food-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.food-edit-button,
+.food-delete-button {
+  width: 34px;
+  height: 34px;
+
+  border: none;
+  border-radius: 7px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.food-edit-button {
+  background: rgba(37, 99, 235, 0.15);
+  color: #60a5fa;
+}
+
+.food-edit-button:hover {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.food-delete-button {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+
+.food-delete-button:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+/* =========================
+   EMPTY / ERROR
+========================= */
+
+.food-empty {
+  height: 180px;
+
+  text-align: center !important;
+  vertical-align: middle !important;
+
+  color: #7f8da3 !important;
+}
+
+.food-error {
+  color: #f87171 !important;
+}
+
+/* =========================
+   FORM OVERLAY
+========================= */
+
+.food-form-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  box-sizing: border-box;
+
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* =========================
+   FORM MODAL
+========================= */
+
+.food-form-modal {
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  background: #111c30;
+
+  border: 1px solid #263248;
+  border-radius: 12px;
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+/* =========================
+   FORM HEADER
+========================= */
+
+.food-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 20px 24px;
+
+  border-bottom: 1px solid #263248;
+}
+
+.food-form-header h2 {
+  margin: 0;
+
+  color: #ffffff;
+  font-size: 20px;
+}
+
+.food-form-header button {
+  width: 32px;
+  height: 32px;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+  color: #9ca3af;
+
+  font-size: 28px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.food-form-header button:hover {
+  color: #ffffff;
+}
+
+/* =========================
+   FORM BODY
+========================= */
+
+.food-form-modal form {
+  padding: 24px;
+}
+
+.food-form-group {
+  margin-bottom: 18px;
+}
+
+.food-form-group label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #dbe3ef;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.food-form-group input,
+.food-form-group textarea,
+.food-form-group select {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 11px 13px;
+
+  border: 1px solid #2b3950;
+  border-radius: 7px;
+
+  outline: none;
+
+  background: #172238;
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 14px;
+
+  transition: 0.2s ease;
+}
+
+.food-form-group input {
+  height: 42px;
+}
+
+.food-form-group textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.food-form-group select {
+  height: 42px;
+}
+
+.food-form-group input:focus,
+.food-form-group textarea:focus,
+.food-form-group select:focus {
+  border-color: #2563eb;
+}
+
+.food-form-group input::placeholder,
+.food-form-group textarea::placeholder {
+  color: #68758a;
+}
+
+.food-form-group select option {
+  background: #172238;
+  color: #ffffff;
+}
+
+/* =========================
+   FORM ROW
+========================= */
+
+.food-form-row {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 16px;
+}
+
+/* =========================
+   FORM FOOTER
+========================= */
+
+.food-form-footer {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  margin-top: 8px;
+  padding-top: 20px;
+
+  border-top: 1px solid #263248;
+}
+
+.food-cancel-button,
+.food-save-button {
+  height: 42px;
+
+  padding: 0 20px;
+
+  border: none;
+  border-radius: 7px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+}
+
+.food-cancel-button {
+  background: #263248;
+  color: #dbe3ef;
+}
+
+.food-cancel-button:hover {
+  background: #344158;
+}
+
+.food-save-button {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.food-save-button:hover {
+  background: #1d4ed8;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+  .food-admin {
+    padding: 20px;
+  }
+
+  .food-admin-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .food-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .food-search {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .food-admin {
+    padding: 15px;
+  }
+
+  .food-admin-header h1 {
+    font-size: 24px;
+  }
+
+  .food-admin-actions {
+    width: 100%;
+  }
+
+  .food-refresh-button,
+  .food-add-button {
+    flex: 1;
+  }
+
+  .food-form-overlay {
+    padding: 10px;
+  }
+
+  .food-form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .food-form-modal form {
+    padding: 18px;
+  }
+}

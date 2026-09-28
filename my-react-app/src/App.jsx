@@ -15,6 +15,10 @@ import Dashboard from "./pages/Admin/Dashboard";
 import MovieAdmin from "./pages/Admin/MovieAdmin";
 import UserAdmin from "./pages/Admin/UserAdmin";
 import TicketAdmin from "./pages/Admin/TicketAdmin";
+import FoodAdmin from "./pages/Admin/FoodAdmin";
+
+import CinemaAdmin from "./pages/Admin/CinemaAdmin";
+import ShowtimeAdmin from "./pages/Admin/ShowtimeAdmin";
 
 import "./App.css";
 
@@ -76,39 +80,53 @@ function App() {
           element={<AdminLayout />}
         >
 
+          {/* DASHBOARD */}
+
           <Route
             index
             element={<Dashboard />}
           />
 
           {/* QUẢN LÝ PHIM */}
+
           <Route
             path="movies"
             element={<MovieAdmin />}
           />
 
           {/* QUẢN LÝ NGƯỜI DÙNG */}
+
           <Route
             path="users"
             element={<UserAdmin />}
           />
 
           {/* QUẢN LÝ VÉ */}
+
           <Route
             path="tickets"
             element={<TicketAdmin />}
           />
 
           {/* QUẢN LÝ BẮP NƯỚC */}
+
           <Route
             path="food"
-            element={
-              <div>
-                <h1>
-                  Quản lý bắp nước
-                </h1>
-              </div>
-            }
+            element={<FoodAdmin />}
+          />
+
+          {/* QUẢN LÝ RẠP */}
+
+          <Route
+            path="cinemas"
+            element={<CinemaAdmin />}
+          />
+
+          {/* QUẢN LÝ SUẤT CHIẾU */}
+
+          <Route
+            path="showtimes"
+            element={<ShowtimeAdmin />}
           />
 
         </Route>
