@@ -13,6 +13,8 @@ import MovieDetail from "./pages/MovieDetail";
 import AdminLayout from "./pages/Admin/AdminLayout";
 import Dashboard from "./pages/Admin/Dashboard";
 import MovieAdmin from "./pages/Admin/MovieAdmin";
+import UserAdmin from "./pages/Admin/UserAdmin";
+import TicketAdmin from "./pages/Admin/TicketAdmin";
 
 import "./App.css";
 
@@ -49,8 +51,6 @@ function App() {
 
         {/* =========================
             TÌM KIẾM PHIM
-            /search
-            /search?keyword=...
         ========================= */}
 
         <Route
@@ -60,7 +60,6 @@ function App() {
 
         {/* =========================
             CHI TIẾT PHIM
-            /movie/1
         ========================= */}
 
         <Route
@@ -82,33 +81,25 @@ function App() {
             element={<Dashboard />}
           />
 
+          {/* QUẢN LÝ PHIM */}
           <Route
             path="movies"
             element={<MovieAdmin />}
           />
 
+          {/* QUẢN LÝ NGƯỜI DÙNG */}
           <Route
             path="users"
-            element={
-              <div>
-                <h1>
-                  Quản lý người dùng
-                </h1>
-              </div>
-            }
+            element={<UserAdmin />}
           />
 
+          {/* QUẢN LÝ VÉ */}
           <Route
             path="tickets"
-            element={
-              <div>
-                <h1>
-                  Quản lý vé
-                </h1>
-              </div>
-            }
+            element={<TicketAdmin />}
           />
 
+          {/* QUẢN LÝ BẮP NƯỚC */}
           <Route
             path="food"
             element={
