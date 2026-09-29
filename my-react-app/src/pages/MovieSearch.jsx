@@ -1,43 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaPlayCircle, FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { useLocation, useNavigate } from "react-router-dom";
+import {
+  FaChevronLeft,
+  FaChevronRight,
+} from "react-icons/fa";
+import {
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+
+import MovieCard from "../components/MovieCard";
+
 import "./MovieSearch.css";
 
-const API_URL = "http://localhost:5000/api/movies";
-
-const posterAssets = import.meta.glob(
-  "../assets/*.{png,jpg,jpeg,webp}",
-  {
-    eager: true,
-    query: "?url",
-    import: "default",
-  }
-);
-
-const getPosterUrl = (posterUrl) => {
-  if (!posterUrl) {
-    return "";
-  }
-
-  const fileName = posterUrl.split("/").pop();
-
-  const asset = Object.entries(posterAssets).find(([path]) =>
-    path.endsWith(`/${fileName}`)
-  );
-
-  if (asset) {
-    return asset[1];
-  }
-
-  if (
-    posterUrl.startsWith("http://") ||
-    posterUrl.startsWith("https://")
-  ) {
-    return posterUrl;
-  }
-
-  return posterUrl;
-};
+const API_URL =
+  "http://localhost:5000/api/movies";
 
 function MovieSearch() {
   const location = useLocation();
@@ -48,8 +24,18 @@ function MovieSearch() {
   const [error, setError] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
 
+  // =========================
+  // LẤY TỪ KHÓA TÌM KIẾM
+  // =========================
+
   const keyword =
-    new URLSearchParams(location.search).get("keyword") || "";
+    new URLSearchParams(
+      location.search
+    ).get("keyword") || "";
+
+  // =========================
+  // LẤY PHIM TỪ BACKEND
+  // =========================
 
   useEffect(() => {
     const loadMovies = async () => {
@@ -57,22 +43,31 @@ function MovieSearch() {
         setLoading(true);
         setError(false);
 
-        const response = await fetch(API_URL);
+        const response = await fetch(
+          API_URL
+        );
 
         if (!response.ok) {
-          throw new Error("Không thể lấy danh sách phim");
+          throw new Error(
+            "Không thể lấy danh sách phim"
+          );
         }
 
-        const data = await response.json();
+        const data =
+          await response.json();
 
-        const moviesWithPoster = data.map((movie) => ({
-          ...movie,
-          posterUrl: getPosterUrl(movie.posterUrl),
-        }));
-
-        setMovies(moviesWithPoster);
+        // Không xử lý poster ở đây.
+        // MovieCard sẽ tự xử lý:
+        // /assets/...
+        // /uploads/...
+        // http://...
+        setMovies(data);
       } catch (err) {
-        console.error("Lỗi lấy danh sách phim:", err);
+        console.error(
+          "Lỗi lấy danh sách phim:",
+          err
+        );
+
         setMovies([]);
         setError(true);
       } finally {
@@ -83,17 +78,29 @@ function MovieSearch() {
     loadMovies();
   }, []);
 
+  // =========================
+  // LỌC PHIM
+  // =========================
+
   const filteredMovies = useMemo(() => {
-    const search = keyword.trim().toLowerCase();
+    const search =
+      keyword
+        .trim()
+        .toLowerCase();
 
     if (!search) {
       return movies;
     }
 
     return movies.filter((movie) => {
-      const title = movie.title?.toLowerCase() || "";
-      const genre = movie.genre?.toLowerCase() || "";
-      const director = movie.director?.toLowerCase() || "";
+      const title =
+        movie.title?.toLowerCase() || "";
+
+      const genre =
+        movie.genre?.toLowerCase() || "";
+
+      const director =
+        movie.director?.toLowerCase() || "";
 
       return (
         title.includes(search) ||
@@ -103,48 +110,66 @@ function MovieSearch() {
     });
   }, [movies, keyword]);
 
+  // =========================
+  // RESET TRANG KHI ĐỔI TỪ KHÓA
+  // =========================
+
   useEffect(() => {
     setCurrentPage(0);
   }, [keyword]);
 
+  // =========================
+  // PHÂN TRANG
+  // =========================
+
   const moviesPerPage = 4;
 
   const totalPages = Math.ceil(
-    filteredMovies.length / moviesPerPage
+    filteredMovies.length /
+      moviesPerPage
   );
 
-  const displayedMovies = filteredMovies.slice(
-    currentPage * moviesPerPage,
-    currentPage * moviesPerPage + moviesPerPage
-  );
+  const displayedMovies =
+    filteredMovies.slice(
+      currentPage * moviesPerPage,
+      currentPage * moviesPerPage +
+        moviesPerPage
+    );
 
   const nextPage = () => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage((prev) => prev + 1);
+    if (
+      currentPage <
+      totalPages - 1
+    ) {
+      setCurrentPage(
+        (prev) => prev + 1
+      );
     }
   };
 
   const previousPage = () => {
     if (currentPage > 0) {
-      setCurrentPage((prev) => prev - 1);
+      setCurrentPage(
+        (prev) => prev - 1
+      );
     }
   };
 
-  const handleMovieDetail = (movieId) => {
-    navigate(`/movie/${movieId}`);
+  // =========================
+  // CHI TIẾT PHIM
+  // =========================
+
+  const handleMovieDetail = (
+    movieId
+  ) => {
+    navigate(
+      `/movie/${movieId}`
+    );
   };
 
-  const handleBookTicket = (movieId) => {
-    navigate(`/movie/${movieId}`);
-  };
-
-  const handleTrailer = (trailerUrl) => {
-    if (trailerUrl) {
-      window.open(trailerUrl, "_blank");
-    } else {
-      alert("Phim này chưa có trailer.");
-    }
-  };
+  // =========================
+  // RENDER
+  // =========================
 
   return (
     <main className="movie-search-page">
@@ -154,14 +179,20 @@ function MovieSearch() {
       ========================= */}
 
       <section className="search-result-header">
-        <h1>KẾT QUẢ TÌM KIẾM PHIM</h1>
+
+        <h1>
+          KẾT QUẢ TÌM KIẾM PHIM
+        </h1>
 
         {keyword.trim() && (
           <p>
             Kết quả cho:{" "}
-            <strong>"{keyword}"</strong>
+            <strong>
+              "{keyword}"
+            </strong>
           </p>
         )}
+
       </section>
 
       {/* =========================
@@ -170,7 +201,9 @@ function MovieSearch() {
 
       {loading && (
         <div className="search-message">
-          <p>Đang tải danh sách phim...</p>
+          <p>
+            Đang tải danh sách phim...
+          </p>
         </div>
       )}
 
@@ -180,9 +213,14 @@ function MovieSearch() {
 
       {!loading && error && (
         <div className="search-message error">
-          <div className="error-icon">🎬</div>
 
-          <h2>CÓ LỖI XẢY RA</h2>
+          <div className="error-icon">
+            🎬
+          </div>
+
+          <h2>
+            CÓ LỖI XẢY RA
+          </h2>
 
           <p>
             Không thể tải danh sách phim.
@@ -192,10 +230,13 @@ function MovieSearch() {
 
           <button
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={() =>
+              window.location.reload()
+            }
           >
             Thử lại
           </button>
+
         </div>
       )}
 
@@ -205,18 +246,28 @@ function MovieSearch() {
 
       {!loading &&
         !error &&
-        filteredMovies.length === 0 && (
+        filteredMovies.length ===
+          0 && (
           <div className="search-message">
-            <div className="empty-icon">🎬</div>
 
-            <h2>KHÔNG TÌM THẤY PHIM</h2>
+            <div className="empty-icon">
+              🎬
+            </div>
+
+            <h2>
+              KHÔNG TÌM THẤY PHIM
+            </h2>
 
             <p>
-              Không có phim phù hợp với từ khóa
+              Không có phim phù hợp
+              với từ khóa{" "}
               <strong>
-                {keyword ? ` "${keyword}"` : ""}
+                {keyword
+                  ? ` "${keyword}"`
+                  : ""}
               </strong>
             </p>
+
           </div>
         )}
 
@@ -226,114 +277,65 @@ function MovieSearch() {
 
       {!loading &&
         !error &&
-        filteredMovies.length > 0 && (
+        filteredMovies.length >
+          0 && (
           <section className="search-results">
 
             <div className="movie-carousel">
+
+              {/* =========================
+                  NÚT TRÁI
+              ========================= */}
 
               {totalPages > 1 && (
                 <button
                   type="button"
                   className="carousel-arrow left"
-                  onClick={previousPage}
-                  disabled={currentPage === 0}
+                  onClick={
+                    previousPage
+                  }
+                  disabled={
+                    currentPage === 0
+                  }
                 >
                   <FaChevronLeft />
                 </button>
               )}
 
+              {/* =========================
+                  MOVIE GRID
+              ========================= */}
+
               <div className="movie-result-grid">
 
-                {displayedMovies.map((movie) => (
-                  <article
-                    className="search-movie-card"
-                    key={movie.movieId}
-                  >
-
-                    {/* POSTER */}
-
+                {displayedMovies.map(
+                  (movie) => (
                     <div
-                      className="movie-poster-wrapper"
+                      key={
+                        movie.movieId
+                      }
+                      className="search-movie-card"
                       onClick={() =>
-                        handleMovieDetail(movie.movieId)
+                        handleMovieDetail(
+                          movie.movieId
+                        )
                       }
                     >
-                      {movie.posterUrl ? (
-                        <img
-                          src={movie.posterUrl}
-                          alt={movie.title}
-                          className="movie-poster"
-                        />
-                      ) : (
-                        <div className="poster-empty">
-                          Không có ảnh
-                        </div>
-                      )}
 
-                      {/* AGE */}
-
-                      {movie.ageRating && (
-                        <span className="age-rating">
-                          {movie.ageRating}
-                        </span>
-                      )}
-
-                      {/* 2D */}
-
-                      <span className="movie-type">
-                        2D
-                      </span>
-                    </div>
-
-                    {/* TITLE */}
-
-                    <h2
-                      className="movie-title"
-                      onClick={() =>
-                        handleMovieDetail(movie.movieId)
-                      }
-                    >
-                      {movie.title}
-                      {movie.ageRating
-                        ? ` (${movie.ageRating})`
-                        : ""}
-                    </h2>
-
-                    {/* ACTIONS */}
-
-                    <div className="movie-actions">
-
-                      <button
-                        type="button"
-                        className="trailer-button"
-                        onClick={() =>
-                          handleTrailer(
-                            movie.trailerUrl
-                          )
-                        }
-                      >
-                        <FaPlayCircle />
-                        <span>Xem Trailer</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        className="booking-button"
-                        onClick={() =>
-                          handleBookTicket(
-                            movie.movieId
-                          )
-                        }
-                      >
-                        ĐẶT VÉ
-                      </button>
+                      {/* DÙNG MOVIECARD CÓ SẴN */}
+                      <MovieCard
+                        movie={movie}
+                      />
 
                     </div>
-
-                  </article>
-                ))}
+                  )
+                )}
 
               </div>
+
+              {/* =========================
+                  NÚT PHẢI
+              ========================= */}
 
               {totalPages > 1 && (
                 <button
@@ -341,7 +343,8 @@ function MovieSearch() {
                   className="carousel-arrow right"
                   onClick={nextPage}
                   disabled={
-                    currentPage === totalPages - 1
+                    currentPage ===
+                    totalPages - 1
                   }
                 >
                   <FaChevronRight />
@@ -350,101 +353,46 @@ function MovieSearch() {
 
             </div>
 
-            {/* DOTS */}
+            {/* =========================
+                DOTS
+            ========================= */}
 
             {totalPages > 1 && (
               <div className="carousel-dots">
+
                 {Array.from({
                   length: totalPages,
-                }).map((_, index) => (
-                  <button
-                    type="button"
-                    key={index}
-                    className={
-                      index === currentPage
-                        ? "active"
-                        : ""
-                    }
-                    onClick={() =>
-                      setCurrentPage(index)
-                    }
-                  />
-                ))}
+                }).map(
+                  (_, index) => (
+                    <button
+                      type="button"
+                      key={index}
+                      className={
+                        index ===
+                        currentPage
+                          ? "active"
+                          : ""
+                      }
+                      onClick={() =>
+                        setCurrentPage(
+                          index
+                        )
+                      }
+                    />
+                  )
+                )}
+
               </div>
             )}
 
-            {/* COUNT */}
+            {/* =========================
+                COUNT
+            ========================= */}
 
             <div className="search-count">
-              {filteredMovies.length} phim
+              {filteredMovies.length}{" "}
+              phim
             </div>
-
-            {/* ALL MOVIES */}
-
-            {filteredMovies.length > 4 && (
-              <section className="all-search-results">
-
-                <h2>DANH SÁCH PHIM</h2>
-
-                <div className="all-movie-grid">
-
-                  {filteredMovies.map((movie) => (
-                    <article
-                      className="small-movie-card"
-                      key={`all-${movie.movieId}`}
-                      onClick={() =>
-                        handleMovieDetail(
-                          movie.movieId
-                        )
-                      }
-                    >
-                      <div className="small-poster">
-
-                        {movie.posterUrl ? (
-                          <img
-                            src={movie.posterUrl}
-                            alt={movie.title}
-                          />
-                        ) : (
-                          <div>
-                            Không có ảnh
-                          </div>
-                        )}
-
-                      </div>
-
-                      <div className="small-movie-info">
-
-                        <h3>
-                          {movie.title}
-                        </h3>
-
-                        <p>
-                          {movie.genre ||
-                            "Phim điện ảnh"}
-                        </p>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleBookTicket(
-                              movie.movieId
-                            );
-                          }}
-                        >
-                          ĐẶT VÉ
-                        </button>
-
-                      </div>
-
-                    </article>
-                  ))}
-
-                </div>
-
-              </section>
-            )}
 
           </section>
         )}

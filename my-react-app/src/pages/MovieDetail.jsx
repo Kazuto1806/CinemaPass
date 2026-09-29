@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 
 import {
   FaArrowLeft,
@@ -13,10 +16,16 @@ import {
 
 import "./MovieDetail.css";
 
-const API_URL = "http://localhost:5000/api/movies";
+const API_URL =
+  "http://localhost:5000/api/movies";
+
+
+// =========================
+// ẢNH TRONG SRC/ASSETS
+// =========================
 
 const posterAssets = import.meta.glob(
-  "../assets/*.{png,jpg,jpeg,webp}",
+  "../assets/**/*.{png,jpg,jpeg,webp,avif,gif,svg}",
   {
     eager: true,
     query: "?url",
@@ -24,21 +33,19 @@ const posterAssets = import.meta.glob(
   }
 );
 
+
+// =========================
+// XỬ LÝ POSTER URL
+// =========================
+
 const getPosterUrl = (posterUrl) => {
   if (!posterUrl) {
     return "";
   }
 
-  const fileName = posterUrl.split("/").pop();
-
-  const asset = Object.entries(posterAssets).find(
-    ([path]) =>
-      path.endsWith(`/${fileName}`)
-  );
-
-  if (asset) {
-    return asset[1];
-  }
+  // =========================
+  // URL ĐẦY ĐỦ
+  // =========================
 
   if (
     posterUrl.startsWith("http://") ||
@@ -47,8 +54,54 @@ const getPosterUrl = (posterUrl) => {
     return posterUrl;
   }
 
+
+  // =========================
+  // POSTER UPLOAD BACKEND
+  // =========================
+
+  if (
+    posterUrl.startsWith("/uploads/")
+  ) {
+    return `http://localhost:5000${posterUrl}`;
+  }
+
+
+  // =========================
+  // POSTER TRONG SRC/ASSETS
+  // =========================
+
+  const fileName = posterUrl
+    .split("/")
+    .pop()
+    ?.toLowerCase();
+
+  if (!fileName) {
+    return "";
+  }
+
+  const asset = Object.entries(
+    posterAssets
+  ).find(
+    ([path]) =>
+      path
+        .split("/")
+        .pop()
+        ?.toLowerCase() === fileName
+  );
+
+  if (asset) {
+    return asset[1];
+  }
+
+
+  // Không tìm thấy asset
   return posterUrl;
 };
+
+
+// =========================
+// FORMAT NGÀY
+// =========================
 
 const formatDate = (date) => {
   if (!date) {
@@ -57,31 +110,63 @@ const formatDate = (date) => {
 
   const value = new Date(date);
 
-  if (Number.isNaN(value.getTime())) {
+  if (
+    Number.isNaN(
+      value.getTime()
+    )
+  ) {
     return date;
   }
 
-  return value.toLocaleDateString("vi-VN");
+  return value.toLocaleDateString(
+    "vi-VN"
+  );
 };
 
+
+// =========================
+// TRẠNG THÁI PHIM
+// =========================
+
 const getStatusText = (status) => {
-  if (status === "NowShowing") {
+  if (
+    status === "NowShowing"
+  ) {
     return "ĐANG CHIẾU";
   }
 
-  if (status === "ComingSoon") {
+  if (
+    status === "ComingSoon"
+  ) {
     return "SẮP CHIẾU";
   }
 
-  return status || "CHƯA CẬP NHẬT";
+  if (
+    status === "Ended"
+  ) {
+    return "ĐÃ KẾT THÚC";
+  }
+
+  return (
+    status ||
+    "CHƯA CẬP NHẬT"
+  );
 };
 
+
 function MovieDetail() {
+
   const { id } = useParams();
 
   const navigate = useNavigate();
 
-  const [movie, setMovie] = useState(null);
+
+  // =========================
+  // STATE
+  // =========================
+
+  const [movie, setMovie] =
+    useState(null);
 
   const [loading, setLoading] =
     useState(true);
@@ -89,32 +174,50 @@ function MovieDetail() {
   const [error, setError] =
     useState("");
 
+
+  // =========================
+  // LẤY CHI TIẾT PHIM
+  // =========================
+
   useEffect(() => {
+
     const loadMovie = async () => {
+
       try {
+
         setLoading(true);
         setError("");
 
-        const response = await fetch(
-          `${API_URL}/${id}`
-        );
+        const response =
+          await fetch(
+            `${API_URL}/${id}`
+          );
+
 
         if (!response.ok) {
+
           throw new Error(
             "Không tìm thấy bộ phim"
           );
+
         }
+
 
         const data =
           await response.json();
 
+
         setMovie({
           ...data,
-          posterUrl: getPosterUrl(
-            data.posterUrl
-          ),
+
+          posterUrl:
+            getPosterUrl(
+              data.posterUrl
+            ),
         });
+
       } catch (err) {
+
         console.error(
           "Lỗi lấy chi tiết phim:",
           err
@@ -125,16 +228,28 @@ function MovieDetail() {
         setError(
           "Không thể tải thông tin bộ phim."
         );
+
       } finally {
+
         setLoading(false);
+
       }
     };
 
+
     loadMovie();
+
   }, [id]);
 
+
+  // =========================
+  // LOADING
+  // =========================
+
   if (loading) {
+
     return (
+
       <main className="movie-detail-page">
 
         <div className="movie-detail-message">
@@ -152,11 +267,20 @@ function MovieDetail() {
         </div>
 
       </main>
+
     );
+
   }
 
+
+  // =========================
+  // ERROR
+  // =========================
+
   if (error || !movie) {
+
     return (
+
       <main className="movie-detail-page">
 
         <div className="movie-detail-message error">
@@ -172,39 +296,62 @@ function MovieDetail() {
               "Bộ phim không tồn tại."}
           </p>
 
+
+          {/* QUAY LẠI TRANG TRƯỚC */}
           <button
             type="button"
             onClick={() =>
-              navigate("/search")
+              navigate(-1)
             }
           >
             <FaArrowLeft />
-            QUAY LẠI TÌM KIẾM
+
+            QUAY LẠI
           </button>
 
         </div>
 
       </main>
+
     );
+
   }
 
+
+  // =========================
+  // DETAIL
+  // =========================
+
   return (
+
     <main className="movie-detail-page">
 
       <div className="movie-detail-container">
+
+
+        {/* =========================
+            QUAY LẠI
+        ========================= */}
 
         <button
           type="button"
           className="movie-detail-back"
           onClick={() =>
-            navigate("/search")
+            navigate(-1)
           }
         >
           <FaArrowLeft />
-          Quay lại tìm kiếm
+
+          Quay lại
         </button>
 
+
+        {/* =========================
+            CARD
+        ========================= */}
+
         <section className="movie-detail-card">
+
 
           {/* =========================
               POSTER
@@ -213,11 +360,18 @@ function MovieDetail() {
           <div className="movie-detail-poster">
 
             {movie.posterUrl ? (
+
               <img
                 src={movie.posterUrl}
                 alt={movie.title}
+                onError={(e) => {
+                  e.currentTarget.style.display =
+                    "none";
+                }}
               />
+
             ) : (
+
               <div className="movie-detail-poster-empty">
 
                 <FaFilm />
@@ -227,15 +381,20 @@ function MovieDetail() {
                 </span>
 
               </div>
+
             )}
 
           </div>
+
 
           {/* =========================
               THÔNG TIN
           ========================= */}
 
           <div className="movie-detail-info">
+
+
+            {/* TRẠNG THÁI */}
 
             <span
               className={`movie-detail-status ${
@@ -250,18 +409,30 @@ function MovieDetail() {
               )}
             </span>
 
+
+            {/* TÊN PHIM */}
+
             <h1>
               {movie.title}
             </h1>
+
+
+            {/* THỂ LOẠI */}
 
             <p className="movie-detail-genre">
               {movie.genre ||
                 "Chưa cập nhật thể loại"}
             </p>
 
-            {/* META */}
+
+            {/* =========================
+                META
+            ========================= */}
 
             <div className="movie-detail-meta">
+
+
+              {/* THỜI LƯỢNG */}
 
               <div>
 
@@ -281,6 +452,9 @@ function MovieDetail() {
 
               </div>
 
+
+              {/* NGÀY KHỞI CHIẾU */}
+
               <div>
 
                 <FaCalendarAlt />
@@ -299,6 +473,9 @@ function MovieDetail() {
 
               </div>
 
+
+              {/* ĐẠO DIỄN */}
+
               <div>
 
                 <FaUserTie />
@@ -315,6 +492,9 @@ function MovieDetail() {
                 </span>
 
               </div>
+
+
+              {/* ĐỘ TUỔI */}
 
               <div>
 
@@ -335,7 +515,10 @@ function MovieDetail() {
 
             </div>
 
-            {/* DESCRIPTION */}
+
+            {/* =========================
+                NỘI DUNG
+            ========================= */}
 
             <div className="movie-detail-description">
 
@@ -350,24 +533,41 @@ function MovieDetail() {
 
             </div>
 
-            {/* BUTTON */}
+
+            {/* =========================
+                BUTTON
+            ========================= */}
 
             <div className="movie-detail-actions">
 
+
+              {/* TRAILER */}
+
               {movie.trailerUrl && (
+
                 <a
-                  href={movie.trailerUrl}
+                  href={
+                    movie.trailerUrl
+                  }
                   target="_blank"
                   rel="noreferrer"
                   className="movie-trailer-button"
                 >
+
                   <FaPlay />
+
                   XEM TRAILER
+
                 </a>
+
               )}
+
+
+              {/* ĐẶT VÉ */}
 
               {movie.status ===
                 "NowShowing" && (
+
                 <button
                   type="button"
                   className="movie-ticket-button"
@@ -375,9 +575,13 @@ function MovieDetail() {
                     navigate("/")
                   }
                 >
+
                   <FaTicketAlt />
+
                   ĐẶT VÉ NGAY
+
                 </button>
+
               )}
 
             </div>
@@ -389,7 +593,9 @@ function MovieDetail() {
       </div>
 
     </main>
+
   );
+
 }
 
 export default MovieDetail;

@@ -62,8 +62,7 @@ function MovieCard({ movie }) {
             <strong>Khởi chiếu:</strong>{" "}
             {movie.releaseDate
               ? new Date(movie.releaseDate).toLocaleDateString("vi-VN")
-              : "Chưa cập nhật"
-            }
+              : "Chưa cập nhật"}
           </p>
 
           <p>
