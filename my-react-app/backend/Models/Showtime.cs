@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace CinemaBackend.Models
 {
     public class Showtime
@@ -6,13 +8,13 @@ namespace CinemaBackend.Models
 
         public int MovieId { get; set; }
 
-        public int CinemaId { get; set; }
+        public int RoomId { get; set; }
 
-        public DateTime StartTime { get; set; }
+        public DateTime ShowDate { get; set; }
 
-        public DateTime? EndTime { get; set; }
+        public TimeSpan StartTime { get; set; }
 
-        public string RoomName { get; set; } = string.Empty;
+        public TimeSpan EndTime { get; set; }
 
         public decimal TicketPrice { get; set; }
 
@@ -20,8 +22,11 @@ namespace CinemaBackend.Models
 
         public DateTime CreatedAt { get; set; }
 
+        // Navigation
+        [ForeignKey(nameof(MovieId))]
         public Movie? Movie { get; set; }
 
-        public Cinema? Cinema { get; set; }
+        [ForeignKey(nameof(RoomId))]
+        public Room? Room { get; set; }
     }
 }

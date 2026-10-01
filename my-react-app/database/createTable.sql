@@ -65,6 +65,32 @@ CREATE TABLE Showtimes
 GO
 USE CinemaDB;
 GO
+
+CREATE TABLE Seats
+(
+    SeatId INT IDENTITY(1,1) PRIMARY KEY,
+
+    RoomId INT NOT NULL,
+
+    SeatCode VARCHAR(10) NOT NULL,
+
+    RowName VARCHAR(5) NOT NULL,
+
+    SeatNumber INT NOT NULL,
+
+    SeatType VARCHAR(30) NOT NULL
+        DEFAULT 'Normal',
+
+    CONSTRAINT FK_Seats_Rooms
+        FOREIGN KEY (RoomId)
+        REFERENCES Rooms(RoomId),
+
+    CONSTRAINT UQ_Seats_Room_SeatCode
+        UNIQUE (RoomId, SeatCode)
+);
+GO
+USE CinemaDB;
+GO
 CREATE TABLE Cinemas
 (
     CinemaId INT IDENTITY(1,1) PRIMARY KEY,
@@ -94,5 +120,45 @@ CREATE TABLE Rooms
     CONSTRAINT FK_Rooms_Cinemas
         FOREIGN KEY (CinemaId)
         REFERENCES Cinemas(CinemaId)
+);
+GO
+USE CinemaDB;
+GO
+
+CREATE TABLE Tickets
+(
+    TicketId INT IDENTITY(1,1) PRIMARY KEY,
+
+    UserId INT NOT NULL,
+
+    MovieId INT NOT NULL,
+
+    ShowtimeId INT NOT NULL,
+
+    SeatId INT NOT NULL,
+
+    TicketPrice DECIMAL(18,2) NOT NULL,
+
+    Status NVARCHAR(30) NOT NULL
+        DEFAULT N'Đã đặt',
+
+    CreatedAt DATETIME NOT NULL
+        DEFAULT GETDATE(),
+
+    CONSTRAINT FK_Tickets_Users
+        FOREIGN KEY (UserId)
+        REFERENCES Users(UserId),
+
+    CONSTRAINT FK_Tickets_Movies
+        FOREIGN KEY (MovieId)
+        REFERENCES Movies(MovieId),
+
+    CONSTRAINT FK_Tickets_Showtimes
+        FOREIGN KEY (ShowtimeId)
+        REFERENCES Showtimes(ShowtimeId),
+
+    CONSTRAINT FK_Tickets_Seats
+        FOREIGN KEY (SeatId)
+        REFERENCES Seats(SeatId)
 );
 GO

@@ -16,34 +16,57 @@ namespace CinemaBackend.Controllers
             _context = context;
         }
 
+        // =====================================================
         // GET: api/showtimes
-        // Lấy danh sách suất chiếu
+        // Lấy tất cả suất chiếu
+        // =====================================================
+
         [HttpGet]
         public async Task<IActionResult> GetShowtimes()
         {
             var showtimes = await _context.Showtimes
                 .AsNoTracking()
                 .Include(s => s.Movie)
-                .Include(s => s.Cinema)
-                .OrderBy(s => s.StartTime)
+                .Include(s => s.Room)
+                    .ThenInclude(r => r.Cinema)
+                .OrderBy(s => s.ShowDate)
+                .ThenBy(s => s.StartTime)
                 .Select(s => new
                 {
                     s.ShowtimeId,
+
                     s.MovieId,
+
                     MovieTitle = s.Movie != null
                         ? s.Movie.Title
                         : "",
 
-                    s.CinemaId,
-                    CinemaName = s.Cinema != null
-                        ? s.Cinema.Name
+                    s.RoomId,
+
+                    RoomName = s.Room != null
+                        ? s.Room.RoomName
                         : "",
 
+                    CinemaId = s.Room != null
+                        ? s.Room.CinemaId
+                        : 0,
+
+                    CinemaName =
+                        s.Room != null &&
+                        s.Room.Cinema != null
+                            ? s.Room.Cinema.Name
+                            : "",
+
+                    s.ShowDate,
+
                     s.StartTime,
+
                     s.EndTime,
-                    s.RoomName,
+
                     s.TicketPrice,
+
                     s.Status,
+
                     s.CreatedAt
                 })
                 .ToListAsync();
@@ -51,34 +74,57 @@ namespace CinemaBackend.Controllers
             return Ok(showtimes);
         }
 
-        // GET: api/showtimes/1
+
+        // =====================================================
+        // GET: api/showtimes/{id}
         // Lấy một suất chiếu
+        // =====================================================
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetShowtime(int id)
         {
             var showtime = await _context.Showtimes
                 .AsNoTracking()
                 .Include(s => s.Movie)
-                .Include(s => s.Cinema)
+                .Include(s => s.Room)
+                    .ThenInclude(r => r.Cinema)
                 .Where(s => s.ShowtimeId == id)
                 .Select(s => new
                 {
                     s.ShowtimeId,
+
                     s.MovieId,
+
                     MovieTitle = s.Movie != null
                         ? s.Movie.Title
                         : "",
 
-                    s.CinemaId,
-                    CinemaName = s.Cinema != null
-                        ? s.Cinema.Name
+                    s.RoomId,
+
+                    RoomName = s.Room != null
+                        ? s.Room.RoomName
                         : "",
 
+                    CinemaId = s.Room != null
+                        ? s.Room.CinemaId
+                        : 0,
+
+                    CinemaName =
+                        s.Room != null &&
+                        s.Room.Cinema != null
+                            ? s.Room.Cinema.Name
+                            : "",
+
+                    s.ShowDate,
+
                     s.StartTime,
+
                     s.EndTime,
-                    s.RoomName,
+
                     s.TicketPrice,
+
                     s.Status,
+
                     s.CreatedAt
                 })
                 .FirstOrDefaultAsync();
@@ -94,14 +140,23 @@ namespace CinemaBackend.Controllers
             return Ok(showtime);
         }
 
+
+        // =====================================================
         // POST: api/showtimes
         // Thêm suất chiếu
+        // =====================================================
+
         [HttpPost]
-        public async Task<IActionResult> CreateShowtime(Showtime showtime)
+        public async Task<IActionResult> CreateShowtime(
+            Showtime showtime)
         {
-            // Kiểm tra phim
+            // =================================================
+            // KIỂM TRA PHIM
+            // =================================================
+
             var movieExists = await _context.Movies
-                .AnyAsync(m => m.MovieId == showtime.MovieId);
+                .AnyAsync(m =>
+                    m.MovieId == showtime.MovieId);
 
             if (!movieExists)
             {
@@ -111,118 +166,360 @@ namespace CinemaBackend.Controllers
                 });
             }
 
-            // Kiểm tra rạp
-            var cinemaExists = await _context.Cinemas
-                .AnyAsync(c => c.CinemaId == showtime.CinemaId);
 
-            if (!cinemaExists)
+            // =================================================
+            // KIỂM TRA PHÒNG
+            // =================================================
+
+            var room = await _context.Rooms
+                .Include(r => r.Cinema)
+                .FirstOrDefaultAsync(r =>
+                    r.RoomId == showtime.RoomId);
+
+            if (room == null)
             {
                 return BadRequest(new
                 {
-                    message = "Rạp không tồn tại"
+                    message = "Phòng chiếu không tồn tại"
                 });
             }
 
-            showtime.ShowtimeId = 0;
-            showtime.CreatedAt = DateTime.Now;
 
-            if (string.IsNullOrWhiteSpace(showtime.Status))
+            // =================================================
+            // KIỂM TRA RẠP
+            // =================================================
+
+            if (room.Cinema == null)
             {
-                showtime.Status = "Đang hoạt động";
+                return BadRequest(new
+                {
+                    message = "Rạp của phòng chiếu không tồn tại"
+                });
             }
 
-            _context.Showtimes.Add(showtime);
+
+            // =================================================
+            // KIỂM TRA GIỜ
+            // =================================================
+
+            if (showtime.EndTime <= showtime.StartTime)
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Giờ kết thúc phải lớn hơn giờ bắt đầu"
+                });
+            }
+
+
+            // =================================================
+            // KIỂM TRA GIÁ
+            // =================================================
+
+            if (showtime.TicketPrice <= 0)
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Giá vé phải lớn hơn 0"
+                });
+            }
+
+
+            // =================================================
+            // KIỂM TRA TRÙNG SUẤT CHIẾU
+            // =================================================
+
+            var conflict = await _context.Showtimes
+                .AnyAsync(s =>
+                    s.RoomId == showtime.RoomId &&
+                    s.ShowDate == showtime.ShowDate &&
+
+                    showtime.StartTime < s.EndTime &&
+                    showtime.EndTime > s.StartTime
+                );
+
+            if (conflict)
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Phòng chiếu đã có suất chiếu trùng thời gian"
+                });
+            }
+
+
+            // =================================================
+            // GÁN GIÁ TRỊ MẶC ĐỊNH
+            // =================================================
+
+            showtime.ShowtimeId = 0;
+
+            showtime.CreatedAt =
+                DateTime.Now;
+
+            if (string.IsNullOrWhiteSpace(
+                showtime.Status))
+            {
+                showtime.Status =
+                    "Đang hoạt động";
+            }
+
+
+            // =================================================
+            // LƯU DATABASE
+            // =================================================
+
+            _context.Showtimes.Add(
+                showtime
+            );
 
             await _context.SaveChangesAsync();
 
+
             return Ok(new
             {
-                message = "Thêm suất chiếu thành công",
-                showtimeId = showtime.ShowtimeId
+                message =
+                    "Thêm suất chiếu thành công",
+
+                showtimeId =
+                    showtime.ShowtimeId
             });
         }
 
-        // PUT: api/showtimes/1
+
+        // =====================================================
+        // PUT: api/showtimes/{id}
         // Cập nhật suất chiếu
+        // =====================================================
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateShowtime(
             int id,
             Showtime updatedShowtime)
         {
-            var showtime = await _context.Showtimes
-                .FirstOrDefaultAsync(s => s.ShowtimeId == id);
+            // =================================================
+            // TÌM SUẤT CHIẾU
+            // =================================================
+
+            var showtime =
+                await _context.Showtimes
+                    .FirstOrDefaultAsync(
+                        s => s.ShowtimeId == id
+                    );
 
             if (showtime == null)
             {
                 return NotFound(new
                 {
-                    message = "Không tìm thấy suất chiếu"
+                    message =
+                        "Không tìm thấy suất chiếu"
                 });
             }
 
-            // Kiểm tra phim
-            var movieExists = await _context.Movies
-                .AnyAsync(m => m.MovieId == updatedShowtime.MovieId);
+
+            // =================================================
+            // KIỂM TRA PHIM
+            // =================================================
+
+            var movieExists =
+                await _context.Movies
+                    .AnyAsync(
+                        m =>
+                            m.MovieId ==
+                            updatedShowtime.MovieId
+                    );
 
             if (!movieExists)
             {
                 return BadRequest(new
                 {
-                    message = "Phim không tồn tại"
+                    message =
+                        "Phim không tồn tại"
                 });
             }
 
-            // Kiểm tra rạp
-            var cinemaExists = await _context.Cinemas
-                .AnyAsync(c => c.CinemaId == updatedShowtime.CinemaId);
 
-            if (!cinemaExists)
+            // =================================================
+            // KIỂM TRA PHÒNG
+            // =================================================
+
+            var room =
+                await _context.Rooms
+                    .Include(r => r.Cinema)
+                    .FirstOrDefaultAsync(
+                        r =>
+                            r.RoomId ==
+                            updatedShowtime.RoomId
+                    );
+
+            if (room == null)
             {
                 return BadRequest(new
                 {
-                    message = "Rạp không tồn tại"
+                    message =
+                        "Phòng chiếu không tồn tại"
                 });
             }
 
-            showtime.MovieId = updatedShowtime.MovieId;
-            showtime.CinemaId = updatedShowtime.CinemaId;
-            showtime.StartTime = updatedShowtime.StartTime;
-            showtime.EndTime = updatedShowtime.EndTime;
-            showtime.RoomName = updatedShowtime.RoomName;
-            showtime.TicketPrice = updatedShowtime.TicketPrice;
-            showtime.Status = updatedShowtime.Status;
+
+            if (room.Cinema == null)
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Rạp của phòng chiếu không tồn tại"
+                });
+            }
+
+
+            // =================================================
+            // KIỂM TRA GIỜ
+            // =================================================
+
+            if (
+                updatedShowtime.EndTime <=
+                updatedShowtime.StartTime
+            )
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Giờ kết thúc phải lớn hơn giờ bắt đầu"
+                });
+            }
+
+
+            // =================================================
+            // KIỂM TRA GIÁ
+            // =================================================
+
+            if (
+                updatedShowtime.TicketPrice <= 0
+            )
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Giá vé phải lớn hơn 0"
+                });
+            }
+
+
+            // =================================================
+            // KIỂM TRA TRÙNG SUẤT CHIẾU
+            // =================================================
+
+            var conflict =
+                await _context.Showtimes
+                    .AnyAsync(s =>
+                        s.ShowtimeId != id &&
+
+                        s.RoomId ==
+                        updatedShowtime.RoomId &&
+
+                        s.ShowDate ==
+                        updatedShowtime.ShowDate &&
+
+                        updatedShowtime.StartTime <
+                        s.EndTime &&
+
+                        updatedShowtime.EndTime >
+                        s.StartTime
+                    );
+
+            if (conflict)
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Phòng chiếu đã có suất chiếu trùng thời gian"
+                });
+            }
+
+
+            // =================================================
+            // CẬP NHẬT
+            // =================================================
+
+            showtime.MovieId =
+                updatedShowtime.MovieId;
+
+            showtime.RoomId =
+                updatedShowtime.RoomId;
+
+            showtime.ShowDate =
+                updatedShowtime.ShowDate;
+
+            showtime.StartTime =
+                updatedShowtime.StartTime;
+
+            showtime.EndTime =
+                updatedShowtime.EndTime;
+
+            showtime.TicketPrice =
+                updatedShowtime.TicketPrice;
+
+            showtime.Status =
+                string.IsNullOrWhiteSpace(
+                    updatedShowtime.Status
+                )
+                    ? "Đang hoạt động"
+                    : updatedShowtime.Status;
+
+
+            // =================================================
+            // SAVE
+            // =================================================
 
             await _context.SaveChangesAsync();
 
+
             return Ok(new
             {
-                message = "Cập nhật suất chiếu thành công"
+                message =
+                    "Cập nhật suất chiếu thành công"
             });
         }
 
-        // DELETE: api/showtimes/1
+
+        // =====================================================
+        // DELETE: api/showtimes/{id}
         // Xóa suất chiếu
+        // =====================================================
+
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteShowtime(int id)
+        public async Task<IActionResult> DeleteShowtime(
+            int id)
         {
-            var showtime = await _context.Showtimes
-                .FirstOrDefaultAsync(s => s.ShowtimeId == id);
+            var showtime =
+                await _context.Showtimes
+                    .FirstOrDefaultAsync(
+                        s =>
+                            s.ShowtimeId == id
+                    );
 
             if (showtime == null)
             {
                 return NotFound(new
                 {
-                    message = "Không tìm thấy suất chiếu"
+                    message =
+                        "Không tìm thấy suất chiếu"
                 });
             }
 
-            _context.Showtimes.Remove(showtime);
+
+            _context.Showtimes.Remove(
+                showtime
+            );
 
             await _context.SaveChangesAsync();
 
+
             return Ok(new
             {
-                message = "Xóa suất chiếu thành công"
+                message =
+                    "Xóa suất chiếu thành công"
             });
         }
     }

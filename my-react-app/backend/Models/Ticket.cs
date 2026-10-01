@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace CinemaBackend.Models
 {
     public class Ticket
@@ -8,9 +10,9 @@ namespace CinemaBackend.Models
 
         public int MovieId { get; set; }
 
-        public string SeatNumber { get; set; } = string.Empty;
+        public int ShowtimeId { get; set; }
 
-        public DateTime Showtime { get; set; }
+        public int SeatId { get; set; }
 
         public decimal TicketPrice { get; set; }
 
@@ -18,10 +20,16 @@ namespace CinemaBackend.Models
 
         public DateTime CreatedAt { get; set; }
 
-        // Quan hệ với User
+        [ForeignKey(nameof(UserId))]
         public User? User { get; set; }
 
-        // Quan hệ với Movie
+        [ForeignKey(nameof(MovieId))]
         public Movie? Movie { get; set; }
+
+        [ForeignKey(nameof(ShowtimeId))]
+        public Showtime? Showtime { get; set; }
+
+        [ForeignKey(nameof(SeatId))]
+        public Seat? Seat { get; set; }
     }
 }
