@@ -27,3 +27,72 @@ CREATE TABLE Movies
     Status VARCHAR(30) NOT NULL DEFAULT 'ComingSoon',
     CreatedAt DATETIME NOT NULL DEFAULT GETDATE()
 );
+USE CinemaDB;
+GO
+CREATE TABLE Showtimes
+(
+    ShowtimeId INT IDENTITY(1,1) PRIMARY KEY,
+
+    MovieId INT NOT NULL,
+
+    RoomId INT NOT NULL,
+
+    ShowDate DATE NOT NULL,
+
+    StartTime TIME NOT NULL,
+
+    EndTime TIME NOT NULL,
+
+    TicketPrice DECIMAL(18,2) NOT NULL,
+
+    Status VARCHAR(20) NOT NULL
+        DEFAULT 'Active',
+
+    CreatedAt DATETIME NOT NULL
+        DEFAULT GETDATE(),
+
+    CONSTRAINT FK_Showtimes_Movies
+        FOREIGN KEY (MovieId)
+        REFERENCES Movies(MovieId),
+
+    CONSTRAINT UQ_Showtimes_RoomDateTime
+        UNIQUE (
+            RoomId,
+            ShowDate,
+            StartTime
+        )
+);
+GO
+USE CinemaDB;
+GO
+CREATE TABLE Cinemas
+(
+    CinemaId INT IDENTITY(1,1) PRIMARY KEY,
+
+    Name NVARCHAR(200) NOT NULL,
+
+    Address NVARCHAR(300) NOT NULL,
+
+    Phone NVARCHAR(20) NULL,
+
+    Status NVARCHAR(30) NOT NULL
+        DEFAULT N'Đang hoạt động',
+
+    CreatedAt DATETIME NOT NULL
+        DEFAULT GETDATE()
+);
+GO
+CREATE TABLE Rooms
+(
+    RoomId INT IDENTITY(1,1) PRIMARY KEY,
+    CinemaId INT NOT NULL,
+    RoomName NVARCHAR(100) NOT NULL,
+    Capacity INT NOT NULL,
+    Status VARCHAR(30) NOT NULL DEFAULT 'Active',
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+
+    CONSTRAINT FK_Rooms_Cinemas
+        FOREIGN KEY (CinemaId)
+        REFERENCES Cinemas(CinemaId)
+);
+GO
