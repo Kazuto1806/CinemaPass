@@ -202,12 +202,12 @@ namespace CinemaBackend.Controllers
             // KIỂM TRA GIỜ
             // =================================================
 
-            if (showtime.EndTime <= showtime.StartTime)
+            if (showtime.EndTime == showtime.StartTime)
             {
                 return BadRequest(new
                 {
                     message =
-                        "Giờ kết thúc phải lớn hơn giờ bắt đầu"
+                        "Giờ kết thúc không được trùng giờ bắt đầu"
                 });
             }
 
@@ -230,14 +230,12 @@ namespace CinemaBackend.Controllers
             // KIỂM TRA TRÙNG SUẤT CHIẾU
             // =================================================
 
-            var conflict = await _context.Showtimes
-                .AnyAsync(s =>
-                    s.RoomId == showtime.RoomId &&
-                    s.ShowDate == showtime.ShowDate &&
-
-                    showtime.StartTime < s.EndTime &&
-                    showtime.EndTime > s.StartTime
-                );
+            var conflict = await HasScheduleConflict(
+                showtime.RoomId,
+                showtime.ShowDate,
+                showtime.StartTime,
+                showtime.EndTime
+            );
 
             if (conflict)
             {
@@ -377,15 +375,12 @@ namespace CinemaBackend.Controllers
             // KIỂM TRA GIỜ
             // =================================================
 
-            if (
-                updatedShowtime.EndTime <=
-                updatedShowtime.StartTime
-            )
+            if (updatedShowtime.EndTime == updatedShowtime.StartTime)
             {
                 return BadRequest(new
                 {
                     message =
-                        "Giờ kết thúc phải lớn hơn giờ bắt đầu"
+                        "Giờ kết thúc không được trùng giờ bắt đầu"
                 });
             }
 
@@ -410,23 +405,13 @@ namespace CinemaBackend.Controllers
             // KIỂM TRA TRÙNG SUẤT CHIẾU
             // =================================================
 
-            var conflict =
-                await _context.Showtimes
-                    .AnyAsync(s =>
-                        s.ShowtimeId != id &&
-
-                        s.RoomId ==
-                        updatedShowtime.RoomId &&
-
-                        s.ShowDate ==
-                        updatedShowtime.ShowDate &&
-
-                        updatedShowtime.StartTime <
-                        s.EndTime &&
-
-                        updatedShowtime.EndTime >
-                        s.StartTime
-                    );
+            var conflict = await HasScheduleConflict(
+                updatedShowtime.RoomId,
+                updatedShowtime.ShowDate,
+                updatedShowtime.StartTime,
+                updatedShowtime.EndTime,
+                id
+            );
 
             if (conflict)
             {
@@ -479,6 +464,60 @@ namespace CinemaBackend.Controllers
             {
                 message =
                     "Cập nhật suất chiếu thành công"
+            });
+        }
+
+        private async Task<bool> HasScheduleConflict(
+            int roomId,
+            DateTime showDate,
+            TimeSpan startTime,
+            TimeSpan endTime,
+            int? excludedShowtimeId = null)
+        {
+            var dateFrom = showDate.Date.AddDays(-1);
+            var dateTo = showDate.Date.AddDays(1);
+
+            var query = _context.Showtimes
+                .AsNoTracking()
+                .Where(s =>
+                    s.RoomId == roomId &&
+                    s.ShowDate >= dateFrom &&
+                    s.ShowDate <= dateTo);
+
+            if (excludedShowtimeId.HasValue)
+            {
+                query = query.Where(s =>
+                    s.ShowtimeId != excludedShowtimeId.Value);
+            }
+
+            var existingShowtimes = await query
+                .Select(s => new
+                {
+                    s.ShowDate,
+                    s.StartTime,
+                    s.EndTime
+                })
+                .ToListAsync();
+
+            var requestedStart = showDate.Date.Add(startTime);
+            var requestedEnd = showDate.Date.Add(endTime);
+
+            if (endTime < startTime)
+            {
+                requestedEnd = requestedEnd.AddDays(1);
+            }
+
+            return existingShowtimes.Any(existing =>
+            {
+                var existingStart = existing.ShowDate.Date.Add(existing.StartTime);
+                var existingEnd = existing.ShowDate.Date.Add(existing.EndTime);
+
+                if (existing.EndTime < existing.StartTime)
+                {
+                    existingEnd = existingEnd.AddDays(1);
+                }
+
+                return requestedStart < existingEnd && requestedEnd > existingStart;
             });
         }
 

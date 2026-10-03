@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa";
 
 import "./FoodAdmin.css";
+import NotificationPopup from "../../components/NotificationPopup";
 
 const API_URL = "http://localhost:5000/api/foods";
 
@@ -93,6 +94,21 @@ function FoodAdmin() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notification, setNotification] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
+
+  const showNotification = (type, title, message, onConfirm = null) => {
+    setNotification({ show: true, type, title, message, onConfirm });
+  };
+
+  const closeNotification = () => {
+    setNotification((current) => ({ ...current, show: false, onConfirm: null }));
+  };
 
   const [showForm, setShowForm] = useState(false);
   const [editingFood, setEditingFood] = useState(null);
@@ -220,12 +236,12 @@ function FoodAdmin() {
     e.preventDefault();
 
     if (!form.name.trim()) {
-      alert("Vui lòng nhập tên món");
+      showNotification("warning", "Thiếu thông tin", "Vui lòng nhập tên món");
       return;
     }
 
     if (!form.price || Number(form.price) <= 0) {
-      alert("Vui lòng nhập giá hợp lệ");
+      showNotification("warning", "Thông tin không hợp lệ", "Vui lòng nhập giá hợp lệ");
       return;
     }
 
@@ -259,7 +275,9 @@ function FoodAdmin() {
         );
       }
 
-      alert(
+      showNotification(
+        "success",
+        "Thành công",
         editingFood
           ? "Cập nhật món thành công"
           : "Thêm món thành công"
@@ -273,7 +291,9 @@ function FoodAdmin() {
         error
       );
 
-      alert(
+      showNotification(
+        "error",
+        "Không thể lưu món",
         error.message ||
           "Có lỗi xảy ra khi lưu món"
       );
@@ -285,14 +305,6 @@ function FoodAdmin() {
   ===================================================== */
 
   const deleteFood = async (foodId) => {
-    const confirmDelete = window.confirm(
-      "Bạn có chắc muốn xóa món này không?"
-    );
-
-    if (!confirmDelete) {
-      return;
-    }
-
     try {
       const response = await fetch(
         `${API_URL}/${foodId}`,
@@ -313,17 +325,32 @@ function FoodAdmin() {
             food.foodId !== foodId
         )
       );
+      showNotification("success", "Thành công", "Xóa món thành công");
     } catch (error) {
       console.error(
         "Lỗi xóa món:",
         error
       );
 
-      alert(
+      showNotification(
+        "error",
+        "Không thể xóa món",
         error.message ||
           "Không thể xóa món"
       );
     }
+  };
+
+  const requestDeleteFood = (foodId) => {
+    showNotification(
+      "warning",
+      "Xác nhận xóa món",
+      "Bạn có chắc muốn xóa món này không?",
+      () => {
+        closeNotification();
+        void deleteFood(foodId);
+      }
+    );
   };
 
   /* =====================================================
@@ -627,7 +654,7 @@ function FoodAdmin() {
                           className="food-delete-button"
                           title="Xóa món"
                           onClick={() =>
-                            deleteFood(
+                            requestDeleteFood(
                               food.foodId
                             )
                           }
@@ -956,6 +983,15 @@ function FoodAdmin() {
         </div>
 
       )}
+
+      <NotificationPopup
+        show={notification.show}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+        onClose={closeNotification}
+        onConfirm={notification.onConfirm}
+      />
 
     </div>
   );

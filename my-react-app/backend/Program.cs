@@ -1,4 +1,5 @@
 using CinemaBackend.Data;
+using CinemaBackend.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection")
     )
 );
+builder.Services.AddHostedService<ShowtimeStatusBackgroundService>();
 
 builder.Services.AddCors(options =>
 {

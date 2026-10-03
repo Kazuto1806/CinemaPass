@@ -5,6 +5,7 @@ import {
   FaTrash,
   FaSyncAlt,
 } from "react-icons/fa";
+import NotificationPopup from "../../components/NotificationPopup";
 
 import "./TicketAdmin.css";
 
@@ -15,6 +16,21 @@ function TicketAdmin() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notification, setNotification] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
+
+  const showNotification = (type, title, message, onConfirm = null) => {
+    setNotification({ show: true, type, title, message, onConfirm });
+  };
+
+  const closeNotification = () => {
+    setNotification((current) => ({ ...current, show: false, onConfirm: null }));
+  };
 
   const loadTickets = async () => {
     try {
@@ -46,14 +62,6 @@ function TicketAdmin() {
   }, []);
 
   const deleteTicket = async (ticketId) => {
-    const confirmDelete = window.confirm(
-      "Bạn có chắc muốn xóa vé này không?"
-    );
-
-    if (!confirmDelete) {
-      return;
-    }
-
     try {
       const response = await fetch(
         `${API_URL}/${ticketId}`,
@@ -71,13 +79,28 @@ function TicketAdmin() {
           (ticket) => ticket.ticketId !== ticketId
         )
       );
+      showNotification("success", "Thành công", "Xóa vé thành công");
     } catch (error) {
       console.error("Lỗi xóa vé:", error);
 
-      alert(
+      showNotification(
+        "error",
+        "Không thể xóa vé",
         error.message || "Không thể xóa vé"
       );
     }
+  };
+
+  const requestDeleteTicket = (ticketId) => {
+    showNotification(
+      "warning",
+      "Xác nhận xóa vé",
+      "Bạn có chắc muốn xóa vé này không?",
+      () => {
+        closeNotification();
+        void deleteTicket(ticketId);
+      }
+    );
   };
 
   const formatDateTime = (dateString) => {
@@ -309,7 +332,7 @@ function TicketAdmin() {
                         className="ticket-delete-button"
                         title="Xóa vé"
                         onClick={() =>
-                          deleteTicket(
+                          requestDeleteTicket(
                             ticket.ticketId
                           )
                         }
@@ -333,6 +356,15 @@ function TicketAdmin() {
           </tbody>
         </table>
       </div>
+
+      <NotificationPopup
+        show={notification.show}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+        onClose={closeNotification}
+        onConfirm={notification.onConfirm}
+      />
     </div>
   );
 }

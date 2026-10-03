@@ -11,6 +11,7 @@ import {
   FaTimes,
   FaTrashAlt,
 } from "react-icons/fa";
+import NotificationPopup from "../components/NotificationPopup";
 
 import "./Food.css";
 
@@ -252,6 +253,21 @@ function Food() {
   const [error, setError] =
     useState("");
 
+  const [notification, setNotification] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
+
+  const showNotification = (type, title, message) => {
+    setNotification({ show: true, type, title, message });
+  };
+
+  const closeNotification = () => {
+    setNotification((current) => ({ ...current, show: false }));
+  };
+
   // ===================================================
   // LOAD SẢN PHẨM TỪ DATABASE
   // ===================================================
@@ -431,7 +447,9 @@ function Food() {
 
   const handleOrder = () => {
     if (!selectedCinema) {
-      alert(
+      showNotification(
+        "warning",
+        "Chưa chọn rạp",
         "Vui lòng chọn rạp trước khi đặt hàng."
       );
 
@@ -439,20 +457,19 @@ function Food() {
     }
 
     if (totalItems === 0) {
-      alert(
+      showNotification(
+        "warning",
+        "Giỏ hàng trống",
         "Vui lòng chọn ít nhất một sản phẩm."
       );
 
       return;
     }
 
-    alert(
-      `Đặt hàng thành công!\n\n` +
-        `Rạp: ${selectedCinema}\n` +
-        `Số sản phẩm: ${totalItems}\n` +
-        `Tổng tiền: ${formatPrice(
-          totalPrice
-        )}`
+    showNotification(
+      "success",
+      "Đặt hàng thành công",
+      `Rạp: ${selectedCinema} | Số sản phẩm: ${totalItems} | Tổng tiền: ${formatPrice(totalPrice)}`
     );
   };
 
@@ -1113,6 +1130,13 @@ function Food() {
           </aside>
         </div>
       )}
+      <NotificationPopup
+        show={notification.show}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+        onClose={closeNotification}
+      />
     </main>
   );
 }

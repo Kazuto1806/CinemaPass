@@ -45,8 +45,8 @@ CREATE TABLE Showtimes
 
     TicketPrice DECIMAL(18,2) NOT NULL,
 
-    Status VARCHAR(20) NOT NULL
-        DEFAULT 'Active',
+    Status NVARCHAR(30) NOT NULL
+        DEFAULT N'Đang hoạt động',
 
     CreatedAt DATETIME NOT NULL
         DEFAULT GETDATE(),

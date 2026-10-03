@@ -82,6 +82,39 @@
   background: #8149c4;
 }
 
+.notification-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.notification-cancel,
+.notification-confirm {
+  width: 120px;
+  height: 40px;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.notification-cancel {
+  background: #475569;
+}
+
+.notification-cancel:hover {
+  background: #64748b;
+}
+
+.notification-confirm {
+  background: #dc2626;
+}
+
+.notification-confirm:hover {
+  background: #b91c1c;
+}
+
 @keyframes popupShow {
   from {
     opacity: 0;

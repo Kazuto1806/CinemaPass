@@ -7,6 +7,9 @@ const NotificationPopup = ({
   title,
   message,
   onClose,
+  onConfirm,
+  confirmLabel = "Xóa",
+  cancelLabel = "Hủy",
 }) => {
   if (!show) return null;
 
@@ -24,12 +27,29 @@ const NotificationPopup = ({
 
         <p>{message}</p>
 
-        <button
-          className="notification-close"
-          onClick={onClose}
-        >
-          OK
-        </button>
+        {onConfirm ? (
+          <div className="notification-actions">
+            <button
+              className="notification-cancel"
+              onClick={onClose}
+            >
+              {cancelLabel}
+            </button>
+            <button
+              className="notification-confirm"
+              onClick={onConfirm}
+            >
+              {confirmLabel}
+            </button>
+          </div>
+        ) : (
+          <button
+            className="notification-close"
+            onClick={onClose}
+          >
+            OK
+          </button>
+        )}
 
       </div>
     </div>

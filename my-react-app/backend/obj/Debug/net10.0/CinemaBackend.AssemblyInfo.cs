@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CinemaBackend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c2c62dfcab9cd8e87da396947e5112826c2024b1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e01a7aa5e4b299fe8b1cf765f5612b8cc5d4a360")]
 [assembly: System.Reflection.AssemblyProductAttribute("CinemaBackend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CinemaBackend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

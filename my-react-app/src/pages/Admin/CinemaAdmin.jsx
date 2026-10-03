@@ -9,6 +9,7 @@ import {
   FaMapMarkerAlt,
   FaPhone,
 } from "react-icons/fa";
+import NotificationPopup from "../../components/NotificationPopup";
 import "./CinemaAdmin.css";
 
 const API_URL = "http://localhost:5000/api/cinemas";
@@ -28,6 +29,21 @@ function CinemaAdmin() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
+
+  const showNotification = (type, title, message, onConfirm = null) => {
+    setNotification({ show: true, type, title, message, onConfirm });
+  };
+
+  const closeNotification = () => {
+    setNotification((current) => ({ ...current, show: false, onConfirm: null }));
+  };
 
   // =========================
   // LẤY DANH SÁCH RẠP
@@ -47,7 +63,7 @@ function CinemaAdmin() {
       setCinemas(data);
     } catch (error) {
       console.error(error);
-      alert("Không thể kết nối đến API rạp");
+      showNotification("error", "Lỗi kết nối", "Không thể kết nối đến API rạp");
     } finally {
       setLoading(false);
     }
@@ -116,12 +132,12 @@ function CinemaAdmin() {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      alert("Vui lòng nhập tên rạp");
+      showNotification("warning", "Thiếu thông tin", "Vui lòng nhập tên rạp");
       return;
     }
 
     if (!formData.address.trim()) {
-      alert("Vui lòng nhập địa chỉ");
+      showNotification("warning", "Thiếu thông tin", "Vui lòng nhập địa chỉ");
       return;
     }
 
@@ -161,7 +177,7 @@ function CinemaAdmin() {
         throw new Error(data.message || "Có lỗi xảy ra");
       }
 
-      alert(data.message);
+      showNotification("success", "Thành công", data.message || "Lưu rạp thành công");
 
       handleCloseModal();
 
@@ -169,22 +185,14 @@ function CinemaAdmin() {
       fetchCinemas();
     } catch (error) {
       console.error(error);
-      alert(error.message || "Không thể lưu dữ liệu");
+      showNotification("error", "Không thể lưu dữ liệu", error.message || "Không thể lưu dữ liệu");
     }
   };
 
   // =========================
   // XÓA RẠP
   // =========================
-  const handleDelete = async (id) => {
-    const confirmed = window.confirm(
-      "Bạn có chắc muốn xóa rạp này không?"
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
+  const deleteCinema = async (id) => {
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
@@ -196,14 +204,26 @@ function CinemaAdmin() {
         throw new Error(data.message || "Không thể xóa rạp");
       }
 
-      alert(data.message);
+      showNotification("success", "Thành công", data.message || "Xóa rạp thành công");
 
       // Lấy lại dữ liệu từ SQL
       fetchCinemas();
     } catch (error) {
       console.error(error);
-      alert(error.message || "Không thể xóa rạp");
+      showNotification("error", "Không thể xóa rạp", error.message || "Không thể xóa rạp");
     }
+  };
+
+  const handleDelete = (id) => {
+    showNotification(
+      "warning",
+      "Xác nhận xóa rạp",
+      "Bạn có chắc muốn xóa rạp này không?",
+      () => {
+        closeNotification();
+        void deleteCinema(id);
+      }
+    );
   };
 
   // =========================
@@ -461,6 +481,15 @@ function CinemaAdmin() {
           </div>
         </div>
       )}
+
+      <NotificationPopup
+        show={notification.show}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+        onClose={closeNotification}
+        onConfirm={notification.onConfirm}
+      />
     </div>
   );
 }

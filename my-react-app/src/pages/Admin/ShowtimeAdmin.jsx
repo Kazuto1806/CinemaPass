@@ -1,33 +1,66 @@
 import { useEffect, useState } from "react";
+import NotificationPopup from "../../components/NotificationPopup";
 import "./ShowtimeAdmin.css";
 
 const API_URL = "http://localhost:5000/api/showtimes";
 const MOVIE_API_URL = "http://localhost:5000/api/movies";
 const CINEMA_API_URL = "http://localhost:5000/api/cinemas";
 
+const normalizeShowtimeStatus = (status) => {
+  const value = String(status || "").trim();
+
+  if (
+    !value ||
+    value.toLowerCase() === "active" ||
+    value.toLowerCase() === "ðang ho?t d?ng"
+  ) {
+    return "Đang hoạt động";
+  }
+
+  return value;
+};
+
 function ShowtimeAdmin() {
   const [showtimes, setShowtimes] = useState([]);
   const [movies, setMovies] = useState([]);
   const [cinemas, setCinemas] = useState([]);
+  const [notification, setNotification] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
+
+  const showNotification = (type, title, message, onConfirm = null) => {
+    setNotification({ show: true, type, title, message, onConfirm });
+  };
+
+  const closeNotification = () => {
+    setNotification((current) => ({ ...current, show: false, onConfirm: null }));
+  };
 
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
   const [formData, setFormData] = useState({
-    movieId: "",
-    cinemaId: "",
-    startTime: "",
-    endTime: "",
-    roomName: "",
-    ticketPrice: "",
-    status: "Đang hoạt động",
-  });
+  movieId: "",
+  roomId: "",
+  startTime: "",
+  endTime: "",
+  ticketPrice: "",
+  status: "Đang hoạt động",
+});
 
   useEffect(() => {
     loadShowtimes();
     loadMovies();
     loadCinemas();
+
+    const refreshInterval = window.setInterval(loadShowtimes, 30_000);
+
+    return () => window.clearInterval(refreshInterval);
   }, []);
 
   const loadShowtimes = async () => {
@@ -39,10 +72,15 @@ function ShowtimeAdmin() {
       }
 
       const data = await response.json();
-      setShowtimes(data);
+      setShowtimes(
+        data.map((showtime) => ({
+          ...showtime,
+          status: normalizeShowtimeStatus(showtime.status),
+        }))
+      );
     } catch (error) {
       console.error(error);
-      alert("Không thể tải danh sách suất chiếu");
+      showNotification("error", "Lỗi tải dữ liệu", "Không thể tải danh sách suất chiếu");
     }
   };
 
@@ -58,7 +96,7 @@ function ShowtimeAdmin() {
       setMovies(data);
     } catch (error) {
       console.error(error);
-      alert("Không thể tải danh sách phim");
+      showNotification("error", "Lỗi tải dữ liệu", "Không thể tải danh sách phim");
     }
   };
 
@@ -74,23 +112,79 @@ function ShowtimeAdmin() {
       setCinemas(data);
     } catch (error) {
       console.error(error);
-      alert("Không thể tải danh sách rạp");
+      showNotification("error", "Lỗi tải dữ liệu", "Không thể tải danh sách rạp");
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      movieId: "",
-      cinemaId: "",
-      startTime: "",
-      endTime: "",
-      roomName: "",
-      ticketPrice: "",
-      status: "Đang hoạt động",
-    });
+  const calculateEndDateTime = (movieId, startDateTime) => {
+    const movie = movies.find(
+      (item) => String(item.movieId) === String(movieId)
+    );
+    const duration = Number(movie?.duration);
 
-    setEditingId(null);
+    if (!startDateTime || !Number.isFinite(duration) || duration <= 0) {
+      return "";
+    }
+
+    const endDate = new Date(startDateTime);
+
+    if (Number.isNaN(endDate.getTime())) {
+      return "";
+    }
+
+    endDate.setMinutes(endDate.getMinutes() + duration);
+
+    const pad = (value) => String(value).padStart(2, "0");
+
+    return `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(
+      endDate.getDate()
+    )}T${pad(endDate.getHours())}:${pad(endDate.getMinutes())}`;
   };
+
+const formatShowtime = (showDate, time) => {
+  if (!showDate || !time) {
+    return "-";
+  }
+
+  const date = String(showDate).substring(0, 10);
+
+  const timeText = String(time).substring(0, 5);
+
+  const [year, month, day] = date.split("-");
+
+  return `${day}/${month}/${year} ${timeText}`;
+};
+
+const getShowtimeEndDate = (showtime) => {
+  const showDate = String(showtime.showDate || "").substring(0, 10);
+  const startTime = String(showtime.startTime || "").substring(0, 5);
+  const endTime = String(showtime.endTime || "").substring(0, 5);
+
+  if (!showDate || !startTime || !endTime || endTime >= startTime) {
+    return showDate;
+  }
+
+  const endDate = new Date(`${showDate}T00:00:00`);
+  endDate.setDate(endDate.getDate() + 1);
+
+  const pad = (value) => String(value).padStart(2, "0");
+
+  return `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(
+    endDate.getDate()
+  )}`;
+};
+  const resetForm = () => {
+  setFormData({
+    movieId: "",
+    roomId: "",
+    startTime: "",
+    endTime: "",
+    ticketPrice: "",
+    status: "Đang hoạt động",
+  });
+
+  setEditingId(null);
+};
 
   const openAddModal = () => {
     resetForm();
@@ -98,22 +192,46 @@ function ShowtimeAdmin() {
   };
 
   const openEditModal = (showtime) => {
-    setEditingId(showtime.showtimeId);
+  setEditingId(showtime.showtimeId);
 
-    setFormData({
-      movieId: showtime.movieId?.toString() || "",
-      cinemaId: showtime.cinemaId?.toString() || "",
-      startTime: formatDateTimeForInput(showtime.startTime),
-      endTime: showtime.endTime
-        ? formatDateTimeForInput(showtime.endTime)
-        : "",
-      roomName: showtime.roomName || "",
-      ticketPrice: showtime.ticketPrice?.toString() || "",
-      status: showtime.status || "Đang hoạt động",
-    });
+  const formatTime = (time) => {
+    if (!time) return "";
 
-    setShowModal(true);
+    // TimeSpan từ ASP.NET thường có dạng:
+    // 12:54:00
+    // hoặc 12:54:00.0000000
+    return String(time).substring(0, 5);
   };
+
+  const showDate = showtime.showDate
+    ? String(showtime.showDate).substring(0, 10)
+    : "";
+
+  const startTime = formatTime(showtime.startTime);
+  const endTime = formatTime(showtime.endTime);
+  const startDateTime =
+    showDate && startTime
+      ? `${showDate}T${startTime}`
+      : "";
+
+  setFormData({
+    movieId: showtime.movieId?.toString() || "",
+    roomId: showtime.roomId?.toString() || "",
+
+    startTime: startDateTime,
+
+    endTime:
+      calculateEndDateTime(showtime.movieId, startDateTime) ||
+      (showDate && endTime ? `${showDate}T${endTime}` : ""),
+
+    ticketPrice:
+      showtime.ticketPrice?.toString() || "",
+
+    status: normalizeShowtimeStatus(showtime.status),
+  });
+
+  setShowModal(true);
+};
 
   const closeModal = () => {
     setShowModal(false);
@@ -141,86 +259,169 @@ function ShowtimeAdmin() {
   const handleChange = (event) => {
     const { name, value } = event.target;
 
-    setFormData((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
+    setFormData((previous) => {
+      const next = {
+        ...previous,
+        [name]: value,
+      };
+
+      if (name === "movieId" || name === "startTime") {
+        next.endTime = calculateEndDateTime(
+          name === "movieId" ? value : previous.movieId,
+          name === "startTime" ? value : previous.startTime
+        );
+      }
+
+      return next;
+    });
   };
 
   const handleSubmit = async (event) => {
-    event.preventDefault();
+  event.preventDefault();
 
-    if (
-      !formData.movieId ||
-      !formData.cinemaId ||
-      !formData.startTime ||
-      !formData.roomName ||
-      !formData.ticketPrice
-    ) {
-      alert("Vui lòng nhập đầy đủ thông tin bắt buộc");
-      return;
-    }
+  // ==============================
+  // KIỂM TRA DỮ LIỆU
+  // ==============================
 
-    const payload = {
-      movieId: Number(formData.movieId),
-      cinemaId: Number(formData.cinemaId),
-      startTime: formData.startTime,
-      endTime: formData.endTime || null,
-      roomName: formData.roomName,
-      ticketPrice: Number(formData.ticketPrice),
-      status: formData.status,
-    };
+  if (
+    !formData.movieId ||
+    !formData.roomId ||
+    !formData.startTime ||
+    !formData.endTime ||
+    !formData.ticketPrice
+  ) {
+    showNotification("warning", "Thiếu thông tin", "Vui lòng nhập đầy đủ thông tin bắt buộc");
+    return;
+  }
 
-    try {
-      let response;
+  // ==============================
+  // TÁCH NGÀY + GIỜ
+  // ==============================
 
-      if (editingId) {
-        response = await fetch(`${API_URL}/${editingId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-      }
+  const [showDate, startTime] =
+    formData.startTime.split("T");
 
-      const data = await response.json();
+  let endTime = "";
 
-      if (!response.ok) {
-        throw new Error(data.message || "Có lỗi xảy ra");
-      }
+  if (formData.endTime) {
+    const parts = formData.endTime.split("T");
 
-      alert(
-        editingId
-          ? "Cập nhật suất chiếu thành công"
-          : "Thêm suất chiếu thành công"
-      );
+    endTime = parts[1] || "";
+  }
 
-      closeModal();
-      loadShowtimes();
-    } catch (error) {
-      console.error(error);
-      alert(error.message || "Không thể lưu suất chiếu");
-    }
+  // ==============================
+  // PAYLOAD MỚI
+  // ==============================
+
+  const payload = {
+    movieId: Number(formData.movieId),
+
+    roomId: Number(formData.roomId),
+
+    showDate: showDate,
+
+    startTime: `${startTime}:00`,
+
+    endTime: endTime
+      ? `${endTime}:00`
+      : `${startTime}:00`,
+
+    ticketPrice: Number(formData.ticketPrice),
+
+    status: formData.status || "Đang hoạt động",
   };
 
-  const handleDelete = async (id) => {
-    const confirmed = window.confirm(
-      "Bạn có chắc muốn xóa suất chiếu này không?"
-    );
+  console.log("PAYLOAD GỬI BACKEND:", payload);
 
-    if (!confirmed) {
-      return;
+  try {
+    let response;
+
+    // ==============================
+    // UPDATE
+    // ==============================
+
+    if (editingId) {
+      response = await fetch(
+        `${API_URL}/${editingId}`,
+        {
+          method: "PUT",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify(payload),
+        }
+      );
     }
 
+    // ==============================
+    // CREATE
+    // ==============================
+
+    else {
+      response = await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify(payload),
+        }
+      );
+    }
+
+    // ==============================
+    // ĐỌC RESPONSE
+    // ==============================
+
+    const data = await response.json();
+
+    console.log("BACKEND RESPONSE:", data);
+
+    if (!response.ok) {
+      throw new Error(
+        data.message ||
+        data.title ||
+        "Có lỗi xảy ra"
+      );
+    }
+
+    // ==============================
+    // THÀNH CÔNG
+    // ==============================
+
+    showNotification(
+      "success",
+      "Thành công",
+      editingId
+        ? "Cập nhật suất chiếu thành công"
+        : "Thêm suất chiếu thành công"
+    );
+
+    closeModal();
+
+    await loadShowtimes();
+
+  } catch (error) {
+    console.error(
+      "Lỗi lưu suất chiếu:",
+      error
+    );
+
+    showNotification(
+      "error",
+      "Không thể lưu suất chiếu",
+      error.message ||
+      "Không thể lưu suất chiếu"
+    );
+  }
+};
+
+  const deleteShowtime = async (id) => {
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
@@ -232,12 +433,24 @@ function ShowtimeAdmin() {
         throw new Error(data.message || "Không thể xóa suất chiếu");
       }
 
-      alert("Xóa suất chiếu thành công");
+      showNotification("success", "Thành công", "Xóa suất chiếu thành công");
       loadShowtimes();
     } catch (error) {
       console.error(error);
-      alert(error.message || "Không thể xóa suất chiếu");
+      showNotification("error", "Không thể xóa suất chiếu", error.message || "Không thể xóa suất chiếu");
     }
+  };
+
+  const handleDelete = (id) => {
+    showNotification(
+      "warning",
+      "Xác nhận xóa suất chiếu",
+      "Bạn có chắc muốn xóa suất chiếu này không?",
+      () => {
+        closeNotification();
+        void deleteShowtime(id);
+      }
+    );
   };
 
   const formatDateTime = (dateString) => {
@@ -331,14 +544,23 @@ function ShowtimeAdmin() {
                   <td>{showtime.cinemaName || "-"}</td>
 
                   <td>
-                    <div>{formatDateTime(showtime.startTime)}</div>
+  <div>
+    {formatShowtime(
+      showtime.showDate,
+      showtime.startTime
+    )}
+  </div>
 
-                    {showtime.endTime && (
-                      <small>
-                        đến {formatDateTime(showtime.endTime)}
-                      </small>
-                    )}
-                  </td>
+  {showtime.endTime && (
+    <small>
+      đến{" "}
+      {formatShowtime(
+        getShowtimeEndDate(showtime),
+        showtime.endTime
+      )}
+    </small>
+  )}
+</td>
 
                   <td>{showtime.roomName || "-"}</td>
 
@@ -459,13 +681,13 @@ function ShowtimeAdmin() {
                 </div>
 
                 <div className="showtime-form-group">
-                  <label>Kết thúc</label>
+                  <label>Kết thúc (tự động)</label>
 
                   <input
                     type="datetime-local"
                     name="endTime"
                     value={formData.endTime}
-                    onChange={handleChange}
+                    readOnly
                   />
                 </div>
               </div>
@@ -475,13 +697,14 @@ function ShowtimeAdmin() {
                   <label>Phòng *</label>
 
                   <input
-                    type="text"
-                    name="roomName"
-                    placeholder="Ví dụ: Phòng 01"
-                    value={formData.roomName}
-                    onChange={handleChange}
-                    required
-                  />
+  type="number"
+  name="roomId"
+  placeholder="Nhập Room ID, ví dụ: 4"
+  min="1"
+  value={formData.roomId}
+  onChange={handleChange}
+  required
+/>
                 </div>
 
                 <div className="showtime-form-group">
@@ -541,6 +764,15 @@ function ShowtimeAdmin() {
           </div>
         </div>
       )}
+
+      <NotificationPopup
+        show={notification.show}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+        onClose={closeNotification}
+        onConfirm={notification.onConfirm}
+      />
     </div>
   );
 }

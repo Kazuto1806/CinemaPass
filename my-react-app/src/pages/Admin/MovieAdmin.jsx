@@ -126,6 +126,7 @@ function MovieAdmin() {
       type: "success",
       title: "",
       message: "",
+      onConfirm: null,
     });
 
 
@@ -163,13 +164,15 @@ function MovieAdmin() {
   const showNotification = (
     type,
     title,
-    message
+    message,
+    onConfirm = null
   ) => {
     setNotification({
       show: true,
       type,
       title,
       message,
+      onConfirm,
     });
   };
 
@@ -182,6 +185,7 @@ function MovieAdmin() {
     setNotification((prev) => ({
       ...prev,
       show: false,
+      onConfirm: null,
     }));
   };
 
@@ -620,7 +624,7 @@ function MovieAdmin() {
   // XÓA PHIM
   // =====================================================
 
-  const handleDelete = async (id) => {
+  const deleteMovie = async (id) => {
 
     const movie =
       movies.find(
@@ -629,20 +633,6 @@ function MovieAdmin() {
       );
 
     if (!movie) {
-      return;
-    }
-
-
-    // ===================================================
-    // XÁC NHẬN XÓA
-    // ===================================================
-
-    const confirmDelete =
-      window.confirm(
-        `Bạn có chắc muốn xóa phim "${movie.title}"?`
-      );
-
-    if (!confirmDelete) {
       return;
     }
 
@@ -719,6 +709,24 @@ function MovieAdmin() {
       );
 
     }
+  };
+
+  const handleDelete = (id) => {
+    const movie = movies.find((item) => item.movieId === id);
+
+    if (!movie) {
+      return;
+    }
+
+    showNotification(
+      "warning",
+      "Xác nhận xóa phim",
+      `Bạn có chắc muốn xóa phim "${movie.title}"?`,
+      () => {
+        closeNotification();
+        void deleteMovie(id);
+      }
+    );
   };
 
 
@@ -1747,6 +1755,10 @@ function MovieAdmin() {
 
         message={
           notification.message
+        }
+
+        onConfirm={
+          notification.onConfirm
         }
 
         onClose={
