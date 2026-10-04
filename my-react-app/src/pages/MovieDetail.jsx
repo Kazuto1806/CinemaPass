@@ -572,7 +572,9 @@ function MovieDetail() {
                   type="button"
                   className="movie-ticket-button"
                   onClick={() =>
-                    navigate("/")
+                    navigate(
+                      `/booking?movieId=${movie.movieId}`
+                    )
                   }
                 >
 

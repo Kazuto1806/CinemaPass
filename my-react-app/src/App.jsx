@@ -9,6 +9,7 @@ import Food from "./pages/Food";
 import Account from "./pages/Account";
 import MovieSearch from "./pages/MovieSearch";
 import MovieDetail from "./pages/MovieDetail";
+import Booking from "./pages/Booking";
 
 import AdminLayout from "./pages/Admin/AdminLayout";
 import Dashboard from "./pages/Admin/Dashboard";
@@ -69,6 +70,11 @@ function App() {
         <Route
           path="/movie/:id"
           element={<MovieDetail />}
+        />
+
+        <Route
+          path="/booking"
+          element={<Booking />}
         />
 
         {/* =========================
