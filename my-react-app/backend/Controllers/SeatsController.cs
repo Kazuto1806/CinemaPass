@@ -16,10 +16,13 @@ namespace CinemaBackend.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetSeats([FromQuery] int? roomId, [FromQuery] int? showtimeId)
+        public async Task<IActionResult> GetSeats(
+            [FromQuery] int? roomId,
+            [FromQuery] int? showtimeId)
         {
             int? resolvedRoomId = roomId;
 
+            // Nếu chỉ truyền showtimeId thì lấy RoomId từ Showtime
             if (!resolvedRoomId.HasValue && showtimeId.HasValue)
             {
                 resolvedRoomId = await _context.Showtimes
@@ -37,6 +40,7 @@ namespace CinemaBackend.Controllers
                 });
             }
 
+            // Kiểm tra phòng chiếu
             var room = await _context.Rooms
                 .AsNoTracking()
                 .FirstOrDefaultAsync(r => r.RoomId == resolvedRoomId.Value);
@@ -49,6 +53,7 @@ namespace CinemaBackend.Controllers
                 });
             }
 
+            // Lấy danh sách mã ghế đã được đặt trong suất chiếu
             var bookedSeatCodes = new List<string>();
 
             if (showtimeId.HasValue)
@@ -62,33 +67,21 @@ namespace CinemaBackend.Controllers
                     .ToListAsync();
             }
 
-            var roomCapacity = room.Capacity > 0 ? room.Capacity : 70;
-            var maxSeatsPerRow = 10;
-            var rowCount = Math.Max(1, (int)Math.Ceiling((double)roomCapacity / maxSeatsPerRow));
-
-            var seats = new List<object>();
-
-            for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
-            {
-                var rowName = ((char)('A' + rowIndex)).ToString();
-                var seatsInThisRow = rowIndex == rowCount - 1 && roomCapacity % maxSeatsPerRow != 0
-                    ? roomCapacity % maxSeatsPerRow
-                    : maxSeatsPerRow;
-
-                for (int seatNumber = 1; seatNumber <= seatsInThisRow; seatNumber++)
+            // Lấy ghế thật từ database
+            var seats = await _context.Seats
+                .AsNoTracking()
+                .Where(s => s.RoomId == resolvedRoomId.Value)
+                .OrderBy(s => s.RowName)
+                .ThenBy(s => s.SeatNumber)
+                .Select(s => new
                 {
-                    var seatCode = $"{rowName}{seatNumber}";
-
-                    seats.Add(new
-                    {
-                        seatId = 0,
-                        seatCode,
-                        rowName,
-                        seatNumber,
-                        isBooked = bookedSeatCodes.Contains(seatCode)
-                    });
-                }
-            }
+                    seatId = s.SeatId,
+                    seatCode = s.SeatCode,
+                    rowName = s.RowName,
+                    seatNumber = s.SeatNumber,
+                    isBooked = bookedSeatCodes.Contains(s.SeatCode)
+                })
+                .ToListAsync();
 
             return Ok(seats);
         }
