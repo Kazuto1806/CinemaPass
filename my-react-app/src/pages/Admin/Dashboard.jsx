@@ -10,12 +10,13 @@ import {
 } from "react-icons/fa";
 
 import "./Dashboard.css";
+import { API_BASE } from "../../constants";
 
 const MOVIES_API =
-  "http://localhost:5000/api/movies";
+  `${API_BASE}/api/movies`;
 
 const USERS_COUNT_API =
-  "http://localhost:5000/api/auth/users/count";
+  `${API_BASE}/api/auth/users/count`;
 
 
 function Dashboard() {

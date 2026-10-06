@@ -10,8 +10,9 @@ import {
 
 import "./FoodAdmin.css";
 import NotificationPopup from "../../components/NotificationPopup";
+import { API_BASE } from "../../constants";
 
-const API_URL = "http://localhost:5000/api/foods";
+const API_URL = `${API_BASE}/api/foods`;
 
 /* =====================================================
    LẤY DANH SÁCH ẢNH TRONG SRC/ASSETS

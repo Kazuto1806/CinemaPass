@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { FaSearch, FaUsers, FaUserShield } from "react-icons/fa";
 
 import "./UserAdmin.css";
+import { API_BASE } from "../../constants";
 
-const API_URL = "http://localhost:5000/api/users";
+const API_URL = `${API_BASE}/api/users`;
 
 function UserAdmin() {
   const [users, setUsers] = useState([]);

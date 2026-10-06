@@ -61,7 +61,7 @@ const getPosterUrl = (posterUrl) => {
   if (
     posterUrl.startsWith("/uploads/")
   ) {
-    return `http://localhost:5000${posterUrl}`;
+    return `${API_BASE}${posterUrl}`;
   }
 
 

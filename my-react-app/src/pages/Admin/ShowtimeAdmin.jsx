@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import NotificationPopup from "../../components/NotificationPopup";
+import { API_BASE } from "../../constants";
 import "./ShowtimeAdmin.css";
 
-const API_URL = "http://localhost:5000/api/showtimes";
-const MOVIE_API_URL = "http://localhost:5000/api/movies";
-const CINEMA_API_URL = "http://localhost:5000/api/cinemas";
+const API_URL = `${API_BASE}/api/showtimes`;
+const MOVIE_API_URL = `${API_BASE}/api/movies`;
+const CINEMA_API_URL = `${API_BASE}/api/cinemas`;
 
 const normalizeShowtimeStatus = (status) => {
   const value = String(status || "").trim();

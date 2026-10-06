@@ -1,4 +1,5 @@
 import "./MovieCard.css";
+import { API_BASE } from "../constants";
 
 const getPosterUrl = (posterUrl) => {
   if (!posterUrl) return "";
@@ -13,7 +14,7 @@ const getPosterUrl = (posterUrl) => {
 
   // Poster được upload lên ASP.NET Core
   if (posterUrl.startsWith("/uploads/")) {
-    return `http://localhost:5000${posterUrl}`;
+    return `${API_BASE}${posterUrl}`;
   }
 
   // Poster nằm trong public/assets

@@ -10,11 +10,12 @@ import {
 } from "react-icons/fa";
 
 import NotificationPopup from "../../components/NotificationPopup";
+import { API_BASE } from "../../constants";
 
 import "./MovieAdmin.css";
 
 const API_URL =
-  "http://localhost:5000/api/movies";
+  `${API_BASE}/api/movies`;
 
 
 // =====================================================
@@ -54,7 +55,7 @@ const getPosterUrl = (posterUrl) => {
   if (
     posterUrl.startsWith("/uploads/")
   ) {
-    return `http://localhost:5000${posterUrl}`;
+    return `${API_BASE}${posterUrl}`;
   }
 
   // Poster cũ lưu trong SQL

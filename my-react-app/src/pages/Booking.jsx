@@ -36,7 +36,7 @@ const getPosterUrl = (posterUrl) => {
   }
 
   if (posterUrl.startsWith("/uploads/")) {
-    return `http://localhost:5000${posterUrl}`;
+    return `${API_BASE}${posterUrl}`;
   }
 
   const fileName = posterUrl.split("/").pop()?.toLowerCase();
@@ -432,7 +432,7 @@ function Booking() {
       setPaymentLoading(true);
 
       const response = await fetch(
-        "http://localhost:5000/api/tickets/book",
+        `${API_BASE}/api/tickets/book`,
         {
           method: "POST",
           headers: {

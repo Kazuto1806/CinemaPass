@@ -10,9 +10,10 @@ import {
   FaPhone,
 } from "react-icons/fa";
 import NotificationPopup from "../../components/NotificationPopup";
+import { API_BASE } from "../../constants";
 import "./CinemaAdmin.css";
 
-const API_URL = "http://localhost:5000/api/cinemas";
+const API_URL = `${API_BASE}/api/cinemas`;
 
 function CinemaAdmin() {
   const [cinemas, setCinemas] = useState([]);

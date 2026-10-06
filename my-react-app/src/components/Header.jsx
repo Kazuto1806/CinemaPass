@@ -9,6 +9,7 @@ import {
 
 import { Link, useNavigate } from "react-router-dom";
 
+import { API_BASE } from "../constants";
 import "./Header.css";
 import CinemaPass from "../assets/Cinema_Pass.png";
 
@@ -56,7 +57,7 @@ function Header() {
       setLoadingUser(true);
 
       const response = await fetch(
-        `http://localhost:5000/api/auth/user/${userId}`
+        `${API_BASE}/api/auth/user/${userId}`
       );
 
       if (!response.ok) {

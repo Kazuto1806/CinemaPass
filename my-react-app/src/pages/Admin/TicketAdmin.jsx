@@ -6,10 +6,11 @@ import {
   FaSyncAlt,
 } from "react-icons/fa";
 import NotificationPopup from "../../components/NotificationPopup";
+import { API_BASE } from "../../constants";
 
 import "./TicketAdmin.css";
 
-const API_URL = "http://localhost:5000/api/tickets";
+const API_URL = `${API_BASE}/api/tickets`;
 
 function TicketAdmin() {
   const [tickets, setTickets] = useState([]);
