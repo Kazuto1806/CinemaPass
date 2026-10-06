@@ -14,7 +14,7 @@ import {
 import NotificationPopup from "../components/NotificationPopup";
 
 import "./Food.css";
-import { API_BASE } from './constants';
+import { API_BASE } from '../constants';
 // =====================================================
 // API
 // =====================================================

@@ -11,7 +11,7 @@ import {
 import MovieCard from "../components/MovieCard";
 
 import "./MovieSearch.css";
-import { API_BASE } from './constants';
+import { API_BASE } from '../constants';
 const API_URL =
   `${API_BASE}/api/movies`;
 

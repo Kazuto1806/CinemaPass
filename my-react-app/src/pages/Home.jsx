@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import MovieCard from "../components/MovieCard";
 import "./Home.css";
-import { API_BASE } from './constants';
+import { API_BASE } from '../constants';
 // API lấy phim từ SQL Server
 const API_URL = `${API_BASE}/api/movies`;
 

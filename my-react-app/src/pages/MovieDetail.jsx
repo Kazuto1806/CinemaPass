@@ -15,7 +15,7 @@ import {
 } from "react-icons/fa";
 
 import "./MovieDetail.css";
-import { API_BASE } from './constants';
+import { API_BASE } from '../constants';
 const API_URL =`${API_BASE}/api/movies`;
 
 

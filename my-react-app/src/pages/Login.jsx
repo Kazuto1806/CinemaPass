@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NotificationPopup from "../components/NotificationPopup";
 import "./Login.css";
-import { API_BASE } from './constants';
+import { API_BASE } from '../constants';
 const API_URL = `${API_BASE}/api/auth`;
 
 function Login() {

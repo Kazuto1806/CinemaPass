@@ -14,7 +14,7 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import "./Booking.css";
-import { API_BASE } from './constants';
+import { API_BASE } from '../constants';
 const MOVIE_API_URL = `${API_BASE}/api/movies`;
 const SHOWTIME_API_URL = `${API_BASE}/api/showtimes`;
 const SEAT_API_URL = `${API_BASE}/api/seats`;
