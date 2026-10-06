@@ -15,9 +15,8 @@ import {
 } from "react-icons/fa";
 
 import "./MovieDetail.css";
-
-const API_URL =
-  "http://localhost:5000/api/movies";
+import { API_BASE } from './constants';
+const API_URL =`${API_BASE}/api/movies`;
 
 
 // =========================

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NotificationPopup from "../components/NotificationPopup";
 import "./Login.css";
-
-const API_URL = "http://localhost:5000/api/auth";
+import { API_BASE } from './constants';
+const API_URL = `${API_BASE}/api/auth`;
 
 function Login() {
   const navigate = useNavigate();

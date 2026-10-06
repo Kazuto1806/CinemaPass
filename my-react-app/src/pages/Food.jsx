@@ -14,12 +14,12 @@ import {
 import NotificationPopup from "../components/NotificationPopup";
 
 import "./Food.css";
-
+import { API_BASE } from './constants';
 // =====================================================
 // API
 // =====================================================
 
-const API_URL = "http://localhost:5000/api/foods";
+const API_URL = `${API_BASE}/api/foods`;
 
 // =====================================================
 // LẤY ẢNH TRONG SRC/ASSETS

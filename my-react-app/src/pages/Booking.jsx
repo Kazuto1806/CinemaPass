@@ -14,10 +14,10 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import "./Booking.css";
-
-const MOVIE_API_URL = "http://localhost:5000/api/movies";
-const SHOWTIME_API_URL = "http://localhost:5000/api/showtimes";
-const SEAT_API_URL = "http://localhost:5000/api/seats";
+import { API_BASE } from './constants';
+const MOVIE_API_URL = `${API_BASE}/api/movies`;
+const SHOWTIME_API_URL = `${API_BASE}/api/showtimes`;
+const SEAT_API_URL = `${API_BASE}/api/seats`;
 
 const posterAssets = import.meta.glob(
   "../assets/*.{png,jpg,jpeg,webp,avif,gif,svg}",
