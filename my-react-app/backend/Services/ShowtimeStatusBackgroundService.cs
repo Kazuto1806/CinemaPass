@@ -6,6 +6,7 @@ namespace CinemaBackend.Services;
 public sealed class ShowtimeStatusBackgroundService : BackgroundService
 {
     private static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(30);
+
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<ShowtimeStatusBackgroundService> _logger;
 
@@ -31,17 +32,31 @@ public sealed class ShowtimeStatusBackgroundService : BackgroundService
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, "Failed to update finished showtimes");
+                _logger.LogError(
+                    exception,
+                    "Failed to update finished showtimes"
+                );
             }
 
-            await Task.Delay(CheckInterval, stoppingToken);
+            try
+            {
+                await Task.Delay(CheckInterval, stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                return;
+            }
         }
     }
 
-    private async Task UpdateFinishedShowtimes(CancellationToken cancellationToken)
+    private async Task UpdateFinishedShowtimes(
+        CancellationToken cancellationToken)
     {
         using var scope = _scopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var dbContext =
+            scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
         var today = DateTime.Today;
         var now = DateTime.Now;
 
@@ -55,7 +70,8 @@ public sealed class ShowtimeStatusBackgroundService : BackgroundService
 
         foreach (var showtime in showtimes)
         {
-            var endDateTime = showtime.ShowDate.Date.Add(showtime.EndTime);
+            var endDateTime =
+                showtime.ShowDate.Date.Add(showtime.EndTime);
 
             if (showtime.EndTime < showtime.StartTime)
             {

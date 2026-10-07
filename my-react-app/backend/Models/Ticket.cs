@@ -14,9 +14,17 @@ namespace CinemaBackend.Models
 
         public int SeatId { get; set; }
 
+        public int? TicketTypeId { get; set; }
+
         public decimal TicketPrice { get; set; }
 
         public string Status { get; set; } = "Đã đặt";
+
+        public string PaymentStatus { get; set; } = "Chưa thanh toán";
+
+        public string? PaymentMethod { get; set; }
+
+        public string? PaymentTransactionId { get; set; }
 
         public DateTime CreatedAt { get; set; }
 
@@ -31,5 +39,8 @@ namespace CinemaBackend.Models
 
         [ForeignKey(nameof(SeatId))]
         public Seat? Seat { get; set; }
+
+        [ForeignKey(nameof(TicketTypeId))]
+        public TicketType? TicketType { get; set; }
     }
 }

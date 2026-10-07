@@ -21,7 +21,15 @@ namespace CinemaBackend.Data
         public DbSet<Cinema> Cinemas { get; set; }
 
         public DbSet<Showtime> Showtimes { get; set; }
-        public DbSet<Room> Rooms {get; set;}
-        public DbSet<Seat> Seats {get; set;}
+
+        public DbSet<Room> Rooms { get; set; }
+
+        public DbSet<Seat> Seats { get; set; }
+
+        public DbSet<TicketType> TicketTypes { get; set; }
+
+        public DbSet<FoodOrder> FoodOrders { get; set; }
+
+        public DbSet<FoodOrderItem> FoodOrderItems { get; set; }
     }
 }

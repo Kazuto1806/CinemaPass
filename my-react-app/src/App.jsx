@@ -20,6 +20,11 @@ import FoodAdmin from "./pages/Admin/FoodAdmin";
 
 import CinemaAdmin from "./pages/Admin/CinemaAdmin";
 import ShowtimeAdmin from "./pages/Admin/ShowtimeAdmin";
+import RoomAdmin from "./pages/Admin/RoomAdmin";
+import SeatAdmin from "./pages/Admin/SeatAdmin";
+import TicketTypeAdmin from "./pages/Admin/TicketTypeAdmin";
+import FoodOrderAdmin from "./pages/Admin/FoodOrderAdmin";
+import PaymentAdmin from "./pages/Admin/PaymentAdmin";
 
 import "./App.css";
 
@@ -29,30 +34,17 @@ function App() {
       <Header />
 
       <Routes>
-
         {/* =========================
             USER
         ========================= */}
 
-        <Route
-          path="/"
-          element={<Home />}
-        />
+        <Route path="/" element={<Home />} />
 
-        <Route
-          path="/login"
-          element={<Login />}
-        />
+        <Route path="/login" element={<Login />} />
 
-        <Route
-          path="/food"
-          element={<Food />}
-        />
+        <Route path="/food" element={<Food />} />
 
-        <Route
-          path="/account"
-          element={<Account />}
-        />
+        <Route path="/account" element={<Account />} />
 
         {/* =========================
             TÌM KIẾM PHIM
@@ -72,6 +64,10 @@ function App() {
           element={<MovieDetail />}
         />
 
+        {/* =========================
+            ĐẶT VÉ
+        ========================= */}
+
         <Route
           path="/booking"
           element={<Booking />}
@@ -85,7 +81,6 @@ function App() {
           path="/admin"
           element={<AdminLayout />}
         >
-
           {/* DASHBOARD */}
 
           <Route
@@ -121,11 +116,39 @@ function App() {
             element={<FoodAdmin />}
           />
 
+          {/* QUẢN LÝ ĐƠN BẮP NƯỚC */}
+
+          <Route
+            path="food-orders"
+            element={<FoodOrderAdmin />}
+          />
+
+          {/* QUẢN LÝ THANH TOÁN */}
+
+          <Route
+            path="payments"
+            element={<PaymentAdmin />}
+          />
+
           {/* QUẢN LÝ RẠP */}
 
           <Route
             path="cinemas"
             element={<CinemaAdmin />}
+          />
+
+          {/* QUẢN LÝ PHÒNG CHIẾU */}
+
+          <Route
+            path="rooms"
+            element={<RoomAdmin />}
+          />
+
+          {/* QUẢN LÝ GHẾ */}
+
+          <Route
+            path="seats"
+            element={<SeatAdmin />}
           />
 
           {/* QUẢN LÝ SUẤT CHIẾU */}
@@ -135,6 +158,12 @@ function App() {
             element={<ShowtimeAdmin />}
           />
 
+          {/* QUẢN LÝ LOẠI VÉ */}
+
+          <Route
+            path="ticket-types"
+            element={<TicketTypeAdmin />}
+          />
         </Route>
 
         {/* =========================
@@ -158,7 +187,6 @@ function App() {
             </div>
           }
         />
-
       </Routes>
 
       <Footer />

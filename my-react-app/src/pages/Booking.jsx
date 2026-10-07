@@ -14,10 +14,12 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import "./Booking.css";
-import { API_BASE } from '../constants';
+import { API_BASE } from "../constants";
+
 const MOVIE_API_URL = `${API_BASE}/api/movies`;
 const SHOWTIME_API_URL = `${API_BASE}/api/showtimes`;
 const SEAT_API_URL = `${API_BASE}/api/seats`;
+const TICKET_TYPE_API_URL = `${API_BASE}/api/tickettypes`;
 
 const posterAssets = import.meta.glob(
   "../assets/*.{png,jpg,jpeg,webp,avif,gif,svg}",
@@ -31,7 +33,10 @@ const posterAssets = import.meta.glob(
 const getPosterUrl = (posterUrl) => {
   if (!posterUrl) return "";
 
-  if (posterUrl.startsWith("http://") || posterUrl.startsWith("https://")) {
+  if (
+    posterUrl.startsWith("http://") ||
+    posterUrl.startsWith("https://")
+  ) {
     return posterUrl;
   }
 
@@ -108,6 +113,7 @@ function Booking() {
   const [movies, setMovies] = useState([]);
   const [showtimes, setShowtimes] = useState([]);
   const [seatList, setSeatList] = useState([]);
+  const [ticketTypes, setTicketTypes] = useState([]);
 
   const [loading, setLoading] = useState(true);
 
@@ -122,7 +128,10 @@ function Booking() {
   const [selectedCinema, setSelectedCinema] = useState("");
   const [selectedSeats, setSelectedSeats] = useState([]);
 
-  // 1 = chọn suất + ghế
+  const [selectedTicketTypeId, setSelectedTicketTypeId] =
+    useState(null);
+
+  // 1 = chọn suất + ghế + loại vé
   // 2 = thanh toán
   const [bookingStep, setBookingStep] = useState(1);
 
@@ -137,9 +146,14 @@ function Booking() {
       try {
         setLoading(true);
 
-        const [movieResponse, showtimeResponse] = await Promise.all([
+        const [
+          movieResponse,
+          showtimeResponse,
+          ticketTypeResponse,
+        ] = await Promise.all([
           fetch(MOVIE_API_URL),
           fetch(SHOWTIME_API_URL),
+          fetch(TICKET_TYPE_API_URL),
         ]);
 
         if (!movieResponse.ok) {
@@ -153,6 +167,12 @@ function Booking() {
         const movieData = await movieResponse.json();
         const showtimeData = await showtimeResponse.json();
 
+        let ticketTypeData = [];
+
+        if (ticketTypeResponse.ok) {
+          ticketTypeData = await ticketTypeResponse.json();
+        }
+
         const normalizedMovies = Array.isArray(movieData)
           ? movieData.map((movie) => ({
               ...movie,
@@ -160,12 +180,34 @@ function Booking() {
             }))
           : [];
 
+        const normalizedTicketTypes = Array.isArray(ticketTypeData)
+          ? ticketTypeData.filter(
+              (ticketType) =>
+                String(ticketType.status || "Active").toLowerCase() !==
+                "inactive"
+            )
+          : [];
+
         setMovies(normalizedMovies);
-        setShowtimes(Array.isArray(showtimeData) ? showtimeData : []);
+        setShowtimes(
+          Array.isArray(showtimeData) ? showtimeData : []
+        );
+        setTicketTypes(normalizedTicketTypes);
+
+        if (normalizedTicketTypes.length) {
+          setSelectedTicketTypeId(
+            Number(normalizedTicketTypes[0].ticketTypeId)
+          );
+        }
       } catch (error) {
-        console.error("Lỗi tải dữ liệu đặt vé từ backend:", error);
+        console.error(
+          "Lỗi tải dữ liệu đặt vé từ backend:",
+          error
+        );
+
         setMovies([]);
         setShowtimes([]);
+        setTicketTypes([]);
       } finally {
         setLoading(false);
       }
@@ -179,7 +221,9 @@ function Booking() {
 
     if (
       !selectedMovieId ||
-      !movies.some((movie) => movie.movieId === selectedMovieId)
+      !movies.some(
+        (movie) => movie.movieId === selectedMovieId
+      )
     ) {
       setSelectedMovieId(movies[0].movieId);
     }
@@ -187,7 +231,9 @@ function Booking() {
 
   const selectedMovie = useMemo(
     () =>
-      movies.find((movie) => movie.movieId === selectedMovieId) ||
+      movies.find(
+        (movie) => movie.movieId === selectedMovieId
+      ) ||
       movies[0] ||
       null,
     [movies, selectedMovieId]
@@ -197,13 +243,17 @@ function Booking() {
     if (!selectedMovie) return [];
 
     return showtimes.filter(
-      (item) => Number(item.movieId) === Number(selectedMovie.movieId)
+      (item) =>
+        Number(item.movieId) ===
+        Number(selectedMovie.movieId)
     );
   }, [selectedMovie, showtimes]);
 
   const dates = useMemo(() => {
     const uniqueDates = [
-      ...new Set(movieShowtimes.map((item) => item.showDate)),
+      ...new Set(
+        movieShowtimes.map((item) => item.showDate)
+      ),
     ];
 
     return uniqueDates.sort();
@@ -220,7 +270,9 @@ function Booking() {
     const firstDate = dates[0];
 
     setSelectedDate((current) =>
-      current && dates.includes(current) ? current : firstDate
+      current && dates.includes(current)
+        ? current
+        : firstDate
     );
   }, [dates]);
 
@@ -256,7 +308,9 @@ function Booking() {
 
     return Object.values(unique).map((group) => ({
       ...group,
-      times: group.times.sort((a, b) => a.time.localeCompare(b.time)),
+      times: group.times.sort((a, b) =>
+        a.time.localeCompare(b.time)
+      ),
     }));
   }, [movieShowtimes, selectedDate]);
 
@@ -271,26 +325,38 @@ function Booking() {
 
     if (
       !selectedCinema ||
-      !timeOptions.some((group) => group.cinemaName === selectedCinema)
+      !timeOptions.some(
+        (group) => group.cinemaName === selectedCinema
+      )
     ) {
       setSelectedCinema(firstGroup.cinemaName);
     }
 
     const currentGroup =
-      timeOptions.find((group) => group.cinemaName === selectedCinema) ||
-      firstGroup;
+      timeOptions.find(
+        (group) => group.cinemaName === selectedCinema
+      ) || firstGroup;
 
-    const firstTime = currentGroup?.times[0]?.time || "";
+    const firstTime =
+      currentGroup?.times[0]?.time || "";
 
     setSelectedTime((value) =>
-      currentGroup?.times.some((item) => item.time === value)
+      currentGroup?.times.some(
+        (item) => item.time === value
+      )
         ? value
         : firstTime
     );
   }, [selectedCinema, selectedDate, timeOptions]);
 
   const selectedShowtime = useMemo(() => {
-    if (!selectedDate || !selectedCinema || !selectedTime) return null;
+    if (
+      !selectedDate ||
+      !selectedCinema ||
+      !selectedTime
+    ) {
+      return null;
+    }
 
     return movieShowtimes.find(
       (item) =>
@@ -333,7 +399,10 @@ function Booking() {
         setSeatList(Array.isArray(data) ? data : []);
       } catch (error) {
         if (error.name !== "AbortError") {
-          console.error("Lỗi tải ghế từ backend:", error);
+          console.error(
+            "Lỗi tải ghế từ backend:",
+            error
+          );
           setSeatList([]);
         }
       }
@@ -349,7 +418,9 @@ function Booking() {
       current.filter(
         (seat) =>
           !seatList.some(
-            (item) => item.isBooked && item.seatCode === seat
+            (item) =>
+              item.isBooked &&
+              item.seatCode === seat
           )
       )
     );
@@ -363,8 +434,23 @@ function Booking() {
     [seatList]
   );
 
+  const selectedTicketType = useMemo(
+    () =>
+      ticketTypes.find(
+        (ticketType) =>
+          Number(ticketType.ticketTypeId) ===
+          Number(selectedTicketTypeId)
+      ) || null,
+    [ticketTypes, selectedTicketTypeId]
+  );
+
+  const ticketUnitPrice =
+    selectedTicketType?.price != null
+      ? Number(selectedTicketType.price)
+      : Number(selectedShowtime?.ticketPrice || 0);
+
   const totalPrice =
-    (selectedShowtime?.ticketPrice || 0) * selectedSeats.length;
+    ticketUnitPrice * selectedSeats.length;
 
   const toggleSeat = (seat) => {
     if (reservedSeats.includes(seat)) return;
@@ -378,12 +464,28 @@ function Booking() {
 
   const handleContinuePayment = () => {
     if (!selectedShowtime) {
-      alert("Vui lòng chọn suất chiếu trước khi tiếp tục.");
+      alert(
+        "Vui lòng chọn suất chiếu trước khi tiếp tục."
+      );
       return;
     }
 
     if (!selectedSeats.length) {
-      alert("Vui lòng chọn ít nhất một ghế trước khi tiếp tục.");
+      alert(
+        "Vui lòng chọn ít nhất một ghế trước khi tiếp tục."
+      );
+      return;
+    }
+
+    if (!ticketTypes.length) {
+      alert(
+        "Hiện chưa có loại vé. Vui lòng thêm loại vé trong trang quản trị."
+      );
+      return;
+    }
+
+    if (!selectedTicketTypeId) {
+      alert("Vui lòng chọn loại vé.");
       return;
     }
 
@@ -415,12 +517,21 @@ function Booking() {
       return;
     }
 
-    if (!paymentConfirmed) {
-      alert("Vui lòng xác nhận bạn đã thanh toán trước khi tiếp tục.");
+    if (!selectedTicketTypeId) {
+      alert("Vui lòng chọn loại vé.");
       return;
     }
 
-    const userId = Number(localStorage.getItem("userId"));
+    if (!paymentConfirmed) {
+      alert(
+        "Vui lòng xác nhận bạn đã thanh toán trước khi tiếp tục."
+      );
+      return;
+    }
+
+    const userId = Number(
+      localStorage.getItem("userId")
+    );
 
     if (!userId) {
       alert("Bạn cần đăng nhập để đặt vé.");
@@ -441,17 +552,26 @@ function Booking() {
           body: JSON.stringify({
             userId,
             movieId: Number(selectedMovie.movieId),
-            showtimeId: Number(selectedShowtime.showtimeId),
+            showtimeId: Number(
+              selectedShowtime.showtimeId
+            ),
             seatCodes: selectedSeats,
-            ticketPrice: Number(selectedShowtime.ticketPrice || 0),
+            ticketPrice: Number(ticketUnitPrice),
+            ticketTypeId: Number(
+              selectedTicketTypeId
+            ),
           }),
         }
       );
 
-      const data = await response.json().catch(() => ({}));
+      const data = await response
+        .json()
+        .catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.message || "Thanh toán thất bại.");
+        throw new Error(
+          data.message || "Thanh toán thất bại."
+        );
       }
 
       setBookingResult({
@@ -466,7 +586,10 @@ function Booking() {
     } catch (error) {
       console.error("Lỗi thanh toán:", error);
 
-      alert(error.message || "Có lỗi xảy ra khi thanh toán.");
+      alert(
+        error.message ||
+          "Có lỗi xảy ra khi thanh toán."
+      );
     } finally {
       setPaymentLoading(false);
     }
@@ -487,9 +610,14 @@ function Booking() {
     return (
       <main className="booking-page">
         <div className="booking-empty">
-          <h2>Không tìm thấy phim để đặt vé.</h2>
+          <h2>
+            Không tìm thấy phim để đặt vé.
+          </h2>
 
-          <button type="button" onClick={() => navigate("/")}>
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+          >
             <FaChevronLeft />
             Quay lại trang chủ
           </button>
@@ -519,9 +647,18 @@ function Booking() {
             </div>
 
             <div>
+              <span>Loại vé</span>
+              <strong>
+                {selectedTicketType?.name ||
+                  "Chưa cập nhật"}
+              </strong>
+            </div>
+
+            <div>
               <span>Rạp</span>
               <strong>
-                {selectedShowtime?.cinemaName || "Chưa cập nhật"}
+                {selectedShowtime?.cinemaName ||
+                  "Chưa cập nhật"}
               </strong>
             </div>
 
@@ -529,7 +666,9 @@ function Booking() {
               <span>Suất chiếu</span>
               <strong>
                 {selectedShowtime
-                  ? `${formatDate(selectedShowtime.showDate)} • ${formatTime(
+                  ? `${formatDate(
+                      selectedShowtime.showDate
+                    )} • ${formatTime(
                       selectedShowtime.startTime
                     )}`
                   : "Chưa cập nhật"}
@@ -539,14 +678,18 @@ function Booking() {
             <div>
               <span>Ghế</span>
               <strong>
-                {bookingResult?.bookedSeats?.join(", ") ||
+                {bookingResult?.bookedSeats?.join(
+                  ", "
+                ) ||
                   selectedSeats.join(", ")}
               </strong>
             </div>
 
             <div className="success-total">
               <span>Tổng thanh toán</span>
-              <strong>{currency(totalPrice)}</strong>
+              <strong>
+                {currency(totalPrice)}
+              </strong>
             </div>
           </div>
 
@@ -578,7 +721,9 @@ function Booking() {
           }}
         >
           <FaChevronLeft />
-          {bookingStep === 2 ? "Quay lại chọn ghế" : "Quay lại"}
+          {bookingStep === 2
+            ? "Quay lại chọn ghế"
+            : "Quay lại"}
         </button>
 
         {bookingStep === 1 ? (
@@ -589,7 +734,8 @@ function Booking() {
                 alt={selectedMovie.title}
                 className="booking-poster"
                 onError={(event) => {
-                  event.currentTarget.style.display = "none";
+                  event.currentTarget.style.display =
+                    "none";
                 }}
               />
 
@@ -609,7 +755,9 @@ function Booking() {
                   <span>
                     <FaCalendarAlt />
                     {selectedMovie.releaseDate
-                      ? formatDate(selectedMovie.releaseDate)
+                      ? formatDate(
+                          selectedMovie.releaseDate
+                        )
                       : "Chưa cập nhật"}
                   </span>
 
@@ -638,16 +786,21 @@ function Booking() {
                         key={date}
                         type="button"
                         className={`date-button ${
-                          selectedDate === date ? "active" : ""
+                          selectedDate === date
+                            ? "active"
+                            : ""
                         }`}
-                        onClick={() => setSelectedDate(date)}
+                        onClick={() =>
+                          setSelectedDate(date)
+                        }
                       >
                         {formatDate(date)}
                       </button>
                     ))
                   ) : (
                     <p className="booking-empty-text">
-                      Hiện chưa có suất chiếu cho phim này.
+                      Hiện chưa có suất chiếu cho
+                      phim này.
                     </p>
                   )}
                 </div>
@@ -671,42 +824,164 @@ function Booking() {
                         </div>
 
                         <div className="time-list">
-                          {group.times.map((slot) => (
-                            <button
-                              key={`${group.cinemaName}-${slot.time}-${slot.showtimeId}`}
-                              type="button"
-                              className={`time-button ${
-                                selectedCinema ===
-                                  group.cinemaName &&
-                                selectedTime === slot.time
-                                  ? "active"
-                                  : ""
-                              }`}
-                              onClick={() => {
-                                setSelectedCinema(
-                                  group.cinemaName
-                                );
-                                setSelectedTime(slot.time);
-                                setBookingStep(1);
-                              }}
-                            >
-                              <span>{slot.time}</span>
-                              <small>
-                                {currency(slot.price)}
-                              </small>
-                            </button>
-                          ))}
+                          {group.times.map(
+                            (slot) => (
+                              <button
+                                key={`${group.cinemaName}-${slot.time}-${slot.showtimeId}`}
+                                type="button"
+                                className={`time-button ${
+                                  selectedCinema ===
+                                    group.cinemaName &&
+                                  selectedTime ===
+                                    slot.time
+                                    ? "active"
+                                    : ""
+                                }`}
+                                onClick={() => {
+                                  setSelectedCinema(
+                                    group.cinemaName
+                                  );
+                                  setSelectedTime(
+                                    slot.time
+                                  );
+                                  setBookingStep(1);
+                                }}
+                              >
+                                <span>
+                                  {slot.time}
+                                </span>
+
+                                <small>
+                                  {currency(
+                                    slot.price
+                                  )}
+                                </small>
+                              </button>
+                            )
+                          )}
                         </div>
                       </div>
                     ))
                   ) : (
                     <div className="booking-empty-state">
                       <FaClock />
+
                       <p>
-                        Chưa có suất chiếu phù hợp với
-                        ngày bạn chọn.
+                        Chưa có suất chiếu phù
+                        hợp với ngày bạn chọn.
                       </p>
                     </div>
+                  )}
+                </div>
+
+                {/* LOẠI VÉ */}
+                <div
+                  className="ticket-type-section"
+                  style={{
+                    marginTop: "24px",
+                  }}
+                >
+                  <div className="booking-section-title">
+                    <FaTicketAlt />
+                    <h2>Chọn loại vé</h2>
+                  </div>
+
+                  {ticketTypes.length ? (
+                    <div
+                      className="ticket-type-list"
+                      style={{
+                        display: "grid",
+                        gap: "12px",
+                      }}
+                    >
+                      {ticketTypes.map(
+                        (ticketType) => {
+                          const ticketTypeId =
+                            Number(
+                              ticketType.ticketTypeId
+                            );
+
+                          const isActive =
+                            Number(
+                              selectedTicketTypeId
+                            ) === ticketTypeId;
+
+                          return (
+                            <button
+                              key={ticketTypeId}
+                              type="button"
+                              onClick={() =>
+                                setSelectedTicketTypeId(
+                                  ticketTypeId
+                                )
+                              }
+                              style={{
+                                width: "100%",
+                                textAlign: "left",
+                                padding: "16px",
+                                borderRadius:
+                                  "12px",
+                                border: isActive
+                                  ? "2px solid #d4af37"
+                                  : "1px solid #ddd",
+                                background:
+                                  isActive
+                                    ? "rgba(212, 175, 55, 0.08)"
+                                    : "#fff",
+                                cursor: "pointer",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent:
+                                    "space-between",
+                                  alignItems:
+                                    "center",
+                                  gap: "16px",
+                                }}
+                              >
+                                <div>
+                                  <strong>
+                                    {
+                                      ticketType.name
+                                    }
+                                  </strong>
+
+                                  {ticketType.description && (
+                                    <div
+                                      style={{
+                                        marginTop:
+                                          "4px",
+                                        fontSize:
+                                          "13px",
+                                        opacity:
+                                          0.7,
+                                      }}
+                                    >
+                                      {
+                                        ticketType.description
+                                      }
+                                    </div>
+                                  )}
+                                </div>
+
+                                <strong>
+                                  {currency(
+                                    ticketType.price
+                                  )}
+                                </strong>
+                              </div>
+                            </button>
+                          );
+                        }
+                      )}
+                    </div>
+                  ) : (
+                    <p className="booking-empty-text">
+                      Chưa có loại vé. Vui lòng thêm
+                      loại vé trong trang quản trị.
+                    </p>
                   )}
                 </div>
               </section>
@@ -724,28 +999,45 @@ function Booking() {
                 <div className="seat-grid">
                   {seatList.length ? (
                     seatList.map((seat) => {
-                      const seatCode = seat.seatCode;
+                      const seatCode =
+                        seat.seatCode;
+
                       const isReserved =
-                        reservedSeats.includes(seatCode);
+                        reservedSeats.includes(
+                          seatCode
+                        );
+
                       const isSelected =
-                        selectedSeats.includes(seatCode);
+                        selectedSeats.includes(
+                          seatCode
+                        );
 
                       return (
                         <button
                           key={seatCode}
                           type="button"
                           className={`seat ${
-                            isReserved ? "reserved" : ""
+                            isReserved
+                              ? "reserved"
+                              : ""
                           } ${
-                            isSelected ? "selected" : ""
+                            isSelected
+                              ? "selected"
+                              : ""
                           }`}
                           onClick={() =>
-                            toggleSeat(seatCode)
+                            toggleSeat(
+                              seatCode
+                            )
                           }
                           disabled={isReserved}
                           aria-label={`Ghế ${seatCode}`}
                         >
-                          {seatCode.replace(/[0-9]/g, "")}
+                          {seatCode.replace(
+                            /[0-9]/g,
+                            ""
+                          )}
+
                           {seatCode.replace(
                             /[^0-9]/g,
                             ""
@@ -755,8 +1047,8 @@ function Booking() {
                     })
                   ) : (
                     <p className="booking-empty-text">
-                      Sơ đồ ghế đang được cập nhật từ
-                      backend.
+                      Sơ đồ ghế đang được cập nhật
+                      từ backend.
                     </p>
                   )}
                 </div>
@@ -781,6 +1073,7 @@ function Booking() {
                 <div className="booking-summary-box">
                   <div>
                     <small>Phim</small>
+
                     <strong>
                       {selectedMovie.title}
                     </strong>
@@ -788,6 +1081,7 @@ function Booking() {
 
                   <div>
                     <small>Rạp</small>
+
                     <strong>
                       {selectedShowtime?.cinemaName ||
                         "Chưa chọn"}
@@ -796,6 +1090,7 @@ function Booking() {
 
                   <div>
                     <small>Suất chiếu</small>
+
                     <strong>
                       {selectedShowtime
                         ? `${formatDate(
@@ -808,7 +1103,17 @@ function Booking() {
                   </div>
 
                   <div>
+                    <small>Loại vé</small>
+
+                    <strong>
+                      {selectedTicketType?.name ||
+                        "Chưa chọn"}
+                    </strong>
+                  </div>
+
+                  <div>
                     <small>Ghế</small>
+
                     <strong>
                       {selectedSeats.length
                         ? selectedSeats.join(", ")
@@ -828,7 +1133,9 @@ function Booking() {
                 <button
                   type="button"
                   className="booking-confirm-btn"
-                  onClick={handleContinuePayment}
+                  onClick={
+                    handleContinuePayment
+                  }
                 >
                   Tiếp tục thanh toán
                 </button>
@@ -846,8 +1153,8 @@ function Booking() {
               <h1>Thanh toán</h1>
 
               <p>
-                Kiểm tra thông tin và chọn phương thức
-                thanh toán.
+                Kiểm tra thông tin và chọn phương
+                thức thanh toán.
               </p>
             </div>
 
@@ -858,10 +1165,15 @@ function Booking() {
                 <div className="payment-card">
                   <div className="payment-card-title">
                     <FaCreditCard />
+
                     <div>
-                      <h2>Phương thức thanh toán</h2>
+                      <h2>
+                        Phương thức thanh toán
+                      </h2>
+
                       <p>
-                        Chọn một phương thức để tiếp tục
+                        Chọn một phương thức để
+                        tiếp tục
                       </p>
                     </div>
                   </div>
@@ -877,7 +1189,9 @@ function Booking() {
                       }`}
                       onClick={() => {
                         setPaymentMethod("qr");
-                        setPaymentConfirmed(false);
+                        setPaymentConfirmed(
+                          false
+                        );
                       }}
                     >
                       <div className="payment-method-icon">
@@ -890,7 +1204,8 @@ function Booking() {
                         </strong>
 
                         <span>
-                          Thanh toán bằng mã QR ngân hàng
+                          Thanh toán bằng mã QR
+                          ngân hàng
                         </span>
                       </div>
 
@@ -912,7 +1227,9 @@ function Booking() {
                       }`}
                       onClick={() => {
                         setPaymentMethod("card");
-                        setPaymentConfirmed(false);
+                        setPaymentConfirmed(
+                          false
+                        );
                       }}
                     >
                       <div className="payment-method-icon">
@@ -925,7 +1242,8 @@ function Booking() {
                         </strong>
 
                         <span>
-                          Visa, Mastercard, ATM nội địa
+                          Visa, Mastercard, ATM
+                          nội địa
                         </span>
                       </div>
 
@@ -946,8 +1264,12 @@ function Booking() {
                           : ""
                       }`}
                       onClick={() => {
-                        setPaymentMethod("wallet");
-                        setPaymentConfirmed(false);
+                        setPaymentMethod(
+                          "wallet"
+                        );
+                        setPaymentConfirmed(
+                          false
+                        );
                       }}
                     >
                       <div className="payment-method-icon">
@@ -960,13 +1282,15 @@ function Booking() {
                         </strong>
 
                         <span>
-                          Thanh toán qua ví điện tử
+                          Thanh toán qua ví điện
+                          tử
                         </span>
                       </div>
 
                       <i
                         className={`payment-radio ${
-                          paymentMethod === "wallet"
+                          paymentMethod ===
+                          "wallet"
                             ? "checked"
                             : ""
                         }`}
@@ -992,12 +1316,14 @@ function Booking() {
                         </h3>
 
                         <p>
-                          Mở ứng dụng ngân hàng và quét
-                          mã QR để hoàn tất thanh toán.
+                          Mở ứng dụng ngân hàng và
+                          quét mã QR để hoàn tất
+                          thanh toán.
                         </p>
 
                         <strong>
-                          Số tiền: {currency(totalPrice)}
+                          Số tiền:{" "}
+                          {currency(totalPrice)}
                         </strong>
                       </div>
                     </div>
@@ -1024,8 +1350,8 @@ function Booking() {
                       </div>
 
                       <p>
-                        Đây là giao diện mô phỏng thanh
-                        toán thẻ.
+                        Đây là giao diện mô phỏng
+                        thanh toán thẻ.
                       </p>
                     </div>
                   )}
@@ -1039,12 +1365,13 @@ function Booking() {
                       </h3>
 
                       <p>
-                        Chọn ví điện tử của bạn ở bước
-                        thanh toán.
+                        Chọn ví điện tử của bạn ở
+                        bước thanh toán.
                       </p>
 
                       <strong>
-                        Số tiền: {currency(totalPrice)}
+                        Số tiền:{" "}
+                        {currency(totalPrice)}
                       </strong>
                     </div>
                   )}
@@ -1054,7 +1381,9 @@ function Booking() {
                 <button
                   type="button"
                   className="payment-confirmed-btn"
-                  onClick={() => setPaymentConfirmed(true)}
+                  onClick={() =>
+                    setPaymentConfirmed(true)
+                  }
                   disabled={paymentConfirmed}
                 >
                   {paymentConfirmed
@@ -1066,13 +1395,18 @@ function Booking() {
                   type="button"
                   className="payment-submit-btn"
                   onClick={handleBooking}
-                  disabled={paymentLoading || !paymentConfirmed}
+                  disabled={
+                    paymentLoading ||
+                    !paymentConfirmed
+                  }
                 >
                   {paymentLoading
                     ? "Đang xử lý thanh toán..."
                     : !paymentConfirmed
                     ? "Xác nhận thanh toán trước"
-                    : `Hoàn tất đặt vé • ${currency(totalPrice)}`}
+                    : `Hoàn tất đặt vé • ${currency(
+                        totalPrice
+                      )}`}
                 </button>
 
               </div>
@@ -1081,13 +1415,16 @@ function Booking() {
 
                 <div className="payment-order-title">
                   <FaTicketAlt />
+
                   <h2>Thông tin vé</h2>
                 </div>
 
                 <div className="payment-movie">
                   {selectedMovie.posterUrl ? (
                     <img
-                      src={selectedMovie.posterUrl}
+                      src={
+                        selectedMovie.posterUrl
+                      }
                       alt={selectedMovie.title}
                     />
                   ) : (
@@ -1112,6 +1449,7 @@ function Booking() {
 
                   <div>
                     <span>Rạp</span>
+
                     <strong>
                       {selectedShowtime?.cinemaName ||
                         "Chưa chọn"}
@@ -1120,6 +1458,7 @@ function Booking() {
 
                   <div>
                     <span>Phòng</span>
+
                     <strong>
                       {selectedShowtime?.roomName ||
                         "Chưa cập nhật"}
@@ -1128,6 +1467,7 @@ function Booking() {
 
                   <div>
                     <span>Ngày</span>
+
                     <strong>
                       {selectedShowtime
                         ? formatDate(
@@ -1139,6 +1479,7 @@ function Booking() {
 
                   <div>
                     <span>Suất</span>
+
                     <strong>
                       {selectedShowtime
                         ? formatTime(
@@ -1149,7 +1490,17 @@ function Booking() {
                   </div>
 
                   <div>
+                    <span>Loại vé</span>
+
+                    <strong>
+                      {selectedTicketType?.name ||
+                        "Chưa chọn"}
+                    </strong>
+                  </div>
+
+                  <div>
                     <span>Ghế</span>
+
                     <strong>
                       {selectedSeats.join(", ")}
                     </strong>
@@ -1162,9 +1513,7 @@ function Booking() {
                   <div>
                     <span>
                       {selectedSeats.length} vé ×{" "}
-                      {currency(
-                        selectedShowtime?.ticketPrice || 0
-                      )}
+                      {currency(ticketUnitPrice)}
                     </span>
 
                     <strong>
@@ -1173,7 +1522,9 @@ function Booking() {
                   </div>
 
                   <div className="payment-final-total">
-                    <span>Tổng thanh toán</span>
+                    <span>
+                      Tổng thanh toán
+                    </span>
 
                     <strong>
                       {currency(totalPrice)}

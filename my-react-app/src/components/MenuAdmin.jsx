@@ -1,3 +1,4 @@
+
 import {
   FaTachometerAlt,
   FaFilm,
@@ -7,6 +8,12 @@ import {
   FaSignOutAlt,
   FaBuilding,
   FaClock,
+  FaDoorOpen,
+  FaChair,
+  FaTags,
+  FaShoppingCart,
+  FaCreditCard,
+  FaChartBar,
 } from "react-icons/fa";
 
 import { NavLink, useNavigate } from "react-router-dom";
@@ -76,6 +83,28 @@ function MenuAdmin() {
           <span>Quản lý rạp</span>
         </NavLink>
 
+        {/* QUẢN LÝ PHÒNG CHIẾU */}
+        <NavLink
+          to="/admin/rooms"
+          className={({ isActive }) =>
+            `menu-admin-item ${isActive ? "active" : ""}`
+          }
+        >
+          <FaDoorOpen />
+          <span>Quản lý phòng chiếu</span>
+        </NavLink>
+
+        {/* QUẢN LÝ GHẾ */}
+        <NavLink
+          to="/admin/seats"
+          className={({ isActive }) =>
+            `menu-admin-item ${isActive ? "active" : ""}`
+          }
+        >
+          <FaChair />
+          <span>Quản lý ghế ngồi</span>
+        </NavLink>
+
         {/* QUẢN LÝ SUẤT CHIẾU */}
         <NavLink
           to="/admin/showtimes"
@@ -85,6 +114,17 @@ function MenuAdmin() {
         >
           <FaClock />
           <span>Quản lý suất chiếu</span>
+        </NavLink>
+
+        {/* QUẢN LÝ LOẠI VÉ */}
+        <NavLink
+          to="/admin/ticket-types"
+          className={({ isActive }) =>
+            `menu-admin-item ${isActive ? "active" : ""}`
+          }
+        >
+          <FaTags />
+          <span>Quản lý loại vé</span>
         </NavLink>
 
         {/* QUẢN LÝ NGƯỜI DÙNG */}
@@ -120,6 +160,39 @@ function MenuAdmin() {
           <span>Quản lý bắp nước</span>
         </NavLink>
 
+        {/* QUẢN LÝ ĐƠN HÀNG BẮP NƯỚC */}
+        <NavLink
+          to="/admin/food-orders"
+          className={({ isActive }) =>
+            `menu-admin-item ${isActive ? "active" : ""}`
+          }
+        >
+          <FaShoppingCart />
+          <span>Quản lý đơn bắp nước</span>
+        </NavLink>
+
+        {/* THANH TOÁN */}
+        <NavLink
+          to="/admin/payments"
+          className={({ isActive }) =>
+            `menu-admin-item ${isActive ? "active" : ""}`
+          }
+        >
+          <FaCreditCard />
+          <span>Quản lý thanh toán</span>
+        </NavLink>
+
+        {/* BÁO CÁO & THỐNG KÊ */}
+        <NavLink
+          to="/admin/reports"
+          className={({ isActive }) =>
+            `menu-admin-item ${isActive ? "active" : ""}`
+          }
+        >
+          <FaChartBar />
+          <span>Báo cáo & thống kê</span>
+        </NavLink>
+
       </nav>
 
       {/* LOGOUT */}
@@ -140,4 +213,4 @@ function MenuAdmin() {
   );
 }
 
-export default MenuAdmin;
+export default MenuAdmin; 
