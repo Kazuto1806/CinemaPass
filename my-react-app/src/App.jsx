@@ -148,8 +148,8 @@ function App() {
           {/* QUẢN LÝ GHẾ */}
 
           <Route
-            path="seats"
-            element={<SeatsAdmin />}
+            path="seat"
+            element={<SeatAdmin />}
           />
 
           {/* QUẢN LÝ SUẤT CHIẾU */}
