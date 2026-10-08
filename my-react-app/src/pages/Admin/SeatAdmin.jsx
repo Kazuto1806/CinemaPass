@@ -7,9 +7,9 @@ import {
   FaDoorOpen,
 } from "react-icons/fa";
 import "./SeatAdmin.css";
-
-const ROOM_API_URL = "http://localhost:5000/api/rooms";
-const SEAT_API_URL = "http://localhost:5000/api/seats";
+import { API_BASE } from "../../constants";
+const ROOM_API_URL = `${API_BASE}/api/rooms`;
+const SEAT_API_URL = `${API_BASE}/api/seats`;
 
 function SeatAdmin() {
   const [rooms, setRooms] = useState([]);
