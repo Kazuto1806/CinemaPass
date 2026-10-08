@@ -22,7 +22,6 @@ import CinemaAdmin from "./pages/Admin/CinemaAdmin";
 import ShowtimeAdmin from "./pages/Admin/ShowtimeAdmin";
 import RoomAdmin from "./pages/Admin/RoomAdmin";
 import SeatAdmin from "./pages/Admin/SeatAdmin";
-import SeatsAdmin from "./pages/Admin/SeatsAdmin";
 import TicketTypeAdmin from "./pages/Admin/TicketTypeAdmin";
 import FoodOrderAdmin from "./pages/Admin/FoodOrderAdmin";
 import PaymentAdmin from "./pages/Admin/PaymentAdmin";
@@ -148,7 +147,7 @@ function App() {
           {/* QUẢN LÝ GHẾ */}
 
           <Route
-            path="seat"
+            path="seats"
             element={<SeatAdmin />}
           />
 

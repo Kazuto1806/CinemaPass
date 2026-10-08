@@ -16,226 +16,52 @@ namespace CinemaBackend.Controllers
             _context = context;
         }
 
-        // =========================================================
-        // GET: api/seats?roomId=13
-        // GET: api/seats?showtimeId=2
-        // =========================================================
+        // =====================================================
+        // GET: api/seats
+        // GET: api/seats?roomId=4
+        // =====================================================
+
         [HttpGet]
         public async Task<IActionResult> GetSeats(
-            [FromQuery] int? roomId,
-            [FromQuery] int? showtimeId)
+            [FromQuery] int? roomId
+        )
         {
-            int? resolvedRoomId = roomId;
-
-            // Nếu chỉ truyền showtimeId thì lấy RoomId từ Showtime
-            if (!resolvedRoomId.HasValue && showtimeId.HasValue)
-            {
-                resolvedRoomId = await _context.Showtimes
-                    .AsNoTracking()
-                    .Where(s => s.ShowtimeId == showtimeId.Value)
-                    .Select(s => (int?)s.RoomId)
-                    .FirstOrDefaultAsync();
-            }
-
-            if (!resolvedRoomId.HasValue || resolvedRoomId <= 0)
-            {
-                return BadRequest(new
-                {
-                    message = "Thiếu roomId hoặc showtimeId không hợp lệ."
-                });
-            }
-
-            // Kiểm tra phòng chiếu
-            var room = await _context.Rooms
+            var query = _context.Seats
                 .AsNoTracking()
-                .FirstOrDefaultAsync(r => r.RoomId == resolvedRoomId.Value);
+                .AsQueryable();
 
-            if (room == null)
+            if (roomId.HasValue)
             {
-                return NotFound(new
-                {
-                    message = "Phòng chiếu không tồn tại."
-                });
+                query = query.Where(
+                    s => s.RoomId == roomId.Value
+                );
             }
 
-            // Lấy danh sách mã ghế đã được đặt trong suất chiếu
-            var bookedSeatCodes = new List<string>();
-
-            if (showtimeId.HasValue)
-            {
-                bookedSeatCodes = await _context.Tickets
-                    .AsNoTracking()
-                    .Include(t => t.Seat)
-                    .Where(t => t.ShowtimeId == showtimeId.Value)
-                    .Where(t => t.Seat != null)
-                    .Select(t => t.Seat!.SeatCode)
-                    .ToListAsync();
-            }
-
-            // Lấy ghế thật từ database
-            var seats = await _context.Seats
-                .AsNoTracking()
-                .Where(s => s.RoomId == resolvedRoomId.Value)
+            var seats = await query
                 .OrderBy(s => s.RowName)
                 .ThenBy(s => s.SeatNumber)
                 .Select(s => new
                 {
                     seatId = s.SeatId,
+                    roomId = s.RoomId,
                     seatCode = s.SeatCode,
                     rowName = s.RowName,
                     seatNumber = s.SeatNumber,
-                    seatType = s.SeatType,
-                    isBooked = bookedSeatCodes.Contains(s.SeatCode)
+                    seatType = s.SeatType
                 })
                 .ToListAsync();
 
             return Ok(seats);
         }
 
-        // =========================================================
-        // POST: api/seats
-        // Thêm ghế mới
-        // =========================================================
-        [HttpPost]
-        public async Task<IActionResult> CreateSeat([FromBody] CreateSeatRequest request)
-        {
-            if (request == null)
-            {
-                return BadRequest(new
-                {
-                    message = "Dữ liệu ghế không hợp lệ."
-                });
-            }
+        // =====================================================
+        // GET: api/seats/5
+        // =====================================================
 
-            // Kiểm tra RoomId
-            if (request.RoomId <= 0)
-            {
-                return BadRequest(new
-                {
-                    message = "Vui lòng chọn phòng chiếu."
-                });
-            }
-
-            // Kiểm tra mã ghế
-            if (string.IsNullOrWhiteSpace(request.SeatCode))
-            {
-                return BadRequest(new
-                {
-                    message = "Mã ghế không được để trống."
-                });
-            }
-
-            // Kiểm tra hàng ghế
-            if (string.IsNullOrWhiteSpace(request.RowName))
-            {
-                return BadRequest(new
-                {
-                    message = "Hàng ghế không được để trống."
-                });
-            }
-
-            // Kiểm tra số ghế
-            if (request.SeatNumber <= 0)
-            {
-                return BadRequest(new
-                {
-                    message = "Số ghế phải lớn hơn 0."
-                });
-            }
-
-            // Kiểm tra phòng
-            var room = await _context.Rooms
-                .FirstOrDefaultAsync(r => r.RoomId == request.RoomId);
-
-            if (room == null)
-            {
-                return NotFound(new
-                {
-                    message = "Phòng chiếu không tồn tại."
-                });
-            }
-
-            // Đếm số ghế hiện tại
-            var currentSeatCount = await _context.Seats
-                .CountAsync(s => s.RoomId == request.RoomId);
-
-            // Không cho vượt quá sức chứa
-            if (currentSeatCount >= room.Capacity)
-            {
-                return BadRequest(new
-                {
-                    message = $"Phòng {room.RoomName} đã đủ {room.Capacity} ghế."
-                });
-            }
-
-            // Chuẩn hóa dữ liệu
-            var seatCode = request.SeatCode.Trim().ToUpper();
-            var rowName = request.RowName.Trim().ToUpper();
-
-            var seatType = string.IsNullOrWhiteSpace(request.SeatType)
-                ? "Normal"
-                : request.SeatType.Trim();
-
-            // Kiểm tra ghế trùng trong cùng phòng
-            var duplicateSeat = await _context.Seats
-                .AnyAsync(s =>
-                    s.RoomId == request.RoomId &&
-                    s.SeatCode == seatCode);
-
-            if (duplicateSeat)
-            {
-                return Conflict(new
-                {
-                    message = $"Ghế {seatCode} đã tồn tại trong phòng {room.RoomName}."
-                });
-            }
-
-            // Tạo ghế
-            var seat = new Seat
-            {
-                RoomId = request.RoomId,
-                SeatCode = seatCode,
-                RowName = rowName,
-                SeatNumber = request.SeatNumber,
-                SeatType = seatType
-            };
-
-            _context.Seats.Add(seat);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                return Conflict(new
-                {
-                    message = "Không thể thêm ghế. Có thể mã ghế đã tồn tại."
-                });
-            }
-
-            return CreatedAtAction(
-                nameof(GetSeat),
-                new { id = seat.SeatId },
-                new
-                {
-                    seatId = seat.SeatId,
-                    roomId = seat.RoomId,
-                    seatCode = seat.SeatCode,
-                    rowName = seat.RowName,
-                    seatNumber = seat.SeatNumber,
-                    seatType = seat.SeatType,
-                    isBooked = false
-                }
-            );
-        }
-
-        // =========================================================
-        // GET: api/seats/{id}
-        // Lấy 1 ghế
-        // =========================================================
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetSeat(int id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetSeat(
+            int id
+        )
         {
             var seat = await _context.Seats
                 .AsNoTracking()
@@ -255,77 +81,383 @@ namespace CinemaBackend.Controllers
             {
                 return NotFound(new
                 {
-                    message = "Ghế không tồn tại."
+                    message = "Không tìm thấy ghế."
                 });
             }
 
             return Ok(seat);
         }
 
-        // =========================================================
-        // DELETE: api/seats/{id}
-        // Xóa ghế
-        // =========================================================
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteSeat(int id)
+        // =====================================================
+        // POST: api/seats/bulk
+        // =====================================================
+
+        [HttpPost("bulk")]
+        public async Task<IActionResult> CreateSeatsBulk(
+            [FromBody] BulkSeatRequest request
+        )
+        {
+            if (request.RoomId <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "RoomId không hợp lệ."
+                });
+            }
+
+            if (request.Rows <= 0 || request.Rows > 26)
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Số hàng phải từ 1 đến 26."
+                });
+            }
+
+            if (
+                request.SeatsPerRow <= 0 ||
+                request.SeatsPerRow > 50
+            )
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Số ghế mỗi hàng phải từ 1 đến 50."
+                });
+            }
+
+            // =================================================
+            // KIỂM TRA ROOM
+            // =================================================
+
+            var room = await _context.Rooms
+                .FirstOrDefaultAsync(
+                    r => r.RoomId == request.RoomId
+                );
+
+            if (room == null)
+            {
+                return NotFound(new
+                {
+                    message =
+                        "Không tìm thấy phòng chiếu."
+                });
+            }
+
+            // =================================================
+            // KIỂM TRA GHẾ ĐÃ TỒN TẠI
+            // =================================================
+
+            var existingCount =
+                await _context.Seats
+                    .CountAsync(
+                        s =>
+                            s.RoomId ==
+                            request.RoomId
+                    );
+
+            if (existingCount > 0)
+            {
+                return BadRequest(new
+                {
+                    message =
+                        $"Phòng {room.RoomName} đã có {existingCount} ghế. Hãy xóa sơ đồ cũ trước."
+                });
+            }
+
+            // =================================================
+            // KIỂM TRA LOẠI GHẾ
+            // =================================================
+
+            var seatType =
+                string.IsNullOrWhiteSpace(
+                    request.SeatType
+                )
+                    ? "Normal"
+                    : request.SeatType.Trim();
+
+            var validSeatTypes =
+                new[]
+                {
+                    "Normal",
+                    "VIP",
+                    "Couple"
+                };
+
+            if (
+                !validSeatTypes.Contains(
+                    seatType,
+                    StringComparer.OrdinalIgnoreCase
+                )
+            )
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Loại ghế không hợp lệ."
+                });
+            }
+
+            // =================================================
+            // TẠO GHẾ
+            // =================================================
+
+            var seats = new List<Seat>();
+
+            var capacity = room.Capacity;
+
+            var requestedTotal =
+                request.Rows *
+                request.SeatsPerRow;
+
+            var totalToCreate =
+                Math.Min(
+                    requestedTotal,
+                    capacity
+                );
+
+            var createdCount = 0;
+
+            for (
+                var rowIndex = 0;
+                rowIndex < request.Rows;
+                rowIndex++
+            )
+            {
+                if (
+                    createdCount >=
+                    totalToCreate
+                )
+                {
+                    break;
+                }
+
+                var rowName =
+                    ((char)(
+                        'A' + rowIndex
+                    )).ToString();
+
+                for (
+                    var seatNumber = 1;
+                    seatNumber <=
+                    request.SeatsPerRow;
+                    seatNumber++
+                )
+                {
+                    if (
+                        createdCount >=
+                        totalToCreate
+                    )
+                    {
+                        break;
+                    }
+
+                    var seat = new Seat
+                    {
+                        RoomId =
+                            request.RoomId,
+
+                        SeatCode =
+                            $"{rowName}{seatNumber}",
+
+                        RowName =
+                            rowName,
+
+                        SeatNumber =
+                            seatNumber,
+
+                        SeatType =
+                            seatType
+                    };
+
+                    seats.Add(seat);
+
+                    createdCount++;
+                }
+            }
+
+            // =================================================
+            // SAVE
+            // =================================================
+
+            _context.Seats.AddRange(seats);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message =
+                    "Tạo sơ đồ ghế thành công.",
+
+                roomId =
+                    room.RoomId,
+
+                roomName =
+                    room.RoomName,
+
+                createdCount,
+
+                capacity
+            });
+        }
+
+        // =====================================================
+        // DELETE ONE SEAT
+        // DELETE: api/seats/5
+        // =====================================================
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteSeat(
+            int id
+        )
         {
             var seat = await _context.Seats
-                .FirstOrDefaultAsync(s => s.SeatId == id);
+                .FirstOrDefaultAsync(
+                    s => s.SeatId == id
+                );
 
             if (seat == null)
             {
                 return NotFound(new
                 {
-                    message = "Ghế không tồn tại."
+                    message =
+                        "Không tìm thấy ghế."
                 });
             }
 
-            // Kiểm tra ghế đã được sử dụng trong vé chưa
-            var hasTickets = await _context.Tickets
-                .AnyAsync(t => t.SeatId == id);
+            // =================================================
+            // KIỂM TRA VÉ
+            // =================================================
 
-            if (hasTickets)
+            var hasTicket =
+                await _context.Tickets
+                    .AnyAsync(
+                        t =>
+                            t.SeatId ==
+                            id
+                    );
+
+            if (hasTicket)
             {
                 return BadRequest(new
                 {
-                    message = $"Không thể xóa ghế {seat.SeatCode} vì ghế đã có vé."
+                    message =
+                        "Không thể xóa ghế đã từng được sử dụng trong vé."
                 });
             }
 
             _context.Seats.Remove(seat);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                return BadRequest(new
-                {
-                    message = "Không thể xóa ghế vì ghế đang được sử dụng."
-                });
-            }
+            await _context.SaveChangesAsync();
 
             return Ok(new
             {
-                message = $"Đã xóa ghế {seat.SeatCode} thành công."
+                message =
+                    "Xóa ghế thành công."
+            });
+        }
+
+        // =====================================================
+        // DELETE ALL SEATS OF ROOM
+        // DELETE: api/seats/room/4
+        // =====================================================
+
+        [HttpDelete("room/{roomId}")]
+        public async Task<IActionResult>
+            DeleteSeatsByRoom(
+                int roomId
+            )
+        {
+            var room = await _context.Rooms
+                .FirstOrDefaultAsync(
+                    r => r.RoomId == roomId
+                );
+
+            if (room == null)
+            {
+                return NotFound(new
+                {
+                    message =
+                        "Không tìm thấy phòng."
+                });
+            }
+
+            var seats = await _context.Seats
+                .Where(
+                    s =>
+                        s.RoomId ==
+                        roomId
+                )
+                .ToListAsync();
+
+            if (seats.Count == 0)
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Phòng này chưa có ghế."
+                });
+            }
+
+            var seatIds =
+                seats
+                    .Select(
+                        s => s.SeatId
+                    )
+                    .ToList();
+
+            // =================================================
+            // KIỂM TRA TICKET
+            // =================================================
+
+            var hasTicket =
+                await _context.Tickets
+                    .AnyAsync(
+                        t =>
+                            seatIds.Contains(
+                                t.SeatId
+                            )
+                    );
+
+            if (hasTicket)
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Không thể xóa sơ đồ ghế vì một hoặc nhiều ghế đã được sử dụng trong vé."
+                });
+            }
+
+            _context.Seats.RemoveRange(
+                seats
+            );
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message =
+                    "Xóa toàn bộ sơ đồ ghế thành công.",
+
+                deletedCount =
+                    seats.Count
             });
         }
     }
 
-    // =============================================================
-    // REQUEST MODEL: THÊM GHẾ
-    // =============================================================
-    public class CreateSeatRequest
+    // =========================================================
+    // REQUEST MODEL
+    // =========================================================
+
+    public class BulkSeatRequest
     {
         public int RoomId { get; set; }
 
-        public string SeatCode { get; set; } = string.Empty;
+        public int Rows { get; set; }
 
-        public string RowName { get; set; } = string.Empty;
+        public int SeatsPerRow { get; set; }
 
-        public int SeatNumber { get; set; }
-
-        public string SeatType { get; set; } = "Normal";
+        public string SeatType { get; set; }
+            = "Normal";
     }
 }

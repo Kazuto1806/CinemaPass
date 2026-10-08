@@ -1,16 +1,35 @@
 import { useEffect, useMemo, useState } from "react";
+
 import {
   FaPlus,
   FaTrash,
   FaSearch,
   FaChair,
   FaDoorOpen,
+  FaLayerGroup,
 } from "react-icons/fa";
+
 import "./SeatAdmin.css";
+
 import { API_BASE } from "../../constants";
+
 const ROOM_API_URL = `${API_BASE}/api/rooms`;
 const SEAT_API_URL = `${API_BASE}/api/seats`;
+const parseResponse = async (response) => {
+  const text = await response.text();
 
+  if (!text) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return {
+      message: text,
+    };
+  }
+};
 function SeatAdmin() {
   const [rooms, setRooms] = useState([]);
   const [seats, setSeats] = useState([]);
@@ -20,20 +39,24 @@ function SeatAdmin() {
   const [searchText, setSearchText] = useState("");
 
   const [showForm, setShowForm] = useState(false);
+
   const [saving, setSaving] = useState(false);
 
+  const [deleting, setDeleting] = useState(false);
+
   const [formData, setFormData] = useState({
-    seatCode: "",
-    rowName: "",
-    seatNumber: "",
+    rows: 0,
+    seatsPerRow: 10,
+    seatType: "Normal",
   });
 
   const [loadingRooms, setLoadingRooms] = useState(true);
+
   const [loadingSeats, setLoadingSeats] = useState(false);
 
-  // =========================
+  // =====================================================
   // LOAD ROOMS
-  // =========================
+  // =====================================================
 
   const loadRooms = async () => {
     try {
@@ -42,29 +65,41 @@ function SeatAdmin() {
       const response = await fetch(ROOM_API_URL);
 
       if (!response.ok) {
-        throw new Error("Không thể tải danh sách phòng.");
+        throw new Error(
+          "Không thể tải danh sách phòng."
+        );
       }
 
       const data = await response.json();
 
-      const roomList = Array.isArray(data) ? data : [];
+      const roomList = Array.isArray(data)
+        ? data
+        : [];
 
       setRooms(roomList);
 
-      if (roomList.length > 0 && !selectedRoomId) {
-        setSelectedRoomId(String(roomList[0].roomId));
+      if (
+        roomList.length > 0 &&
+        !selectedRoomId
+      ) {
+        setSelectedRoomId(
+          String(roomList[0].roomId)
+        );
       }
     } catch (error) {
       console.error(error);
-      alert("Không thể tải danh sách phòng chiếu.");
+
+      alert(
+        "Không thể tải danh sách phòng chiếu."
+      );
     } finally {
       setLoadingRooms(false);
     }
   };
 
-  // =========================
+  // =====================================================
   // LOAD SEATS
-  // =========================
+  // =====================================================
 
   const loadSeats = async (roomId) => {
     if (!roomId) {
@@ -80,32 +115,42 @@ function SeatAdmin() {
       );
 
       if (!response.ok) {
-        throw new Error("Không thể tải danh sách ghế.");
+        throw new Error(
+          "Không thể tải danh sách ghế."
+        );
       }
 
       const data = await response.json();
 
-      setSeats(Array.isArray(data) ? data : []);
+      setSeats(
+        Array.isArray(data)
+          ? data
+          : []
+      );
     } catch (error) {
       console.error(error);
-      alert("Không thể tải danh sách ghế.");
+
+      alert(
+        "Không thể tải danh sách ghế."
+      );
+
       setSeats([]);
     } finally {
       setLoadingSeats(false);
     }
   };
 
-  // =========================
+  // =====================================================
   // INITIAL LOAD
-  // =========================
+  // =====================================================
 
   useEffect(() => {
     loadRooms();
   }, []);
 
-  // =========================
+  // =====================================================
   // LOAD WHEN ROOM CHANGES
-  // =========================
+  // =====================================================
 
   useEffect(() => {
     if (selectedRoomId) {
@@ -113,20 +158,24 @@ function SeatAdmin() {
     }
   }, [selectedRoomId]);
 
-  // =========================
+  // =====================================================
   // SELECTED ROOM
-  // =========================
+  // =====================================================
 
   const selectedRoom = useMemo(() => {
     return rooms.find(
       (room) =>
-        Number(room.roomId) === Number(selectedRoomId)
+        Number(room.roomId) ===
+        Number(selectedRoomId)
     );
-  }, [rooms, selectedRoomId]);
+  }, [
+    rooms,
+    selectedRoomId,
+  ]);
 
-  // =========================
-  // FILTER SEATS
-  // =========================
+  // =====================================================
+  // FILTER
+  // =====================================================
 
   const filteredSeats = useMemo(() => {
     const keyword = searchText
@@ -139,27 +188,38 @@ function SeatAdmin() {
 
     return seats.filter((seat) => {
       const seatCode =
-        seat.seatCode?.toLowerCase() || "";
+        seat.seatCode
+          ?.toLowerCase() || "";
 
       const rowName =
-        seat.rowName?.toLowerCase() || "";
+        seat.rowName
+          ?.toLowerCase() || "";
+
+      const seatType =
+        seat.seatType
+          ?.toLowerCase() || "";
 
       return (
         seatCode.includes(keyword) ||
-        rowName.includes(keyword)
+        rowName.includes(keyword) ||
+        seatType.includes(keyword)
       );
     });
-  }, [seats, searchText]);
+  }, [
+    seats,
+    searchText,
+  ]);
 
-  // =========================
+  // =====================================================
   // GROUP SEATS BY ROW
-  // =========================
+  // =====================================================
 
   const seatRows = useMemo(() => {
     const grouped = {};
 
     filteredSeats.forEach((seat) => {
-      const row = seat.rowName || "?";
+      const row =
+        seat.rowName || "?";
 
       if (!grouped[row]) {
         grouped[row] = [];
@@ -168,113 +228,395 @@ function SeatAdmin() {
       grouped[row].push(seat);
     });
 
+    Object.values(grouped).forEach(
+      (rowSeats) => {
+        rowSeats.sort(
+          (a, b) =>
+            Number(a.seatNumber || 0) -
+            Number(b.seatNumber || 0)
+        );
+      }
+    );
+
     return Object.entries(grouped).sort(
-      ([a], [b]) => a.localeCompare(b)
+      ([a], [b]) =>
+        a.localeCompare(b)
     );
   }, [filteredSeats]);
 
-  // =========================
+  // =====================================================
   // RESET FORM
-  // =========================
+  // =====================================================
 
   const resetForm = () => {
+    const capacity =
+      Number(
+        selectedRoom?.capacity || 0
+      );
+
+    const defaultRows =
+      capacity > 0
+        ? Math.ceil(capacity / 10)
+        : 5;
+
     setFormData({
-      seatCode: "",
-      rowName: "",
-      seatNumber: "",
+      rows: defaultRows,
+      seatsPerRow: 10,
+      seatType: "Normal",
     });
 
     setShowForm(false);
   };
 
-  // =========================
-  // HANDLE FORM
-  // =========================
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // =========================
-  // ADD SEAT
-  // =========================
+  // =====================================================
+  // OPEN CREATE FORM
+  // =====================================================
 
   const handleAddSeat = () => {
     if (!selectedRoomId) {
-      alert("Vui lòng chọn phòng chiếu.");
+      alert(
+        "Vui lòng chọn phòng chiếu."
+      );
       return;
     }
 
+    const capacity =
+      Number(
+        selectedRoom?.capacity || 0
+      );
+
+    const defaultRows =
+      capacity > 0
+        ? Math.ceil(capacity / 10)
+        : 5;
+
     setFormData({
-      seatCode: "",
-      rowName: "",
-      seatNumber: "",
+      rows: defaultRows,
+      seatsPerRow: 10,
+      seatType: "Normal",
     });
 
     setShowForm(true);
   };
 
-  // =========================
-  // SAVE SEAT
-  // =========================
+  // =====================================================
+  // HANDLE FORM
+  // =====================================================
+
+  const handleChange = (event) => {
+    const {
+      name,
+      value,
+    } = event.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        name === "rows" ||
+        name === "seatsPerRow"
+          ? Number(value)
+          : value,
+    }));
+  };
+
+  // =====================================================
+  // GENERATE SEATS
+  // =====================================================
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!selectedRoomId) {
-      alert("Vui lòng chọn phòng chiếu.");
+      alert(
+        "Vui lòng chọn phòng chiếu."
+      );
       return;
     }
 
-    if (!formData.seatCode.trim()) {
-      alert("Vui lòng nhập mã ghế.");
+    const rows =
+      Number(formData.rows);
+
+    const seatsPerRow =
+      Number(
+        formData.seatsPerRow
+      );
+
+    const capacity =
+      Number(
+        selectedRoom?.capacity || 0
+      );
+
+    if (rows <= 0) {
+      alert(
+        "Số hàng phải lớn hơn 0."
+      );
       return;
     }
 
-    if (!formData.rowName.trim()) {
-      alert("Vui lòng nhập hàng ghế.");
+    if (rows > 26) {
+      alert(
+        "Chỉ hỗ trợ tối đa 26 hàng từ A đến Z."
+      );
       return;
     }
 
-    if (!formData.seatNumber) {
-      alert("Vui lòng nhập số ghế.");
+    if (seatsPerRow <= 0) {
+      alert(
+        "Số ghế mỗi hàng phải lớn hơn 0."
+      );
       return;
     }
 
-    /*
-      Hiện tại backend SeatsController chỉ có GET.
-      Vì vậy giao diện này chưa gửi POST để tránh
-      gọi API chưa tồn tại.
-    */
+    if (seatsPerRow > 50) {
+      alert(
+        "Số ghế mỗi hàng không được vượt quá 50."
+      );
+      return;
+    }
 
-    alert(
-      "Giao diện thêm ghế đã sẵn sàng. Backend POST ghế sẽ được làm ở bước tiếp theo."
+    if (capacity <= 0) {
+      alert(
+        "Phòng chưa có sức chứa hợp lệ."
+      );
+      return;
+    }
+
+    const expectedTotal = Math.min(
+      rows * seatsPerRow,
+      capacity
     );
 
-    resetForm();
+    if (seats.length > 0) {
+      alert(
+        "Phòng này đã có ghế. Hãy xóa sơ đồ cũ trước khi tạo lại."
+      );
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const response = await fetch(
+        `${SEAT_API_URL}/bulk`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            roomId:
+              Number(
+                selectedRoomId
+              ),
+
+            rows,
+
+            seatsPerRow,
+
+            seatType:
+              formData.seatType,
+          }),
+        }
+      );
+
+      const data =
+        await parseResponse(response);
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+          `Không thể tạo sơ đồ ghế.HTTP ${response.status}`
+        );
+      }
+
+      alert(
+        `Đã tạo ${data.createdCount || expectedTotal} ghế thành công.`
+      );
+
+      setShowForm(false);
+
+      await loadSeats(
+        selectedRoomId
+      );
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        error.message ||
+        `Không thể tạo sơ đồ ghế. HTTP ${response.status}`
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // =========================
+  // =====================================================
+  // DELETE ONE SEAT
+  // =====================================================
+
+  const handleDeleteSeat = async (
+    seat
+  ) => {
+    const confirmed =
+      window.confirm(
+        `Bạn có chắc muốn xóa ghế ${seat.seatCode}?`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const response =
+        await fetch(
+          `${SEAT_API_URL}/${seat.seatId}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+          "Không thể xóa ghế."
+        );
+      }
+
+      await loadSeats(
+        selectedRoomId
+      );
+
+      alert(
+        "Xóa ghế thành công."
+      );
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        error.message ||
+        "Không thể xóa ghế."
+      );
+    }
+  };
+
+  // =====================================================
+  // DELETE ALL SEATS IN ROOM
+  // =====================================================
+
+  const handleClearRoom = async () => {
+    if (!selectedRoomId) {
+      return;
+    }
+
+    if (seats.length === 0) {
+      alert(
+        "Phòng này chưa có ghế."
+      );
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        `Bạn có chắc muốn xóa toàn bộ ${seats.length} ghế của ${selectedRoom?.roomName}?`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeleting(true);
+
+      const response =
+        await fetch(
+          `${SEAT_API_URL}/room/${selectedRoomId}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+      const data =
+        await parseResponse(response);
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+          `Không thể xóa sơ đồ ghế. HTTP ${response.status}`
+        );
+      }
+
+      await loadSeats(
+        selectedRoomId
+      );
+
+      alert(
+        "Đã xóa toàn bộ sơ đồ ghế."
+      );
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        error.message ||
+        "Không thể xóa sơ đồ ghế."
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // =====================================================
   // STATS
-  // =========================
+  // =====================================================
 
-  const totalSeats = seats.length;
+  const totalSeats =
+    seats.length;
 
-  const bookedSeats = seats.filter(
-    (seat) => seat.isBooked
-  ).length;
+  const capacity =
+    Number(
+      selectedRoom?.capacity || 0
+    );
 
-  const availableSeats =
-    totalSeats - bookedSeats;
+  const remainingSeats =
+    Math.max(
+      capacity - totalSeats,
+      0
+    );
 
-  // =========================
+  const previewTotal = Math.min(
+    Number(formData.rows || 0) *
+      Number(
+        formData.seatsPerRow || 0
+      ),
+    capacity
+  );
+
+  // =====================================================
+  // SEAT TYPE TEXT
+  // =====================================================
+
+  const getSeatTypeText = (
+    seatType
+  ) => {
+    if (seatType === "VIP") {
+      return "VIP";
+    }
+
+    if (seatType === "Couple") {
+      return "Couple";
+    }
+
+    return "Thường";
+  };
+
+  // =====================================================
   // RENDER
-  // =========================
+  // =====================================================
 
   return (
     <div className="seat-admin">
@@ -289,7 +631,9 @@ function SeatAdmin() {
 
             <FaChair />
 
-            <h1>Quản lý ghế ngồi</h1>
+            <h1>
+              Quản lý ghế ngồi
+            </h1>
 
           </div>
 
@@ -299,14 +643,38 @@ function SeatAdmin() {
 
         </div>
 
-        <button
-          type="button"
-          className="seat-add-btn"
-          onClick={handleAddSeat}
-        >
-          <FaPlus />
-          Thêm ghế
-        </button>
+        <div className="seat-header-actions">
+
+          <button
+            type="button"
+            className="seat-add-btn"
+            onClick={
+              handleAddSeat
+            }
+          >
+            <FaPlus />
+
+            Tạo sơ đồ ghế
+          </button>
+
+          {seats.length > 0 && (
+            <button
+              type="button"
+              className="seat-clear-btn"
+              onClick={
+                handleClearRoom
+              }
+              disabled={deleting}
+            >
+              <FaTrash />
+
+              {deleting
+                ? "Đang xóa..."
+                : "Xóa sơ đồ"}
+            </button>
+          )}
+
+        </div>
 
       </div>
 
@@ -315,19 +683,29 @@ function SeatAdmin() {
       <div className="seat-room-selector">
 
         <div className="seat-room-selector-icon">
+
           <FaDoorOpen />
+
         </div>
 
         <div className="seat-room-selector-content">
 
-          <label>Phòng chiếu</label>
+          <label>
+            Phòng chiếu
+          </label>
 
           <select
-            value={selectedRoomId}
-            onChange={(event) =>
-              setSelectedRoomId(event.target.value)
+            value={
+              selectedRoomId
             }
-            disabled={loadingRooms}
+            onChange={(event) =>
+              setSelectedRoomId(
+                event.target.value
+              )
+            }
+            disabled={
+              loadingRooms
+            }
           >
 
             {loadingRooms ? (
@@ -347,8 +725,12 @@ function SeatAdmin() {
               rooms.map((room) => (
 
                 <option
-                  key={room.roomId}
-                  value={room.roomId}
+                  key={
+                    room.roomId
+                  }
+                  value={
+                    room.roomId
+                  }
                 >
                   {room.roomName}
                 </option>
@@ -386,12 +768,21 @@ function SeatAdmin() {
         <div className="seat-stat-card">
 
           <div className="seat-stat-icon purple">
+
             <FaChair />
+
           </div>
 
           <div>
-            <span>Tổng ghế</span>
-            <strong>{totalSeats}</strong>
+
+            <span>
+              Tổng ghế
+            </span>
+
+            <strong>
+              {totalSeats}
+            </strong>
+
           </div>
 
         </div>
@@ -399,25 +790,21 @@ function SeatAdmin() {
         <div className="seat-stat-card">
 
           <div className="seat-stat-icon green">
-            <FaChair />
+
+            <FaLayerGroup />
+
           </div>
 
           <div>
-            <span>Ghế trống</span>
-            <strong>{availableSeats}</strong>
-          </div>
 
-        </div>
+            <span>
+              Chưa tạo
+            </span>
 
-        <div className="seat-stat-card">
+            <strong>
+              {remainingSeats}
+            </strong>
 
-          <div className="seat-stat-icon orange">
-            <FaChair />
-          </div>
-
-          <div>
-            <span>Đã đặt</span>
-            <strong>{bookedSeats}</strong>
           </div>
 
         </div>
@@ -425,14 +812,44 @@ function SeatAdmin() {
         <div className="seat-stat-card">
 
           <div className="seat-stat-icon blue">
+
             <FaDoorOpen />
+
           </div>
 
           <div>
-            <span>Phòng</span>
+
+            <span>
+              Sức chứa
+            </span>
+
             <strong>
-              {selectedRoom?.roomName || "-"}
+              {capacity}
             </strong>
+
+          </div>
+
+        </div>
+
+        <div className="seat-stat-card">
+
+          <div className="seat-stat-icon orange">
+
+            <FaChair />
+
+          </div>
+
+          <div>
+
+            <span>
+              Phòng
+            </span>
+
+            <strong>
+              {selectedRoom?.roomName ||
+                "-"}
+            </strong>
+
           </div>
 
         </div>
@@ -449,17 +866,23 @@ function SeatAdmin() {
 
           <input
             type="text"
-            placeholder="Tìm mã ghế..."
-            value={searchText}
+            placeholder="Tìm mã ghế, hàng hoặc loại ghế..."
+            value={
+              searchText
+            }
             onChange={(event) =>
-              setSearchText(event.target.value)
+              setSearchText(
+                event.target.value
+              )
             }
           />
 
         </div>
 
         <span className="seat-count">
+
           {filteredSeats.length} ghế
+
         </span>
 
       </div>
@@ -472,17 +895,18 @@ function SeatAdmin() {
 
           <div>
 
-            <h2>Sơ đồ ghế</h2>
+            <h2>
+              Sơ đồ ghế
+            </h2>
 
             <p>
-              {selectedRoom?.roomName || "Chưa chọn phòng"}
+              {selectedRoom?.roomName ||
+                "Chưa chọn phòng"}
             </p>
 
           </div>
 
         </div>
-
-        {/* SCREEN */}
 
         <div className="cinema-screen">
           MÀN HÌNH
@@ -497,69 +921,108 @@ function SeatAdmin() {
         ) : seatRows.length === 0 ? (
 
           <div className="seat-empty">
-            Phòng này chưa có ghế.
+
+            <FaChair />
+
+            <p>
+              Phòng này chưa có ghế.
+            </p>
+
+            <button
+              type="button"
+              className="seat-create-empty-btn"
+              onClick={
+                handleAddSeat
+              }
+            >
+              <FaPlus />
+              Tạo sơ đồ ghế
+            </button>
+
           </div>
 
         ) : (
 
           <div className="seat-map">
 
-            {seatRows.map(([rowName, rowSeats]) => (
+            {seatRows.map(
+              ([
+                rowName,
+                rowSeats,
+              ]) => (
 
-              <div
-                className="seat-row"
-                key={rowName}
-              >
+                <div
+                  className="seat-row"
+                  key={rowName}
+                >
 
-                <div className="seat-row-label">
-                  {rowName}
+                  <div className="seat-row-label">
+                    {rowName}
+                  </div>
+
+                  <div className="seat-row-list">
+
+                    {rowSeats.map(
+                      (seat) => {
+
+                        const seatType =
+                          seat.seatType ||
+                          "Normal";
+
+                        return (
+
+                          <button
+                            type="button"
+                            key={
+                              seat.seatId
+                            }
+                            className={`seat-item ${seatType.toLowerCase()}`}
+                            title={`${seat.seatCode} - ${getSeatTypeText(
+                              seatType
+                            )}`}
+                          >
+                            {seat.seatCode}
+                          </button>
+
+                        );
+                      }
+                    )}
+
+                  </div>
+
                 </div>
 
-                <div className="seat-row-list">
-
-                  {rowSeats.map((seat) => (
-
-                    <button
-                      type="button"
-                      key={seat.seatId}
-                      className={
-                        seat.isBooked
-                          ? "seat-item booked"
-                          : "seat-item available"
-                      }
-                      title={
-                        seat.isBooked
-                          ? `${seat.seatCode} - Đã đặt`
-                          : `${seat.seatCode} - Còn trống`
-                      }
-                    >
-                      {seat.seatCode}
-                    </button>
-
-                  ))}
-
-                </div>
-
-              </div>
-
-            ))}
+              )
+            )}
 
           </div>
 
         )}
 
-        {/* LEGEND */}
-
         <div className="seat-legend">
 
           <div>
-            <span className="legend-box available"></span>
-            Ghế trống
+
+            <span className="legend-box normal"></span>
+
+            Ghế thường
+
           </div>
 
           <div>
-            <span className="legend-box booked"></span>
-            Đã đặt
+
+            <span className="legend-box vip"></span>
+
+            Ghế VIP
+
+          </div>
+
+          <div>
+
+            <span className="legend-box couple"></span>
+
+            Ghế Couple
+
           </div>
 
         </div>
@@ -574,7 +1037,9 @@ function SeatAdmin() {
 
           <div>
 
-            <h2>Danh sách ghế</h2>
+            <h2>
+              Danh sách ghế
+            </h2>
 
             <p>
               Chi tiết ghế của phòng đang chọn
@@ -591,78 +1056,129 @@ function SeatAdmin() {
             <thead>
 
               <tr>
-                <th>ID</th>
-                <th>Mã ghế</th>
-                <th>Hàng</th>
-                <th>Số ghế</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
+
+                <th>
+                  ID
+                </th>
+
+                <th>
+                  Mã ghế
+                </th>
+
+                <th>
+                  Hàng
+                </th>
+
+                <th>
+                  Số ghế
+                </th>
+
+                <th>
+                  Loại ghế
+                </th>
+
+                <th>
+                  Thao tác
+                </th>
+
               </tr>
 
             </thead>
 
             <tbody>
 
-              {filteredSeats.map((seat) => (
+              {filteredSeats.length === 0 ? (
 
-                <tr key={seat.seatId}>
+                <tr>
 
-                  <td>
-                    #{seat.seatId}
-                  </td>
-
-                  <td>
-
-                    <strong>
-                      {seat.seatCode}
-                    </strong>
-
-                  </td>
-
-                  <td>
-                    {seat.rowName}
-                  </td>
-
-                  <td>
-                    {seat.seatNumber}
-                  </td>
-
-                  <td>
-
-                    <span
-                      className={
-                        seat.isBooked
-                          ? "seat-status booked"
-                          : "seat-status available"
-                      }
-                    >
-                      {seat.isBooked
-                        ? "Đã đặt"
-                        : "Còn trống"}
-                    </span>
-
-                  </td>
-
-                  <td>
-
-                    <button
-                      type="button"
-                      className="seat-delete-btn"
-                      disabled={seat.isBooked}
-                      title={
-                        seat.isBooked
-                          ? "Không thể xóa ghế đã được đặt"
-                          : "Xóa ghế"
-                      }
-                    >
-                      <FaTrash />
-                    </button>
+                  <td
+                    colSpan="6"
+                    className="seat-empty"
+                  >
+                    Chưa có ghế
 
                   </td>
 
                 </tr>
 
-              ))}
+              ) : (
+
+                filteredSeats.map(
+                  (seat) => (
+
+                    <tr
+                      key={
+                        seat.seatId
+                      }
+                    >
+
+                      <td>
+                        #
+                        {
+                          seat.seatId
+                        }
+                      </td>
+
+                      <td>
+                        <strong>
+                          {
+                            seat.seatCode
+                          }
+                        </strong>
+                      </td>
+
+                      <td>
+                        {
+                          seat.rowName
+                        }
+                      </td>
+
+                      <td>
+                        {
+                          seat.seatNumber
+                        }
+                      </td>
+
+                      <td>
+
+                        <span
+                          className={`seat-type-badge ${
+                            (
+                              seat.seatType ||
+                              "Normal"
+                            ).toLowerCase()
+                          }`}
+                        >
+                          {getSeatTypeText(
+                            seat.seatType
+                          )}
+                        </span>
+
+                      </td>
+
+                      <td>
+
+                        <button
+                          type="button"
+                          className="seat-delete-btn"
+                          onClick={() =>
+                            handleDeleteSeat(
+                              seat
+                            )
+                          }
+                          title="Xóa ghế"
+                        >
+                          <FaTrash />
+                        </button>
+
+                      </td>
+
+                    </tr>
+
+                  )
+                )
+
+              )}
 
             </tbody>
 
@@ -672,7 +1188,7 @@ function SeatAdmin() {
 
       </div>
 
-      {/* ADD SEAT MODAL */}
+      {/* GENERATE MODAL */}
 
       {showForm && (
 
@@ -684,10 +1200,14 @@ function SeatAdmin() {
 
               <div>
 
-                <h2>Thêm ghế</h2>
+                <h2>
+                  Tạo sơ đồ ghế
+                </h2>
 
                 <p>
-                  {selectedRoom?.roomName || ""}
+                  {
+                    selectedRoom?.roomName
+                  }
                 </p>
 
               </div>
@@ -695,7 +1215,9 @@ function SeatAdmin() {
               <button
                 type="button"
                 className="seat-modal-close"
-                onClick={resetForm}
+                onClick={
+                  resetForm
+                }
               >
                 ×
               </button>
@@ -704,52 +1226,127 @@ function SeatAdmin() {
 
             <form
               className="seat-form"
-              onSubmit={handleSubmit}
+              onSubmit={
+                handleSubmit
+              }
             >
 
               <div className="seat-form-group">
 
-                <label>Mã ghế</label>
-
-                <input
-                  type="text"
-                  name="seatCode"
-                  value={formData.seatCode}
-                  onChange={handleChange}
-                  placeholder="Ví dụ: A1"
-                  required
-                />
-
-              </div>
-
-              <div className="seat-form-group">
-
-                <label>Hàng ghế</label>
-
-                <input
-                  type="text"
-                  name="rowName"
-                  value={formData.rowName}
-                  onChange={handleChange}
-                  placeholder="Ví dụ: A"
-                  required
-                />
-
-              </div>
-
-              <div className="seat-form-group">
-
-                <label>Số ghế</label>
+                <label>
+                  Số hàng
+                </label>
 
                 <input
                   type="number"
-                  name="seatNumber"
-                  value={formData.seatNumber}
-                  onChange={handleChange}
+                  name="rows"
+                  value={
+                    formData.rows
+                  }
+                  onChange={
+                    handleChange
+                  }
                   min="1"
-                  placeholder="Ví dụ: 1"
+                  max="26"
                   required
                 />
+
+                <small>
+                  Ví dụ: 10 hàng = A → J
+                </small>
+
+              </div>
+
+              <div className="seat-form-group">
+
+                <label>
+                  Số ghế mỗi hàng
+                </label>
+
+                <input
+                  type="number"
+                  name="seatsPerRow"
+                  value={
+                    formData.seatsPerRow
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  min="1"
+                  max="50"
+                  required
+                />
+
+                <small>
+                  Ví dụ: 10 ghế / hàng
+                </small>
+
+              </div>
+
+              <div className="seat-form-group">
+
+                <label>
+                  Loại ghế
+                </label>
+
+                <select
+                  name="seatType"
+                  value={
+                    formData.seatType
+                  }
+                  onChange={
+                    handleChange
+                  }
+                >
+
+                  <option value="Normal">
+                    Ghế thường
+                  </option>
+
+                  <option value="VIP">
+                    Ghế VIP
+                  </option>
+
+                  <option value="Couple">
+                    Ghế Couple
+                  </option>
+
+                </select>
+
+              </div>
+
+              <div className="seat-preview">
+
+                <span>
+                  Sẽ tạo
+                </span>
+
+                <strong>
+                  {previewTotal} ghế
+                </strong>
+
+                <small>
+                  Sức chứa phòng:{" "}
+                  {capacity} ghế
+                </small>
+
+              </div>
+
+              <div className="seat-form-warning">
+
+                Hệ thống tự động đánh số:
+
+                <br />
+
+                A1 → A{formData.seatsPerRow}
+
+                <br />
+
+                B1 → B{formData.seatsPerRow}
+
+                <br />
+
+                C1 → C{formData.seatsPerRow}
 
               </div>
 
@@ -758,7 +1355,9 @@ function SeatAdmin() {
                 <button
                   type="button"
                   className="seat-cancel-btn"
-                  onClick={resetForm}
+                  onClick={
+                    resetForm
+                  }
                 >
                   Hủy
                 </button>
@@ -766,11 +1365,14 @@ function SeatAdmin() {
                 <button
                   type="submit"
                   className="seat-save-btn"
-                  disabled={saving}
+                  disabled={
+                    saving ||
+                    seats.length > 0
+                  }
                 >
                   {saving
-                    ? "Đang lưu..."
-                    : "Thêm ghế"}
+                    ? "Đang tạo..."
+                    : "Tạo sơ đồ"}
                 </button>
 
               </div>
