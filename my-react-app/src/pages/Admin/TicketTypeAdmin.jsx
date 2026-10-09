@@ -99,12 +99,20 @@ function TicketTypeAdmin() {
   };
 
   const formatStatus = (status) => {
-    const normalized = String(status || "").toLowerCase();
+    const value = String(status || "").trim();
+    const normalized = value
+      .replace(/Dang ho\?t d\?ng/gi, "Đang hoạt động")
+      .replace(/Ðang ho\?t d\?ng/gi, "Đang hoạt động")
+      .replace(/Đang ho\?t d\?ng/gi, "Đang hoạt động")
+      .replace(/ho\?t/gi, "hoạt")
+      .replace(/d\?ng/gi, "động")
+      .toLowerCase();
 
     if (
       normalized === "active" ||
       normalized === "đang hoạt động" ||
-      normalized === "hoạt động"
+      normalized === "hoạt động" ||
+      normalized === "dang hoạt động"
     ) {
       return "Đang hoạt động";
     }
@@ -112,12 +120,13 @@ function TicketTypeAdmin() {
     if (
       normalized === "inactive" ||
       normalized === "tạm ngưng" ||
-      normalized === "ngừng hoạt động"
+      normalized === "ngừng hoạt động" ||
+      normalized === "tam ngung"
     ) {
       return "Tạm ngưng";
     }
 
-    return status || "Tạm ngưng";
+    return value || "Tạm ngưng";
   };
 
   const isActive = (status) => {

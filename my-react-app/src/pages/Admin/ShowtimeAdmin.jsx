@@ -10,15 +10,25 @@ const CINEMA_API_URL = `${API_BASE}/api/cinemas`;
 const normalizeShowtimeStatus = (status) => {
   const value = String(status || "").trim();
 
+  const repaired = value
+    .replace(/Dang ho\?t d\?ng/gi, "Đang hoạt động")
+    .replace(/Ðang ho\?t d\?ng/gi, "Đang hoạt động")
+    .replace(/Đang ho\?t d\?ng/gi, "Đang hoạt động")
+    .replace(/ho\?t/gi, "hoạt")
+    .replace(/d\?ng/gi, "động")
+    .replace(/\s+/g, " ")
+    .trim();
+
   if (
-    !value ||
-    value.toLowerCase() === "active" ||
-    value.toLowerCase() === "đang hoạt động"
-  )
-   {
+    !repaired ||
+    repaired.toLowerCase() === "active" ||
+    repaired.toLowerCase() === "đang hoạt động" ||
+    repaired.toLowerCase() === "dang hoạt động"
+  ) {
     return "Đang hoạt động";
   }
-  return value;
+
+  return repaired;
 };
 
 function ShowtimeAdmin() {
