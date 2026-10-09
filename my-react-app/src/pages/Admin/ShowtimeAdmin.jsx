@@ -11,21 +11,46 @@ const normalizeShowtimeStatus = (status) => {
   const value = String(status || "").trim();
 
   const repaired = value
+    .replace(/T\?m ngung/gi, "Tạm ngưng")
+    .replace(/Tam ngung/gi, "Tạm ngưng")
+    .replace(/T\s*am\s*ngung/gi, "Tạm ngưng")
+    .replace(/Da k\?t th\?c/gi, "Đã kết thúc")
+    .replace(/D\? k\?t th\?c/gi, "Đã kết thúc")
+    .replace(/Da ket thuc/gi, "Đã kết thúc")
+    .replace(/Đang ho\?t d\?ng/gi, "Đang hoạt động")
     .replace(/Dang ho\?t d\?ng/gi, "Đang hoạt động")
     .replace(/Ðang ho\?t d\?ng/gi, "Đang hoạt động")
-    .replace(/Đang ho\?t d\?ng/gi, "Đang hoạt động")
     .replace(/ho\?t/gi, "hoạt")
     .replace(/d\?ng/gi, "động")
+    .replace(/k\?t th\?c/gi, "kết thúc")
+    .replace(/\?/g, "")
     .replace(/\s+/g, " ")
     .trim();
 
+  const normalizedLower = repaired.toLowerCase();
+
   if (
     !repaired ||
-    repaired.toLowerCase() === "active" ||
-    repaired.toLowerCase() === "đang hoạt động" ||
-    repaired.toLowerCase() === "dang hoạt động"
+    normalizedLower === "active" ||
+    normalizedLower === "đang hoạt động" ||
+    normalizedLower === "dang hoạt động"
   ) {
     return "Đang hoạt động";
+  }
+
+  if (
+    normalizedLower === "tạm ngưng" ||
+    normalizedLower === "tam ngung"
+  ) {
+    return "Tạm ngưng";
+  }
+
+  if (
+    normalizedLower === "đã kết thúc" ||
+    normalizedLower === "da ket thuc" ||
+    normalizedLower === "kết thúc"
+  ) {
+    return "Đã kết thúc";
   }
 
   return repaired;
