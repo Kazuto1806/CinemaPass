@@ -17,6 +17,7 @@ const normalizeShowtimeStatus = (status) => {
     .replace(/Da k\?t th\?c/gi, "Đã kết thúc")
     .replace(/D\? k\?t th\?c/gi, "Đã kết thúc")
     .replace(/Da ket thuc/gi, "Đã kết thúc")
+    .replace(/Đang kt thúc/gi,"Đã kết thúc")
     .replace(/Đang ho\?t d\?ng/gi, "Đang hoạt động")
     .replace(/Dang ho\?t d\?ng/gi, "Đang hoạt động")
     .replace(/Ðang ho\?t d\?ng/gi, "Đang hoạt động")
