@@ -13,11 +13,11 @@ const normalizeShowtimeStatus = (status) => {
   if (
     !value ||
     value.toLowerCase() === "active" ||
-    value.toLowerCase() === "ðang ho?t d?ng"
-  ) {
+    value.toLowerCase() === "đang hoạt động"
+  )
+   {
     return "Đang hoạt động";
   }
-
   return value;
 };
 
