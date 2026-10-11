@@ -15,38 +15,54 @@ const normalizeShowtimeStatus = (status) => {
   }
 
   const normalized = value
-    .toLowerCase()
+    .replace(/Ð/g, "Đ")
+    .replace(/\?/g, "")
+    .replace(/[^a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF\s]/g, " ")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, " ")
-    .trim();
+    .trim()
+    .toLowerCase();
 
-  if (
-    normalized === "active" ||
-    normalized.includes("dang hoat dong") ||
-    normalized.includes("đang hoạt động") ||
-    normalized.includes("dang hoat dong") ||
-    normalized.includes("hoat dong")
-  ) {
+  const activePatterns = [
+    "active",
+    "dang hoat dong",
+    "dang hot dong",
+    "dang hoat dong",
+    "hoat dong",
+    "đang hoat dong",
+    "đang hoạt động",
+    "dang hoat dong",
+  ];
+
+  const pausedPatterns = [
+    "tam ngung",
+    "tạm ngưng",
+    "ngung",
+  ];
+
+  const endedPatterns = [
+    "da ket thuc",
+    "da kt thuc",
+    "ket thuc",
+    "kt thuc",
+    "đã ket thuc",
+    "đã kt thuc",
+    "kết thúc",
+    "kt thúc",
+    "đã kết thúc",
+    "đã kt thúc",
+  ];
+
+  if (activePatterns.some((term) => normalized.includes(term))) {
     return "Đang hoạt động";
   }
 
-  if (
-    normalized.includes("tam ngung") ||
-    normalized.includes("tạm ngưng") ||
-    normalized.includes("ngung")
-  ) {
+  if (pausedPatterns.some((term) => normalized.includes(term))) {
     return "Tạm ngưng";
   }
 
-  if (
-    normalized.includes("ket thuc") ||
-    normalized.includes("kết thúc") ||
-    normalized.includes("kt thuc") ||
-    normalized.includes("da ket thuc") ||
-    normalized.includes("đã kết thúc") ||
-    normalized.includes("da kt thuc") ||
-    normalized.includes("đã kt thúc") ||
-    normalized.includes("kt thúc")
-  ) {
+  if (endedPatterns.some((term) => normalized.includes(term))) {
     return "Đã kết thúc";
   }
 

@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using CinemaBackend.Data;
 using CinemaBackend.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -468,48 +470,65 @@ namespace CinemaBackend.Controllers
                 return "Đang hoạt động";
             }
 
-            var normalized = status.Trim();
-            var lower = normalized
+            var cleaned = status
+                .Trim()
                 .Replace("Ð", "Đ")
-                .ToLowerInvariant();
+                .Replace("?", string.Empty)
+                .Replace("_", " ");
+
+            var normalized = cleaned.Normalize(NormalizationForm.FormD);
+            var builder = new StringBuilder();
+
+            foreach (var ch in normalized)
+            {
+                var category = CharUnicodeInfo.GetUnicodeCategory(ch);
+                if (category != UnicodeCategory.NonSpacingMark)
+                {
+                    builder.Append(ch);
+                }
+            }
+
+            var candidate = builder.ToString()
+                .Replace("đ", "d")
+                .Replace("Đ", "D")
+                .Replace("-", " ")
+                .Replace("/", " ")
+                .Replace("\\", " ")
+                .Replace(".", " ")
+                .Replace(",", " ");
+
+            var lower = string.Join(" ", candidate.Split(
+                new[] { ' ', '\t', '\r', '\n' },
+                StringSplitOptions.RemoveEmptyEntries)).ToLowerInvariant();
 
             if (
                 lower.Contains("active") ||
                 lower.Contains("dang hoat dong") ||
-                lower.Contains("đang hoạt động") ||
-                lower.Contains("dang ho?t d?ng") ||
                 lower.Contains("dang hot dong") ||
                 lower.Contains("hoat dong") ||
-                lower.Contains("hoạt động")
+                lower.Contains("dang hoat")
             )
             {
                 return "Đang hoạt động";
             }
 
-            if (
-                lower.Contains("tam ngung") ||
-                lower.Contains("tạm ngưng") ||
-                lower.Contains("ngung")
-            )
+            if (lower.Contains("tam ngung") || lower.Contains("ngung"))
             {
                 return "Tạm ngưng";
             }
 
             if (
                 lower.Contains("da ket thuc") ||
-                lower.Contains("đã kết thúc") ||
-                lower.Contains("da kt thuc") ||
-                lower.Contains("đã kt thúc") ||
                 lower.Contains("ket thuc") ||
-                lower.Contains("kết thúc") ||
                 lower.Contains("kt thuc") ||
-                lower.Contains("kt thúc")
+                lower.Contains("da kt thuc") ||
+                lower.Contains("thuc")
             )
             {
                 return "Đã kết thúc";
             }
 
-            return normalized;
+            return status.Trim();
         }
 
         private async Task<bool> HasScheduleConflict(
