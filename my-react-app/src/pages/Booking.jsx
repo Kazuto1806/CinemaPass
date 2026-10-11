@@ -33,20 +33,29 @@ const posterAssets = import.meta.glob(
 const getPosterUrl = (posterUrl) => {
   if (!posterUrl) return "";
 
+  const normalized = String(posterUrl).trim();
+
   if (
-    posterUrl.startsWith("http://") ||
-    posterUrl.startsWith("https://")
+    normalized.startsWith("http://") ||
+    normalized.startsWith("https://")
   ) {
-    return posterUrl;
+    return normalized;
   }
 
-  if (posterUrl.startsWith("/uploads/")) {
-    return `${API_BASE}${posterUrl}`;
+  if (
+    normalized.startsWith("/uploads/") ||
+    normalized.startsWith("uploads/")
+  ) {
+    const uploadPath = normalized.startsWith("/")
+      ? normalized
+      : `/${normalized}`;
+
+    return `${API_BASE}${uploadPath}`;
   }
 
-  const fileName = posterUrl.split("/").pop()?.toLowerCase();
+  const fileName = normalized.split("/").pop()?.toLowerCase();
 
-  if (!fileName) return posterUrl;
+  if (!fileName) return normalized;
 
   const asset = Object.entries(posterAssets).find(
     ([path]) => path.split("/").pop()?.toLowerCase() === fileName
@@ -56,7 +65,7 @@ const getPosterUrl = (posterUrl) => {
     return asset[1];
   }
 
-  return posterUrl;
+  return normalized;
 };
 
 const formatDate = (value) => {

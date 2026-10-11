@@ -42,15 +42,17 @@ const getPosterUrl = (posterUrl) => {
     return "";
   }
 
+  const normalized = String(posterUrl).trim();
+
   // =========================
   // URL ĐẦY ĐỦ
   // =========================
 
   if (
-    posterUrl.startsWith("http://") ||
-    posterUrl.startsWith("https://")
+    normalized.startsWith("http://") ||
+    normalized.startsWith("https://")
   ) {
-    return posterUrl;
+    return normalized;
   }
 
 
@@ -59,9 +61,14 @@ const getPosterUrl = (posterUrl) => {
   // =========================
 
   if (
-    posterUrl.startsWith("/uploads/")
+    normalized.startsWith("/uploads/") ||
+    normalized.startsWith("uploads/")
   ) {
-    return `${API_BASE}${posterUrl}`;
+    const uploadPath = normalized.startsWith("/")
+      ? normalized
+      : `/${normalized}`;
+
+    return `${API_BASE}${uploadPath}`;
   }
 
 
@@ -69,7 +76,7 @@ const getPosterUrl = (posterUrl) => {
   // POSTER TRONG SRC/ASSETS
   // =========================
 
-  const fileName = posterUrl
+  const fileName = normalized
     .split("/")
     .pop()
     ?.toLowerCase();
@@ -94,7 +101,7 @@ const getPosterUrl = (posterUrl) => {
 
 
   // Không tìm thấy asset
-  return posterUrl;
+  return normalized;
 };
 
 

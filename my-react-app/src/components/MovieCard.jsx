@@ -4,25 +4,39 @@ import { API_BASE } from "../constants";
 const getPosterUrl = (posterUrl) => {
   if (!posterUrl) return "";
 
+  const normalized = String(posterUrl).trim();
+
   // Nếu đã là URL đầy đủ
   if (
-    posterUrl.startsWith("http://") ||
-    posterUrl.startsWith("https://")
+    normalized.startsWith("http://") ||
+    normalized.startsWith("https://")
   ) {
-    return posterUrl;
+    return normalized;
   }
 
   // Poster được upload lên ASP.NET Core
-  if (posterUrl.startsWith("/uploads/")) {
-    return `${API_BASE}${posterUrl}`;
+  if (
+    normalized.startsWith("/uploads/") ||
+    normalized.startsWith("uploads/")
+  ) {
+    const uploadPath = normalized.startsWith("/")
+      ? normalized
+      : `/${normalized}`;
+
+    return `${API_BASE}${uploadPath}`;
   }
 
   // Poster nằm trong public/assets
-  if (posterUrl.startsWith("/assets/")) {
-    return posterUrl;
+  if (
+    normalized.startsWith("/assets/") ||
+    normalized.startsWith("assets/")
+  ) {
+    return normalized.startsWith("/")
+      ? normalized
+      : `/${normalized}`;
   }
 
-  return posterUrl;
+  return normalized;
 };
 
 function MovieCard({ movie }) {

@@ -22,7 +22,27 @@ const getPosterUrl = (posterUrl) => {
     return "";
   }
 
-  const fileName = posterUrl.split("/").pop();
+  const normalized = String(posterUrl).trim();
+
+  if (
+    normalized.startsWith("http://") ||
+    normalized.startsWith("https://")
+  ) {
+    return normalized;
+  }
+
+  if (
+    normalized.startsWith("/uploads/") ||
+    normalized.startsWith("uploads/")
+  ) {
+    const uploadPath = normalized.startsWith("/")
+      ? normalized
+      : `/${normalized}`;
+
+    return `${API_BASE}${uploadPath}`;
+  }
+
+  const fileName = normalized.split("/").pop();
 
   const asset = Object.entries(posterAssets).find(([path]) =>
     path.endsWith(`/${fileName}`)
@@ -32,14 +52,7 @@ const getPosterUrl = (posterUrl) => {
     return asset[1];
   }
 
-  if (
-    posterUrl.startsWith("http://") ||
-    posterUrl.startsWith("https://")
-  ) {
-    return posterUrl;
-  }
-
-  return posterUrl;
+  return normalized;
 };
 
 const Home = () => {
