@@ -62,7 +62,6 @@ public sealed class ShowtimeStatusBackgroundService : BackgroundService
 
         var showtimes = await dbContext.Showtimes
             .Where(showtime =>
-                showtime.Status != "Đã kết thúc" &&
                 showtime.ShowDate <= today)
             .ToListAsync(cancellationToken);
 
@@ -70,6 +69,8 @@ public sealed class ShowtimeStatusBackgroundService : BackgroundService
 
         foreach (var showtime in showtimes)
         {
+            showtime.Status = NormalizeShowtimeStatus(showtime.Status);
+
             var endDateTime =
                 showtime.ShowDate.Date.Add(showtime.EndTime);
 
@@ -78,7 +79,7 @@ public sealed class ShowtimeStatusBackgroundService : BackgroundService
                 endDateTime = endDateTime.AddDays(1);
             }
 
-            if (endDateTime <= now)
+            if (showtime.Status != "Đã kết thúc" && endDateTime <= now)
             {
                 showtime.Status = "Đã kết thúc";
                 changed = true;
@@ -89,5 +90,54 @@ public sealed class ShowtimeStatusBackgroundService : BackgroundService
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
+    }
+
+    private static string NormalizeShowtimeStatus(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            return "Đang hoạt động";
+        }
+
+        var value = status.Trim();
+        var lower = value.Replace("Ð", "Đ").ToLowerInvariant();
+
+        if (
+            lower.Contains("active") ||
+            lower.Contains("dang hoat dong") ||
+            lower.Contains("đang hoạt động") ||
+            lower.Contains("dang ho?t d?ng") ||
+            lower.Contains("dang hot dong") ||
+            lower.Contains("hoat dong") ||
+            lower.Contains("hoạt động")
+        )
+        {
+            return "Đang hoạt động";
+        }
+
+        if (
+            lower.Contains("tam ngung") ||
+            lower.Contains("tạm ngưng") ||
+            lower.Contains("ngung")
+        )
+        {
+            return "Tạm ngưng";
+        }
+
+        if (
+            lower.Contains("da ket thuc") ||
+            lower.Contains("đã kết thúc") ||
+            lower.Contains("da kt thuc") ||
+            lower.Contains("đã kt thúc") ||
+            lower.Contains("ket thuc") ||
+            lower.Contains("kết thúc") ||
+            lower.Contains("kt thuc") ||
+            lower.Contains("kt thúc")
+        )
+        {
+            return "Đã kết thúc";
+        }
+
+        return value;
     }
 }
