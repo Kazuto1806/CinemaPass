@@ -1,6 +1,7 @@
 using CinemaBackend.Data;
 using CinemaBackend.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +28,15 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+var uploadsRoot = Path.Combine(app.Environment.ContentRootPath, "uploads");
+Directory.CreateDirectory(Path.Combine(uploadsRoot, "posters"));
+
 app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsRoot),
+    RequestPath = "/uploads"
+});
 
 app.UseSwagger();
 

@@ -49,6 +49,18 @@ function MovieCard({ movie }) {
           src={getPosterUrl(movie.posterUrl)}
           alt={movie.title}
           className="movie-poster"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+              <svg xmlns="http://www.w3.org/2000/svg" width="600" height="900" viewBox="0 0 600 900">
+                <rect width="600" height="900" fill="#1f2937"/>
+                <rect x="40" y="40" width="520" height="820" rx="24" fill="#111827" stroke="#374151" stroke-width="4"/>
+                <circle cx="300" cy="320" r="110" fill="#374151"/>
+                <path d="M220 470C250 430 270 420 300 420C330 420 350 430 380 470L420 610H180L220 470Z" fill="#374151"/>
+                <text x="300" y="750" text-anchor="middle" fill="#e5e7eb" font-family="Arial, sans-serif" font-size="42" font-weight="700">NO POSTER</text>
+              </svg>
+            `)}`;
+          }}
         />
       ) : (
         <div className="movie-poster movie-poster-placeholder">

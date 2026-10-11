@@ -283,9 +283,8 @@ namespace CinemaBackend.Controllers
                 );
             }
 
-            // Tạo thư mục
             var uploadFolder = Path.Combine(
-                _environment.WebRootPath,
+                _environment.ContentRootPath,
                 "uploads",
                 "posters"
             );
@@ -349,7 +348,7 @@ namespace CinemaBackend.Controllers
             }
 
             var filePath = Path.Combine(
-                _environment.WebRootPath,
+                _environment.ContentRootPath,
                 "uploads",
                 "posters",
                 fileName
