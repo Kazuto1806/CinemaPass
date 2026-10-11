@@ -10,51 +10,47 @@ const CINEMA_API_URL = `${API_BASE}/api/cinemas`;
 const normalizeShowtimeStatus = (status) => {
   const value = String(status || "").trim();
 
-  const repaired = value
-    .replace(/T\?m ngung/gi, "Tạm ngưng")
-    .replace(/Tam ngung/gi, "Tạm ngưng")
-    .replace(/T\s*am\s*ngung/gi, "Tạm ngưng")
-    .replace(/Da k\?t th\?c/gi, "Đã kết thúc")
-    .replace(/D\? k\?t th\?c/gi, "Đã kết thúc")
-    .replace(/Da ket thuc/gi, "Đã kết thúc")
-    .replace(/Đã kt thúc/gi,"Đã kết thúc")
-    .replace(/Đang ho\?t d\?ng/gi, "Đang hoạt động")
-    .replace(/Dang ho\?t d\?ng/gi, "Đang hoạt động")
-    .replace(/Ðang ho\?t d\?ng/gi, "Đang hoạt động")
-    .replace(/ho\?t/gi, "hoạt")
-    .replace(/d\?ng/gi, "động")
-    .replace(/k\?t th\?c/gi, "kết thúc")
-    .replace(/\?/g, "")
+  if (!value) {
+    return "Đang hoạt động";
+  }
+
+  const normalized = value
+    .toLowerCase()
     .replace(/\s+/g, " ")
     .trim();
 
-  const normalizedLower = repaired.toLowerCase();
-
   if (
-    !repaired ||
-    normalizedLower === "active" ||
-    normalizedLower === "đang hoạt động" ||
-    normalizedLower === "dang hoạt động"
+    normalized === "active" ||
+    normalized.includes("dang hoat dong") ||
+    normalized.includes("đang hoạt động") ||
+    normalized.includes("dang hoat dong") ||
+    normalized.includes("hoat dong")
   ) {
     return "Đang hoạt động";
   }
 
   if (
-    normalizedLower === "tạm ngưng" ||
-    normalizedLower === "tam ngung"
+    normalized.includes("tam ngung") ||
+    normalized.includes("tạm ngưng") ||
+    normalized.includes("ngung")
   ) {
     return "Tạm ngưng";
   }
 
   if (
-    normalizedLower === "đã kết thúc" ||
-    normalizedLower === "da ket thuc" ||
-    normalizedLower === "kết thúc"
+    normalized.includes("ket thuc") ||
+    normalized.includes("kết thúc") ||
+    normalized.includes("kt thuc") ||
+    normalized.includes("da ket thuc") ||
+    normalized.includes("đã kết thúc") ||
+    normalized.includes("da kt thuc") ||
+    normalized.includes("đã kt thúc") ||
+    normalized.includes("kt thúc")
   ) {
     return "Đã kết thúc";
   }
 
-  return repaired;
+  return value;
 };
 
 function ShowtimeAdmin() {
