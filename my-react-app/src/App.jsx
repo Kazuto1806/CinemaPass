@@ -17,7 +17,7 @@ import MovieAdmin from "./pages/Admin/MovieAdmin";
 import UserAdmin from "./pages/Admin/UserAdmin";
 import TicketAdmin from "./pages/Admin/TicketAdmin";
 import FoodAdmin from "./pages/Admin/FoodAdmin";
-
+import ReportAdmin from "./pages/Admin/ReportAdmin";
 import CinemaAdmin from "./pages/Admin/CinemaAdmin";
 import ShowtimeAdmin from "./pages/Admin/ShowtimeAdmin";
 import RoomAdmin from "./pages/Admin/RoomAdmin";
@@ -163,6 +163,13 @@ function App() {
           <Route
             path="ticket-types"
             element={<TicketTypeAdmin />}
+          />
+
+          {/* BÁO CÁO & THỐNG KÊ */}
+
+          <Route
+            path="reports"
+            element={<ReportAdmin />}
           />
         </Route>
 
