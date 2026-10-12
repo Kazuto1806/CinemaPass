@@ -275,6 +275,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  color: white;
 }
 
 .ticket-type-category-label {
