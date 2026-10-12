@@ -10,7 +10,7 @@ import {
 } from "react-icons/fa";
 
 import NotificationPopup from "../../components/NotificationPopup";
-import { API_BASE } from "../../constants";
+import { API_BASE, getMissingPosterFallback } from "../../constants";
 
 import "./MovieAdmin.css";
 
@@ -39,6 +39,12 @@ const posterAssets = import.meta.glob(
 // =====================================================
 
 const getPosterUrl = (posterUrl) => {
+  const fallback = getMissingPosterFallback(posterUrl);
+
+  if (fallback) {
+    return fallback;
+  }
+
   if (!posterUrl) {
     return "";
   }

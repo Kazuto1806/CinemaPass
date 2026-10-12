@@ -15,7 +15,7 @@ import {
 } from "react-icons/fa";
 
 import "./MovieDetail.css";
-import { API_BASE } from '../constants';
+import { API_BASE, getMissingPosterFallback } from '../constants';
 const API_URL =`${API_BASE}/api/movies`;
 
 
@@ -43,6 +43,9 @@ const getPosterUrl = (posterUrl) => {
   }
 
   const normalized = String(posterUrl).trim();
+  const fallback = getMissingPosterFallback(normalized);
+
+  if (fallback) return fallback;
 
   // =========================
   // URL ĐẦY ĐỦ

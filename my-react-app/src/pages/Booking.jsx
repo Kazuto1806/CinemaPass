@@ -14,7 +14,7 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import "./Booking.css";
-import { API_BASE } from "../constants";
+import { API_BASE, getMissingPosterFallback } from "../constants";
 
 const MOVIE_API_URL = `${API_BASE}/api/movies`;
 const SHOWTIME_API_URL = `${API_BASE}/api/showtimes`;
@@ -34,6 +34,9 @@ const getPosterUrl = (posterUrl) => {
   if (!posterUrl) return "";
 
   const normalized = String(posterUrl).trim();
+  const fallback = getMissingPosterFallback(normalized);
+
+  if (fallback) return fallback;
 
   if (
     normalized.startsWith("http://") ||

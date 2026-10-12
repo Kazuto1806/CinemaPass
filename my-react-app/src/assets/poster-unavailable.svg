@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="900" viewBox="0 0 600 900">
+  <rect width="600" height="900" fill="#171c20"/>
+  <rect x="44" y="44" width="512" height="812" rx="12" fill="#20272c" stroke="#59636a" stroke-width="4"/>
+  <path d="M210 310h180l-20 155H230z" fill="#d88f54"/>
+  <path d="M230 465h140l52 150H178z" fill="#d9c8a7"/>
+  <circle cx="300" cy="330" r="112" fill="none" stroke="#e7b96d" stroke-width="12"/>
+  <path d="M260 280v100l82-50z" fill="#e7b96d"/>
+  <text x="300" y="720" fill="#f1eee7" font-family="Arial, sans-serif" font-size="34" text-anchor="middle">CHƯA CÓ POSTER</text>
+  <text x="300" y="765" fill="#aeb8bd" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">Vui lòng cập nhật ảnh phim</text>
+</svg>

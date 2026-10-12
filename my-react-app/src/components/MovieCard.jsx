@@ -1,10 +1,13 @@
 import "./MovieCard.css";
-import { API_BASE } from "../constants";
+import { API_BASE, getMissingPosterFallback } from "../constants";
 
 const getPosterUrl = (posterUrl) => {
   if (!posterUrl) return "";
 
   const normalized = String(posterUrl).trim();
+  const fallback = getMissingPosterFallback(normalized);
+
+  if (fallback) return fallback;
 
   // Nếu đã là URL đầy đủ
   if (
