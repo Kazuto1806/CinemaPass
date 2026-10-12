@@ -165,7 +165,7 @@ const getStatusText = (status) => {
 
 function MovieDetail() {
 
-  const { id } = useParams();
+  const { movieName } = useParams();
 
   const navigate = useNavigate();
 
@@ -197,10 +197,10 @@ function MovieDetail() {
         setLoading(true);
         setError("");
 
-        const response =
-          await fetch(
-            `${API_URL}/${id}`
-          );
+        const isLegacyMovieId = /^\d+$/.test(movieName);
+        const response = await fetch(
+          isLegacyMovieId ? `${API_URL}/${movieName}` : API_URL
+        );
 
 
         if (!response.ok) {
@@ -212,16 +212,28 @@ function MovieDetail() {
         }
 
 
-        const data =
-          await response.json();
+        const data = await response.json();
+        const movieData = isLegacyMovieId
+          ? data
+          : Array.isArray(data)
+            ? data.find(
+                (item) =>
+                  String(item.title || "").trim().toLocaleLowerCase() ===
+                  movieName.trim().toLocaleLowerCase()
+              )
+            : null;
+
+        if (!movieData) {
+          throw new Error("Không tìm thấy bộ phim");
+        }
 
 
         setMovie({
-          ...data,
+          ...movieData,
 
           posterUrl:
             getPosterUrl(
-              data.posterUrl
+              movieData.posterUrl
             ),
         });
 
@@ -248,7 +260,7 @@ function MovieDetail() {
 
     loadMovie();
 
-  }, [id]);
+  }, [movieName]);
 
 
   // =========================

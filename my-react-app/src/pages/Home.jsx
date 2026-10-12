@@ -143,7 +143,7 @@ const Home = () => {
             {nowShowingMovies.map((movie) => (
               <Link
                 key={movie.movieId}
-                to={`/movie/${movie.movieId}`}
+                to={`/movie/${encodeURIComponent(movie.title)}`}
                 className="movie-card-link"
               >
                 <MovieCard movie={movie} />
@@ -181,7 +181,7 @@ const Home = () => {
             {comingSoonMovies.map((movie) => (
               <Link
                 key={movie.movieId}
-                to={`/movie/${movie.movieId}`}
+                to={`/movie/${encodeURIComponent(movie.title)}`}
                 className="movie-card-link"
               >
                 <MovieCard movie={movie} />

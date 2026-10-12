@@ -71,7 +71,7 @@ function App() {
         ========================= */}
 
         <Route
-          path="/movie/:id"
+          path="/movie/:movieName"
           element={<MovieDetail />}
         />
 

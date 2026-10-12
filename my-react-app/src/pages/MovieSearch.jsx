@@ -159,11 +159,9 @@ function MovieSearch() {
   // CHI TIẾT PHIM
   // =========================
 
-  const handleMovieDetail = (
-    movieId
-  ) => {
+  const handleMovieDetail = (movie) => {
     navigate(
-      `/movie/${movieId}`
+      `/movie/${encodeURIComponent(movie.title)}`
     );
   };
 
@@ -317,7 +315,7 @@ function MovieSearch() {
                       className="search-movie-card"
                       onClick={() =>
                         handleMovieDetail(
-                          movie.movieId
+                          movie
                         )
                       }
                     >
