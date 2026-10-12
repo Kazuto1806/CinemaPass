@@ -245,6 +245,50 @@
   color: #cbd8ff;
 }
 
+.ticket-type-section {
+  margin-top: 24px;
+}
+
+.ticket-type-list {
+  display: grid;
+  gap: 12px;
+}
+
+.ticket-type-option {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #fff;
+  color: #172033;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ticket-type-option.active {
+  border: 2px solid #d4af37;
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.ticket-type-option-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ticket-type-category-label {
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.ticket-type-description {
+  margin-top: 4px;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
 .booking-summary {
   align-self: start;
 }

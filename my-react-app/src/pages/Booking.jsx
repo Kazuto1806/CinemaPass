@@ -965,25 +965,14 @@ function Booking() {
                 </div>
 
                 {/* LOẠI VÉ */}
-                <div
-                  className="ticket-type-section"
-                  style={{
-                    marginTop: "24px",
-                  }}
-                >
+                <div className="ticket-type-section">
                   <div className="booking-section-title">
                     <FaTicketAlt />
                     <h2>Chọn loại vé</h2>
                   </div>
 
                   {availableTicketTypes.length ? (
-                    <div
-                      className="ticket-type-list"
-                      style={{
-                        display: "grid",
-                        gap: "12px",
-                      }}
-                    >
+                    <div className="ticket-type-list">
                       {availableTicketTypes.map(
                         (ticketType) => {
                           const ticketTypeId =
@@ -1000,37 +989,14 @@ function Booking() {
                             <button
                               key={ticketTypeId}
                               type="button"
+                              className={`ticket-type-option ${isActive ? "active" : ""}`}
                               onClick={() =>
                                 setSelectedTicketTypeId(
                                   ticketTypeId
                                 )
                               }
-                              style={{
-                                width: "100%",
-                                textAlign: "left",
-                                padding: "16px",
-                                borderRadius:
-                                  "12px",
-                                border: isActive
-                                  ? "2px solid #d4af37"
-                                  : "1px solid #ddd",
-                                background:
-                                  isActive
-                                    ? "rgba(212, 175, 55, 0.08)"
-                                    : "#fff",
-                                cursor: "pointer",
-                              }}
                             >
-                              <div
-                                style={{
-                                  display: "flex",
-                                  justifyContent:
-                                    "space-between",
-                                  alignItems:
-                                    "center",
-                                  gap: "16px",
-                                }}
-                              >
+                              <div className="ticket-type-option-content">
                                 <div>
                                   <strong>
                                     {
@@ -1038,29 +1004,14 @@ function Booking() {
                                     }
                                   </strong>
 
-                                  <div
-                                    style={{
-                                      marginTop: "4px",
-                                      fontSize: "11px",
-                                      opacity: 0.65,
-                                    }}
-                                  >
+                                  <div className="ticket-type-category-label">
                                     {ticketType.category === "Program"
                                       ? "Thời điểm / chương trình"
-                                      : "Tư cách khách hàng"}
+                                      : "khách hàng"}
                                   </div>
 
                                   {ticketType.description && (
-                                    <div
-                                      style={{
-                                        marginTop:
-                                          "4px",
-                                        fontSize:
-                                          "13px",
-                                        opacity:
-                                          0.7,
-                                      }}
-                                    >
+                                    <div className="ticket-type-description">
                                       {
                                         ticketType.description
                                       }
