@@ -32,8 +32,10 @@
 
 .ticket-type-title-row p {
   margin: 7px 0 0;
+  max-width: 760px;
   color: #7d8aaa;
   font-size: 14px;
+  line-height: 1.6;
 }
 
 .ticket-type-add-btn {
@@ -198,7 +200,7 @@
 .ticket-type-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 900px;
+  min-width: 1080px;
 }
 
 .ticket-type-table th {
@@ -251,6 +253,21 @@
 
 .ticket-type-name-cell strong {
   color: #e5e9f3;
+}
+
+.ticket-type-category {
+  display: inline-block;
+  max-width: 190px;
+  color: #b9c8e2;
+  line-height: 1.45;
+}
+
+.ticket-type-category.program {
+  color: #f0bf73;
+}
+
+.ticket-type-category.customer {
+  color: #7bd6b1;
 }
 
 .ticket-type-description {
@@ -445,6 +462,14 @@
   padding: 12px;
   resize: vertical;
   min-height: 95px;
+}
+
+.ticket-type-form-hint {
+  display: block;
+  margin-top: 7px;
+  color: #8594b0;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .ticket-type-form-group input:focus,

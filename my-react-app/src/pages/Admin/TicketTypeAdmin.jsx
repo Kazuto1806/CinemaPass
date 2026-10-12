@@ -19,9 +19,23 @@ import "./TicketTypeAdmin.css";
 
 const API_URL = `${API_BASE}/api/tickettypes`;
 
+const CATEGORY_OPTIONS = [
+  {
+    value: "Program",
+    label: "Thời điểm / chương trình",
+    examples: "Happy Day (thứ 3, thứ 4), Sneak show, Premiere",
+  },
+  {
+    value: "Customer",
+    label: "Tư cách khách hàng",
+    examples: "Standard, thành viên VIP, thành viên VVIP",
+  },
+];
+
 const EMPTY_FORM = {
   name: "",
   description: "",
+  category: "Customer",
   price: "",
   status: "Active",
 };
@@ -32,6 +46,7 @@ function TicketTypeAdmin() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -76,6 +91,11 @@ function TicketTypeAdmin() {
     item.description ??
     item.Description ??
     "";
+
+  const getCategory = (item) =>
+    item.category ??
+    item.Category ??
+    "Customer";
 
   const getPrice = (item) =>
     item.price ??
@@ -176,6 +196,7 @@ function TicketTypeAdmin() {
     return ticketTypes.filter((item) => {
       const name = getName(item).toLowerCase();
       const description = getDescription(item).toLowerCase();
+      const category = getCategory(item);
 
       const matchesSearch =
         !keyword ||
@@ -189,9 +210,12 @@ function TicketTypeAdmin() {
         (statusFilter === "active" && isActive(status)) ||
         (statusFilter === "inactive" && !isActive(status));
 
-      return matchesSearch && matchesStatus;
+      const matchesCategory =
+        categoryFilter === "all" || category === categoryFilter;
+
+      return matchesSearch && matchesStatus && matchesCategory;
     });
-  }, [ticketTypes, search, statusFilter]);
+  }, [ticketTypes, search, statusFilter, categoryFilter]);
 
   const totalCount = ticketTypes.length;
 
@@ -221,6 +245,7 @@ function TicketTypeAdmin() {
     setForm({
       name: getName(item),
       description: getDescription(item),
+      category: getCategory(item),
       price: getPrice(item),
       status: isActive(getStatus(item)) ? "Active" : "Inactive",
     });
@@ -272,6 +297,7 @@ function TicketTypeAdmin() {
     const payload = {
       name: form.name.trim(),
       description: form.description.trim(),
+      category: form.category,
       price: Number(form.price),
       status: form.status,
     };
@@ -413,7 +439,7 @@ function TicketTypeAdmin() {
             <h1>Quản lý loại vé</h1>
 
             <p>
-              Quản lý danh sách các loại vé trong hệ thống
+              Chính sách giá theo chương trình hoặc nhóm khách hàng. P/K/T13/T16/T18 là nhãn phân loại phim, không phải loại vé.
             </p>
           </div>
         </div>
@@ -492,6 +518,21 @@ function TicketTypeAdmin() {
 
         <select
           className="ticket-type-filter"
+          value={categoryFilter}
+          onChange={(event) =>
+            setCategoryFilter(event.target.value)
+          }
+        >
+          <option value="all">Tất cả nhóm chính sách</option>
+          {CATEGORY_OPTIONS.map((category) => (
+            <option key={category.value} value={category.value}>
+              {category.label}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="ticket-type-filter"
           value={statusFilter}
           onChange={(event) =>
             setStatusFilter(event.target.value)
@@ -533,6 +574,7 @@ function TicketTypeAdmin() {
               <tr>
                 <th>STT</th>
                 <th>Tên loại vé</th>
+                <th>Nhóm chính sách</th>
                 <th>Mô tả</th>
                 <th>Giá vé</th>
                 <th>Trạng thái</th>
@@ -544,7 +586,7 @@ function TicketTypeAdmin() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan="7"
                     className="ticket-type-empty"
                   >
                     Đang tải dữ liệu...
@@ -553,7 +595,7 @@ function TicketTypeAdmin() {
               ) : filteredTicketTypes.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan="7"
                     className="ticket-type-empty"
                   >
                     <FaTicketAlt />
@@ -583,6 +625,16 @@ function TicketTypeAdmin() {
                             {getName(item)}
                           </strong>
                         </div>
+                      </td>
+
+                      <td>
+                        <span
+                          className={`ticket-type-category ${getCategory(item).toLowerCase()}`}
+                        >
+                          {CATEGORY_OPTIONS.find(
+                            (category) => category.value === getCategory(item)
+                          )?.label || "Tư cách khách hàng"}
+                        </span>
                       </td>
 
                       <td>
@@ -691,6 +743,32 @@ function TicketTypeAdmin() {
             >
               <div className="ticket-type-form-group">
                 <label>
+                  Nhóm chính sách
+                  <span>*</span>
+                </label>
+
+                <select
+                  name="category"
+                  value={form.category}
+                  onChange={handleChange}
+                  disabled={saving}
+                >
+                  {CATEGORY_OPTIONS.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+
+                <small className="ticket-type-form-hint">
+                  Gợi ý: {CATEGORY_OPTIONS.find(
+                    (category) => category.value === form.category
+                  )?.examples}
+                </small>
+              </div>
+
+              <div className="ticket-type-form-group">
+                <label>
                   Tên loại vé
                   <span>*</span>
                 </label>
@@ -700,7 +778,7 @@ function TicketTypeAdmin() {
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  placeholder="Ví dụ: Vé người lớn"
+                  placeholder="Ví dụ: Vé Happy Day hoặc Vé thành viên VIP"
                   disabled={saving}
                 />
               </div>

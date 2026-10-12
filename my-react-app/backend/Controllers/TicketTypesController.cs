@@ -28,6 +28,7 @@ namespace CinemaBackend.Controllers
                     ticketTypeId = t.TicketTypeId,
                     name = t.Name,
                     description = t.Description,
+                    category = t.Category,
                     price = t.Price,
                     status = t.Status,
                     createdAt = t.CreatedAt
@@ -49,6 +50,7 @@ namespace CinemaBackend.Controllers
                     ticketTypeId = t.TicketTypeId,
                     name = t.Name,
                     description = t.Description,
+                    category = t.Category,
                     price = t.Price,
                     status = t.Status,
                     createdAt = t.CreatedAt
@@ -95,6 +97,14 @@ namespace CinemaBackend.Controllers
                 });
             }
 
+            if (!IsValidCategory(ticketType.Category))
+            {
+                return BadRequest(new
+                {
+                    message = "Nhóm chính sách vé không hợp lệ."
+                });
+            }
+
             var duplicate = await _context.TicketTypes
                 .AnyAsync(t =>
                     t.Name.ToLower() ==
@@ -112,6 +122,7 @@ namespace CinemaBackend.Controllers
             ticketType.Name = ticketType.Name.Trim();
             ticketType.Description =
                 ticketType.Description?.Trim() ?? string.Empty;
+            ticketType.Category = NormalizeCategory(ticketType.Category);
             ticketType.Status =
                 string.IsNullOrWhiteSpace(ticketType.Status)
                     ? "Active"
@@ -130,6 +141,7 @@ namespace CinemaBackend.Controllers
                     ticketTypeId = ticketType.TicketTypeId,
                     name = ticketType.Name,
                     description = ticketType.Description,
+                    category = ticketType.Category,
                     price = ticketType.Price,
                     status = ticketType.Status,
                     createdAt = ticketType.CreatedAt
@@ -179,6 +191,14 @@ namespace CinemaBackend.Controllers
                 });
             }
 
+            if (!IsValidCategory(ticketType.Category))
+            {
+                return BadRequest(new
+                {
+                    message = "Nhóm chính sách vé không hợp lệ."
+                });
+            }
+
             var duplicate = await _context.TicketTypes
                 .AnyAsync(t =>
                     t.TicketTypeId != id &&
@@ -200,6 +220,9 @@ namespace CinemaBackend.Controllers
                 ticketType.Description?.Trim()
                 ?? string.Empty;
 
+            existingTicketType.Category =
+                NormalizeCategory(ticketType.Category);
+
             existingTicketType.Price =
                 ticketType.Price;
 
@@ -218,11 +241,26 @@ namespace CinemaBackend.Controllers
                 name = existingTicketType.Name,
                 description =
                     existingTicketType.Description,
+                category = existingTicketType.Category,
                 price = existingTicketType.Price,
                 status = existingTicketType.Status,
                 createdAt =
                     existingTicketType.CreatedAt
             });
+        }
+
+        private static bool IsValidCategory(string? category)
+        {
+            return string.IsNullOrWhiteSpace(category) ||
+                category.Equals("Program", StringComparison.OrdinalIgnoreCase) ||
+                category.Equals("Customer", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizeCategory(string? category)
+        {
+            return string.Equals(category, "Program", StringComparison.OrdinalIgnoreCase)
+                ? "Program"
+                : "Customer";
         }
 
         // DELETE: api/tickettypes/1
