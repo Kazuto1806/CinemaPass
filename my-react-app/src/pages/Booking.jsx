@@ -120,6 +120,7 @@ function Booking() {
   const location = useLocation();
 
   const queryParams = new URLSearchParams(location.search);
+  const selectedMovieNameFromUrl = queryParams.get("movieName")?.trim();
   const selectedMovieIdFromUrl = Number(queryParams.get("movieId"));
 
   const [movies, setMovies] = useState([]);
@@ -130,7 +131,7 @@ function Booking() {
   const [loading, setLoading] = useState(true);
 
   const [selectedMovieId, setSelectedMovieId] = useState(
-    Number.isFinite(selectedMovieIdFromUrl)
+    !selectedMovieNameFromUrl && Number.isFinite(selectedMovieIdFromUrl)
       ? selectedMovieIdFromUrl
       : null
   );
@@ -231,6 +232,19 @@ function Booking() {
   useEffect(() => {
     if (!movies.length) return;
 
+    if (selectedMovieNameFromUrl) {
+      const movieFromUrl = movies.find(
+        (movie) =>
+          String(movie.title || "").trim().toLocaleLowerCase() ===
+          selectedMovieNameFromUrl.toLocaleLowerCase()
+      );
+
+      if (movieFromUrl) {
+        setSelectedMovieId(movieFromUrl.movieId);
+        return;
+      }
+    }
+
     if (
       !selectedMovieId ||
       !movies.some(
@@ -239,7 +253,7 @@ function Booking() {
     ) {
       setSelectedMovieId(movies[0].movieId);
     }
-  }, [movies, selectedMovieId]);
+  }, [movies, selectedMovieId, selectedMovieNameFromUrl]);
 
   const selectedMovie = useMemo(
     () =>
