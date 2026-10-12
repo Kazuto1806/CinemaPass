@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 
 import Header from "./components/Header";
@@ -10,6 +11,7 @@ import Account from "./pages/Account";
 import MovieSearch from "./pages/MovieSearch";
 import MovieDetail from "./pages/MovieDetail";
 import Booking from "./pages/Booking";
+import TicketHistory from "./pages/TicketHistory";
 
 import AdminLayout from "./pages/Admin/AdminLayout";
 import Dashboard from "./pages/Admin/Dashboard";
@@ -45,6 +47,15 @@ function App() {
         <Route path="/food" element={<Food />} />
 
         <Route path="/account" element={<Account />} />
+
+        {/* =========================
+            LỊCH SỬ MUA HÀNG
+        ========================= */}
+
+        <Route
+          path="/tickets"
+          element={<TicketHistory />}
+        />
 
         {/* =========================
             TÌM KIẾM PHIM

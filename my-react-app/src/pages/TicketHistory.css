@@ -1,0 +1,302 @@
+
+.ticket-history-page {
+  min-height: 75vh;
+  padding: 40px 20px 70px;
+  color: #f4f6ff;
+  background: #0d162b;
+}
+
+.ticket-history-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.history-back-button,
+.history-refresh-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 11px 16px;
+  border: 1px solid #34415d;
+  border-radius: 9px;
+  background: #16223b;
+  color: #f4f6ff;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.history-back-button:hover,
+.history-refresh-button:hover {
+  border-color: #f5c451;
+  color: #f5c451;
+}
+
+.history-refresh-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.history-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin: 35px 0 28px;
+}
+
+.history-eyebrow {
+  margin: 0 0 8px;
+  color: #f5c451;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 3px;
+}
+
+.history-heading h1 {
+  margin: 0;
+  font-size: clamp(27px, 4vw, 38px);
+}
+
+.history-subtitle {
+  margin: 10px 0 0;
+  color: #aeb9ce;
+  line-height: 1.6;
+}
+
+.history-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #2b3852;
+}
+
+.history-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 15px 18px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: #aeb9ce;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.history-tabs button.active {
+  border-bottom-color: #f5c451;
+  color: #f5c451;
+}
+
+.history-list {
+  display: grid;
+  gap: 18px;
+}
+
+.history-card {
+  overflow: hidden;
+  padding: 22px;
+  border: 1px solid #293752;
+  border-radius: 15px;
+  background: #131f36;
+}
+
+.history-card-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.history-card-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #2b3651;
+  color: #f5c451;
+  font-size: 20px;
+}
+
+.history-card-icon.food-icon {
+  color: #79d6b0;
+}
+
+.history-card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-card-title h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+.history-card-title p {
+  margin: 0;
+  color: #aeb9ce;
+  font-size: 13px;
+}
+
+.history-status {
+  flex-shrink: 0;
+  padding: 7px 10px;
+  border-radius: 20px;
+  background: #3b3524;
+  color: #f5c451;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.history-status.success {
+  background: #173d34;
+  color: #79d6b0;
+}
+
+.history-status.cancelled {
+  background: #48282e;
+  color: #ff9da8;
+}
+
+.history-details {
+  display: grid;
+  gap: 13px;
+  margin: 22px 0;
+}
+
+.history-details p {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin: 0;
+  color: #d3dced;
+  line-height: 1.5;
+}
+
+.history-details svg {
+  flex-shrink: 0;
+  margin-top: 4px;
+  color: #8d9db8;
+}
+
+.history-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  padding-top: 17px;
+  border-top: 1px solid #2b3852;
+  color: #aeb9ce;
+}
+
+.history-card-bottom strong {
+  color: #f5c451;
+  font-size: 20px;
+}
+
+.food-order-items {
+  display: grid;
+  gap: 12px;
+  margin: 22px 0;
+}
+
+.food-order-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  color: #d3dced;
+}
+
+.food-order-item strong {
+  flex-shrink: 0;
+  color: #f4f6ff;
+}
+
+.food-no-items {
+  color: #aeb9ce;
+}
+
+.history-message,
+.history-empty {
+  padding: 45px 20px;
+  border: 1px solid #293752;
+  border-radius: 15px;
+  background: #131f36;
+  text-align: center;
+  color: #aeb9ce;
+  line-height: 1.7;
+}
+
+.history-error {
+  color: #ffb3bb;
+}
+
+.history-empty > svg {
+  color: #f5c451;
+  font-size: 38px;
+}
+
+.history-empty h3 {
+  margin: 16px 0 8px;
+  color: #f4f6ff;
+}
+
+.history-empty button,
+.history-error button {
+  margin-top: 12px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 9px;
+  background: #f5c451;
+  color: #182239;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .ticket-history-page {
+    padding: 25px 13px 45px;
+  }
+
+  .history-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .history-tabs {
+    gap: 0;
+  }
+
+  .history-tabs button {
+    flex: 1;
+    justify-content: center;
+    padding: 13px 6px;
+    font-size: 12px;
+  }
+
+  .history-card {
+    padding: 16px;
+  }
+
+  .history-card-top {
+    flex-wrap: wrap;
+  }
+
+  .history-card-title {
+    flex-basis: calc(100% - 65px);
+  }
+
+  .history-status {
+    margin-left: 62px;
+  }
+
+  .food-order-item {
+    font-size: 14px;
+  }
+}

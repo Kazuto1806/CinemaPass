@@ -17,6 +17,7 @@ namespace CinemaBackend.Controllers
         }
 
         // GET: api/FoodOrders
+        // Dành cho trang quản trị
         [HttpGet]
         public async Task<IActionResult> GetFoodOrders()
         {
@@ -29,40 +30,73 @@ namespace CinemaBackend.Controllers
                 .Select(o => new
                 {
                     foodOrderId = o.FoodOrderId,
-
                     userId = o.UserId,
-
-                    userName = o.User != null
-                        ? o.User.FullName
-                        : "",
-
-                    userEmail = o.User != null
-                        ? o.User.Email
-                        : "",
-
+                    userName = o.User != null ? o.User.FullName : "",
+                    userEmail = o.User != null ? o.User.Email : "",
                     totalAmount = o.TotalAmount,
-
                     status = o.Status,
-
                     createdAt = o.CreatedAt,
+                    items = o.Items.Select(i => new
+                    {
+                        foodOrderItemId = i.FoodOrderItemId,
+                        foodId = i.FoodId,
+                        foodName = i.Food != null ? i.Food.Name : "",
+                        quantity = i.Quantity,
+                        unitPrice = i.UnitPrice,
+                        amount = i.Quantity * i.UnitPrice
+                    }).ToList()
+                })
+                .ToListAsync();
 
-                    items = o.Items
-                        .Select(i => new
-                        {
-                            foodOrderItemId = i.FoodOrderItemId,
-                            foodId = i.FoodId,
+            return Ok(orders);
+        }
 
-                            foodName = i.Food != null
-                                ? i.Food.Name
-                                : "",
+        // GET: api/FoodOrders/user/1
+        // Lấy lịch sử đơn bắp nước của một tài khoản
+        [HttpGet("user/{userId:int}")]
+        public async Task<IActionResult> GetFoodOrdersByUser(int userId)
+        {
+            if (userId <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "UserId không hợp lệ."
+                });
+            }
 
-                            quantity = i.Quantity,
+            var userExists = await _context.Users
+                .AnyAsync(u => u.UserId == userId);
 
-                            unitPrice = i.UnitPrice,
+            if (!userExists)
+            {
+                return NotFound(new
+                {
+                    message = "Người dùng không tồn tại."
+                });
+            }
 
-                            amount = i.Quantity * i.UnitPrice
-                        })
-                        .ToList()
+            var orders = await _context.FoodOrders
+                .AsNoTracking()
+                .Where(o => o.UserId == userId)
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Food)
+                .OrderByDescending(o => o.CreatedAt)
+                .Select(o => new
+                {
+                    foodOrderId = o.FoodOrderId,
+                    userId = o.UserId,
+                    totalAmount = o.TotalAmount,
+                    status = o.Status,
+                    createdAt = o.CreatedAt,
+                    items = o.Items.Select(i => new
+                    {
+                        foodOrderItemId = i.FoodOrderItemId,
+                        foodId = i.FoodId,
+                        foodName = i.Food != null ? i.Food.Name : "",
+                        quantity = i.Quantity,
+                        unitPrice = i.UnitPrice,
+                        amount = i.Quantity * i.UnitPrice
+                    }).ToList()
                 })
                 .ToListAsync();
 
@@ -82,41 +116,21 @@ namespace CinemaBackend.Controllers
                 .Select(o => new
                 {
                     foodOrderId = o.FoodOrderId,
-
                     userId = o.UserId,
-
-                    userName = o.User != null
-                        ? o.User.FullName
-                        : "",
-
-                    userEmail = o.User != null
-                        ? o.User.Email
-                        : "",
-
+                    userName = o.User != null ? o.User.FullName : "",
+                    userEmail = o.User != null ? o.User.Email : "",
                     totalAmount = o.TotalAmount,
-
                     status = o.Status,
-
                     createdAt = o.CreatedAt,
-
-                    items = o.Items
-                        .Select(i => new
-                        {
-                            foodOrderItemId = i.FoodOrderItemId,
-
-                            foodId = i.FoodId,
-
-                            foodName = i.Food != null
-                                ? i.Food.Name
-                                : "",
-
-                            quantity = i.Quantity,
-
-                            unitPrice = i.UnitPrice,
-
-                            amount = i.Quantity * i.UnitPrice
-                        })
-                        .ToList()
+                    items = o.Items.Select(i => new
+                    {
+                        foodOrderItemId = i.FoodOrderItemId,
+                        foodId = i.FoodId,
+                        foodName = i.Food != null ? i.Food.Name : "",
+                        quantity = i.Quantity,
+                        unitPrice = i.UnitPrice,
+                        amount = i.Quantity * i.UnitPrice
+                    }).ToList()
                 })
                 .FirstOrDefaultAsync();
 
@@ -226,21 +240,16 @@ namespace CinemaBackend.Controllers
                 {
                     FoodId = food.FoodId,
                     Quantity = item.Quantity,
-
-                    // Lấy giá trực tiếp từ database,
-                    // không tin giá gửi từ frontend.
                     UnitPrice = food.Price
                 };
 
                 totalAmount += food.Price * item.Quantity;
-
                 order.Items.Add(orderItem);
             }
 
             order.TotalAmount = totalAmount;
 
             _context.FoodOrders.Add(order);
-
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(
@@ -296,23 +305,17 @@ namespace CinemaBackend.Controllers
             {
                 return BadRequest(new
                 {
-                    message =
-                        "Trạng thái không hợp lệ. " +
-                        "Chỉ được dùng: Chờ xử lý, " +
-                        "Đang chuẩn bị, Đã hoàn thành, Đã hủy."
+                    message = "Trạng thái không hợp lệ."
                 });
             }
 
             order.Status = newStatus;
-
             await _context.SaveChangesAsync();
 
             return Ok(new
             {
                 message = "Cập nhật trạng thái đơn thành công.",
-
                 foodOrderId = order.FoodOrderId,
-
                 status = order.Status
             });
         }
@@ -334,7 +337,6 @@ namespace CinemaBackend.Controllers
             }
 
             _context.FoodOrderItems.RemoveRange(order.Items);
-
             _context.FoodOrders.Remove(order);
 
             await _context.SaveChangesAsync();

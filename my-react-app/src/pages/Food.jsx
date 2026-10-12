@@ -81,16 +81,10 @@ const resolveImage = (imageUrl) => {
 };
 
 // =====================================================
-// DANH SÁCH RẠP
+// API RẠP CHIẾU
 // =====================================================
 
-const cinemas = [
-  "CinemaPass Nguyễn Du",
-  "CinemaPass Landmark 81",
-  "CinemaPass Cộng Hòa",
-  "CinemaPass Phạm Ngọc Thạch",
-  "CinemaPass Thủ Đức",
-];
+const CINEMA_API_URL = `${API_BASE}/api/cinemas`;
 
 // =====================================================
 // CHUYỂN DANH MỤC SQL → DANH MỤC GIAO DIỆN
@@ -239,6 +233,10 @@ function Food() {
   const [selectedCinema, setSelectedCinema] =
     useState("");
 
+  const [cinemas, setCinemas] = useState([]);
+  const [cinemasLoading, setCinemasLoading] = useState(true);
+  const [cinemasError, setCinemasError] = useState("");
+
   const [products, setProducts] = useState([]);
 
   const [quantities, setQuantities] =
@@ -266,6 +264,86 @@ function Food() {
 
   const closeNotification = () => {
     setNotification((current) => ({ ...current, show: false }));
+  };
+
+  // ===================================================
+  // LOAD RẠP TỪ DATABASE
+  // ===================================================
+
+  const loadCinemas = async () => {
+    try {
+      setCinemasLoading(true);
+      setCinemasError("");
+
+      const response = await fetch(CINEMA_API_URL);
+
+      if (!response.ok) {
+        throw new Error("Không thể tải danh sách rạp.");
+      }
+
+      const result = await response.json();
+      const data = Array.isArray(result)
+        ? result
+        : Array.isArray(result?.data)
+          ? result.data
+          : Array.isArray(result?.cinemas)
+            ? result.cinemas
+            : [];
+
+      const convertedCinemas = data
+        .map((cinema) => {
+          const id =
+            cinema.cinemaId ??
+            cinema.CinemaId ??
+            cinema.id ??
+            cinema.Id;
+
+          const name =
+            cinema.cinemaName ??
+            cinema.CinemaName ??
+            cinema.name ??
+            cinema.Name;
+
+          const status = String(
+            cinema.status ?? cinema.Status ?? "Đang hoạt động"
+          ).trim().toLowerCase();
+
+          const isActive = [
+            "active",
+            "đang hoạt động",
+            "dang hoat dong",
+            "hoạt động",
+            "hoat dong",
+          ].includes(status);
+
+          return {
+            id: id == null ? "" : String(id),
+            name: String(name ?? "").trim(),
+            status,
+            isActive,
+          };
+        })
+        .filter((cinema) => cinema.id && cinema.name && cinema.isActive);
+
+      setCinemas(convertedCinemas);
+
+      if (
+        selectedCinema &&
+        !convertedCinemas.some(
+          (cinema) => cinema.id === String(selectedCinema)
+        )
+      ) {
+        setSelectedCinema("");
+      }
+    } catch (error) {
+      console.error("Lỗi lấy danh sách rạp:", error);
+      setCinemasError(
+        "Không thể tải danh sách rạp. Vui lòng kiểm tra kết nối API."
+      );
+      setCinemas([]);
+    } finally {
+      setCinemasLoading(false);
+    }
   };
 
   // ===================================================
@@ -328,6 +406,7 @@ function Food() {
   // ===================================================
 
   useEffect(() => {
+    loadCinemas();
     loadFoods();
   }, []);
 
@@ -441,6 +520,9 @@ function Food() {
         ] || 0) > 0
     );
 
+  const selectedCinemaName =
+    cinemas.find((cinema) => cinema.id === String(selectedCinema))?.name || "";
+
   // ===================================================
   // ĐẶT HÀNG
   // ===================================================
@@ -469,7 +551,7 @@ function Food() {
     showNotification(
       "success",
       "Đặt hàng thành công",
-      `Rạp: ${selectedCinema} | Số sản phẩm: ${totalItems} | Tổng tiền: ${formatPrice(totalPrice)}`
+      `Rạp: ${selectedCinemaName} | Số sản phẩm: ${totalItems} | Tổng tiền: ${formatPrice(totalPrice)}`
     );
   };
 
@@ -565,26 +647,22 @@ function Food() {
 
           <select
             value={selectedCinema}
-            onChange={(e) =>
-              setSelectedCinema(
-                e.target.value
-              )
-            }
+            onChange={(e) => setSelectedCinema(e.target.value)}
+            disabled={cinemasLoading || Boolean(cinemasError)}
           >
             <option value="">
-              Chọn rạp
+              {cinemasLoading
+                ? "Đang tải danh sách rạp..."
+                : cinemasError
+                  ? "Không tải được danh sách rạp"
+                  : "Chọn rạp"}
             </option>
 
-            {cinemas.map(
-              (cinema) => (
-                <option
-                  key={cinema}
-                  value={cinema}
-                >
-                  {cinema}
-                </option>
-              )
-            )}
+            {cinemas.map((cinema) => (
+              <option key={cinema.id} value={cinema.id}>
+                {cinema.name}
+              </option>
+            ))}
           </select>
         </div>
       </section>
@@ -595,16 +673,26 @@ function Food() {
         {!selectedCinema ? (
           <div className="choose-cinema-message">
             <div className="choose-cinema-icon">
-              🍿
+              {cinemasError ? "⚠️" : "🍿"}
             </div>
 
             <h3>
-              VUI LÒNG CHỌN RẠP
+              {cinemasError
+                ? "KHÔNG TẢI ĐƯỢC DANH SÁCH RẠP"
+                : cinemasLoading
+                  ? "ĐANG TẢI DANH SÁCH RẠP"
+                  : cinemas.length === 0
+                    ? "CHƯA CÓ RẠP HOẠT ĐỘNG"
+                    : "VUI LÒNG CHỌN RẠP"}
             </h3>
 
             <p>
-              Chọn rạp ở phía trên để
-              xem các sản phẩm bắp nước.
+              {cinemasError ||
+                (cinemasLoading
+                  ? "Đang lấy danh sách rạp từ hệ thống..."
+                  : cinemas.length === 0
+                    ? "Hãy thêm rạp và đặt trạng thái đang hoạt động trong trang quản trị."
+                    : "Chọn rạp ở phía trên để xem các sản phẩm bắp nước.")}
             </p>
           </div>
         ) : loading ? (
