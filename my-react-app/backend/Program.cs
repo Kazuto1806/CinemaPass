@@ -74,10 +74,19 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Endpoint upload ảnh lên Cloudinary
-app.MapPost("/api/upload", async (IFormFile file, Cloudinary cloudinary) =>
+app.MapPost("/api/upload", async (IFormFile file, HttpContext context) =>
 {
     if (file == null || file.Length == 0)
         return Results.BadRequest(new { message = "Vui lòng chọn file hợp lệ." });
+
+    var cloudinary = context.RequestServices.GetService<Cloudinary>();
+    if (cloudinary == null)
+    {
+        return Results.Problem(
+            detail: "Chưa cấu hình Cloudinary.",
+            statusCode: StatusCodes.Status503ServiceUnavailable
+        );
+    }
 
     await using var stream = file.OpenReadStream();
     var uploadParams = new ImageUploadParams
