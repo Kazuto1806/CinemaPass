@@ -228,6 +228,11 @@
 
 .booking-empty-text,
 .booking-empty-state p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
   margin: 0;
   color: #a1b0d0;
 }
@@ -268,6 +273,10 @@
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
   margin-top: 8px;
+}
+
+.seat-grid > .booking-empty-text {
+  grid-column: 1 / -1;
 }
 
 .seat {

@@ -1059,7 +1059,7 @@ function Booking() {
                     })
                   ) : (
                     <p className="booking-empty-text">
-                      Sơ đồ ghế trên website đang được cập nhật.
+                      Sơ đồ ghế đang được cập nhập.
                       Vui lòng thử lại sau.
                     </p>
                   )}
