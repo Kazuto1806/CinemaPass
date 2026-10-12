@@ -445,6 +445,8 @@ function Booking() {
     }
 
     const controller = new AbortController();
+    setSeatList([]);
+    setSelectedSeats([]);
 
     const loadSeats = async () => {
       try {
@@ -461,8 +463,25 @@ function Booking() {
         }
 
         const data = await response.json();
+        const roomSeats = Array.isArray(data)
+          ? data.filter(
+              (seat) =>
+                Number(seat.roomId) === Number(selectedShowtime.roomId)
+            )
+          : [];
+        const uniqueSeats = new Map();
 
-        setSeatList(Array.isArray(data) ? data : []);
+        roomSeats.forEach((seat) => {
+          const seatCode = String(seat.seatCode || "")
+            .trim()
+            .toUpperCase();
+
+          if (seatCode && !uniqueSeats.has(seatCode)) {
+            uniqueSeats.set(seatCode, seat);
+          }
+        });
+
+        setSeatList([...uniqueSeats.values()]);
       } catch (error) {
         if (error.name !== "AbortError") {
           console.error(

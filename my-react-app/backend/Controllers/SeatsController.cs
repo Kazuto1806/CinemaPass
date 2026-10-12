@@ -23,9 +23,37 @@ namespace CinemaBackend.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetSeats(
-            [FromQuery] int? roomId
+            [FromQuery] int? roomId,
+            [FromQuery] int? showtimeId
         )
         {
+            if (showtimeId.HasValue)
+            {
+                var showtimeRoomId = await _context.Showtimes
+                    .AsNoTracking()
+                    .Where(showtime => showtime.ShowtimeId == showtimeId.Value)
+                    .Select(showtime => (int?)showtime.RoomId)
+                    .FirstOrDefaultAsync();
+
+                if (!showtimeRoomId.HasValue)
+                {
+                    return NotFound(new
+                    {
+                        message = "Không tìm thấy suất chiếu."
+                    });
+                }
+
+                if (roomId.HasValue && roomId.Value != showtimeRoomId.Value)
+                {
+                    return BadRequest(new
+                    {
+                        message = "Phòng không khớp với suất chiếu."
+                    });
+                }
+
+                roomId = showtimeRoomId;
+            }
+
             var query = _context.Seats
                 .AsNoTracking()
                 .AsQueryable();
@@ -47,7 +75,11 @@ namespace CinemaBackend.Controllers
                     seatCode = s.SeatCode,
                     rowName = s.RowName,
                     seatNumber = s.SeatNumber,
-                    seatType = s.SeatType
+                    seatType = s.SeatType,
+                    isBooked = showtimeId.HasValue && _context.Tickets.Any(ticket =>
+                        ticket.ShowtimeId == showtimeId.Value &&
+                        ticket.SeatId == s.SeatId &&
+                        ticket.Status != "Đã hủy")
                 })
                 .ToListAsync();
 
