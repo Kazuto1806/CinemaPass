@@ -225,7 +225,7 @@ function MovieSearch() {
           <p>
             Không thể tải danh sách phim.
             <br />
-            Vui lòng kiểm tra Backend.
+            Vui lòng thử lại sau.
           </p>
 
           <button

@@ -1059,8 +1059,8 @@ function Booking() {
                     })
                   ) : (
                     <p className="booking-empty-text">
-                      Sơ đồ ghế đang được cập nhật
-                      từ backend.
+                      Sơ đồ ghế trên website đang được cập nhật.
+                      Vui lòng thử lại sau.
                     </p>
                   )}
                 </div>

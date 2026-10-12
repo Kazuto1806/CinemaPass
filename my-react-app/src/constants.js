@@ -1,6 +1,10 @@
 import posterUnavailable from "./assets/poster-unavailable.svg";
 
-export const API_BASE = import.meta.env.VITE_API_URL || "https://cinemapass.onrender.com";
+export const API_BASE =
+	import.meta.env.VITE_API_URL ||
+	(import.meta.env.DEV
+		? "http://localhost:5000"
+		: "https://cinemapass.onrender.com");
 
 const missingPosterFiles = new Set([
 	"0aeee33b-eb7c-4ea0-8bcb-20eaa4054840.jpeg",
