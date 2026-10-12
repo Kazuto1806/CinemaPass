@@ -299,6 +299,24 @@ namespace CinemaBackend.Migrations
                     b.ToTable("Showtimes");
                 });
 
+            modelBuilder.Entity("CinemaBackend.Models.ShowtimeTicketType", b =>
+                {
+                    b.Property<int>("ShowtimeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TicketTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("ShowtimeId", "TicketTypeId");
+
+                    b.HasIndex("TicketTypeId");
+
+                    b.ToTable("ShowtimeTicketTypes");
+                });
+
             modelBuilder.Entity("CinemaBackend.Models.Ticket", b =>
                 {
                     b.Property<int>("TicketId")
@@ -496,6 +514,25 @@ namespace CinemaBackend.Migrations
                     b.Navigation("Room");
                 });
 
+            modelBuilder.Entity("CinemaBackend.Models.ShowtimeTicketType", b =>
+                {
+                    b.HasOne("CinemaBackend.Models.Showtime", "Showtime")
+                        .WithMany("TicketTypeAssignments")
+                        .HasForeignKey("ShowtimeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CinemaBackend.Models.TicketType", "TicketType")
+                        .WithMany("ShowtimeAssignments")
+                        .HasForeignKey("TicketTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Showtime");
+
+                    b.Navigation("TicketType");
+                });
+
             modelBuilder.Entity("CinemaBackend.Models.Ticket", b =>
                 {
                     b.HasOne("CinemaBackend.Models.Movie", "Movie")
@@ -549,8 +586,15 @@ namespace CinemaBackend.Migrations
                     b.Navigation("Showtimes");
                 });
 
+            modelBuilder.Entity("CinemaBackend.Models.Showtime", b =>
+                {
+                    b.Navigation("TicketTypeAssignments");
+                });
+
             modelBuilder.Entity("CinemaBackend.Models.TicketType", b =>
                 {
+                    b.Navigation("ShowtimeAssignments");
+
                     b.Navigation("Tickets");
                 });
 #pragma warning restore 612, 618

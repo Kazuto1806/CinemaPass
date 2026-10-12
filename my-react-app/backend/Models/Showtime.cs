@@ -22,6 +22,11 @@ namespace CinemaBackend.Models
 
         public DateTime CreatedAt { get; set; }
 
+        [NotMapped]
+        public List<ShowtimeTicketTypeInput> TicketTypePrices { get; set; } = new();
+
+        public ICollection<ShowtimeTicketType> TicketTypeAssignments { get; set; } = new List<ShowtimeTicketType>();
+
         // Navigation
         [ForeignKey(nameof(MovieId))]
         public Movie? Movie { get; set; }

@@ -6,6 +6,7 @@ import "./ShowtimeAdmin.css";
 const API_URL = `${API_BASE}/api/showtimes`;
 const MOVIE_API_URL = `${API_BASE}/api/movies`;
 const CINEMA_API_URL = `${API_BASE}/api/cinemas`;
+const TICKET_TYPES_API_URL = `${API_BASE}/api/tickettypes`;
 
 const normalizeShowtimeStatus = (status) => {
   const value = String(status || "").trim();
@@ -73,6 +74,7 @@ function ShowtimeAdmin() {
   const [showtimes, setShowtimes] = useState([]);
   const [movies, setMovies] = useState([]);
   const [cinemas, setCinemas] = useState([]);
+  const [ticketTypes, setTicketTypes] = useState([]);
   const [notification, setNotification] = useState({
     show: false,
     type: "success",
@@ -99,6 +101,7 @@ function ShowtimeAdmin() {
   startTime: "",
   endTime: "",
   ticketPrice: "",
+  ticketTypePrices: [],
   status: "Đang hoạt động",
 });
 
@@ -106,6 +109,7 @@ function ShowtimeAdmin() {
     loadShowtimes();
     loadMovies();
     loadCinemas();
+    loadTicketTypes();
 
     const refreshInterval = window.setInterval(loadShowtimes, 30_000);
 
@@ -162,6 +166,34 @@ function ShowtimeAdmin() {
     } catch (error) {
       console.error(error);
       showNotification("error", "Lỗi tải dữ liệu", "Không thể tải danh sách rạp");
+    }
+  };
+
+  const loadTicketTypes = async () => {
+    try {
+      const response = await fetch(TICKET_TYPES_API_URL);
+
+      if (!response.ok) {
+        throw new Error("Không thể tải danh sách chính sách vé");
+      }
+
+      const data = await response.json();
+      setTicketTypes(
+        Array.isArray(data)
+          ? data.filter(
+              (ticketType) =>
+                String(ticketType.status || "Active").toLowerCase() !==
+                "inactive"
+            )
+          : []
+      );
+    } catch (error) {
+      console.error(error);
+      showNotification(
+        "error",
+        "Lỗi tải dữ liệu",
+        "Không thể tải danh sách chính sách vé"
+      );
     }
   };
 
@@ -229,6 +261,7 @@ const getShowtimeEndDate = (showtime) => {
     startTime: "",
     endTime: "",
     ticketPrice: "",
+    ticketTypePrices: [],
     status: "Đang hoạt động",
   });
 
@@ -275,6 +308,13 @@ const getShowtimeEndDate = (showtime) => {
 
     ticketPrice:
       showtime.ticketPrice?.toString() || "",
+
+    ticketTypePrices: Array.isArray(showtime.ticketTypePrices)
+      ? showtime.ticketTypePrices.map((assignment) => ({
+          ticketTypeId: Number(assignment.ticketTypeId),
+          price: Number(assignment.price),
+        }))
+      : [],
 
     status: normalizeShowtimeStatus(showtime.status),
   });
@@ -325,6 +365,36 @@ const getShowtimeEndDate = (showtime) => {
     });
   };
 
+  const toggleTicketType = (ticketType, checked) => {
+    setFormData((previous) => ({
+      ...previous,
+      ticketTypePrices: checked
+        ? [
+            ...previous.ticketTypePrices,
+            {
+              ticketTypeId: Number(ticketType.ticketTypeId),
+              price: Number(ticketType.price || previous.ticketPrice || 0),
+            },
+          ]
+        : previous.ticketTypePrices.filter(
+            (assignment) =>
+              Number(assignment.ticketTypeId) !==
+              Number(ticketType.ticketTypeId)
+          ),
+    }));
+  };
+
+  const updateTicketTypePrice = (ticketTypeId, price) => {
+    setFormData((previous) => ({
+      ...previous,
+      ticketTypePrices: previous.ticketTypePrices.map((assignment) =>
+        Number(assignment.ticketTypeId) === Number(ticketTypeId)
+          ? { ...assignment, price }
+          : assignment
+      ),
+    }));
+  };
+
   const handleSubmit = async (event) => {
   event.preventDefault();
 
@@ -337,9 +407,18 @@ const getShowtimeEndDate = (showtime) => {
     !formData.roomId ||
     !formData.startTime ||
     !formData.endTime ||
-    !formData.ticketPrice
+    !formData.ticketPrice ||
+    !formData.ticketTypePrices.length ||
+    formData.ticketTypePrices.some(
+      (assignment) =>
+        assignment.price === "" || Number(assignment.price) <= 0
+    )
   ) {
-    showNotification("warning", "Thiếu thông tin", "Vui lòng nhập đầy đủ thông tin bắt buộc");
+    showNotification(
+      "warning",
+      "Thiếu thông tin",
+      "Nhập đầy đủ thông tin, chọn ít nhất một chính sách vé và đặt giá lớn hơn 0 cho từng chính sách."
+    );
     return;
   }
 
@@ -376,6 +455,11 @@ const getShowtimeEndDate = (showtime) => {
       : `${startTime}:00`,
 
     ticketPrice: Number(formData.ticketPrice),
+
+    ticketTypePrices: formData.ticketTypePrices.map((assignment) => ({
+      ticketTypeId: Number(assignment.ticketTypeId),
+      price: Number(assignment.price),
+    })),
 
     status: formData.status || "Đang hoạt động",
   };
@@ -692,6 +776,15 @@ const getShowtimeEndDate = (showtime) => {
                     </option>
                   ))}
                 </select>
+
+                {formData.movieId && (
+                  <small className="showtime-rating-hint">
+                    Phân loại phim: {movies.find(
+                      (movie) =>
+                        Number(movie.movieId) === Number(formData.movieId)
+                    )?.ageRating || "Chưa cập nhật"}
+                  </small>
+                )}
               </div>
 
               <div className="showtime-form-group">
@@ -769,6 +862,72 @@ const getShowtimeEndDate = (showtime) => {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="showtime-form-group">
+                <label>Chính sách vé áp dụng *</label>
+                <small className="showtime-policy-hint">
+                  Chọn chính sách phù hợp với suất chiếu và nhập giá áp dụng riêng cho suất này.
+                </small>
+
+                {ticketTypes.length ? (
+                  <div className="showtime-policy-list">
+                    {ticketTypes.map((ticketType) => {
+                      const assignment = formData.ticketTypePrices.find(
+                        (item) =>
+                          Number(item.ticketTypeId) ===
+                          Number(ticketType.ticketTypeId)
+                      );
+
+                      return (
+                        <div
+                          className="showtime-policy-item"
+                          key={ticketType.ticketTypeId}
+                        >
+                          <label className="showtime-policy-choice">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(assignment)}
+                              onChange={(event) =>
+                                toggleTicketType(ticketType, event.target.checked)
+                              }
+                            />
+                            <span>
+                              <strong>{ticketType.name}</strong>
+                              <small>
+                                {ticketType.category === "Program"
+                                  ? "Thời điểm / chương trình"
+                                  : "Tư cách khách hàng"}
+                              </small>
+                            </span>
+                          </label>
+
+                          {assignment && (
+                            <input
+                              className="showtime-policy-price"
+                              type="number"
+                              min="1"
+                              step="1000"
+                              aria-label={`Giá ${ticketType.name}`}
+                              value={assignment.price}
+                              onChange={(event) =>
+                                updateTicketTypePrice(
+                                  ticketType.ticketTypeId,
+                                  event.target.value
+                                )
+                              }
+                              required
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="showtime-policy-hint">
+                    Chưa có chính sách vé đang hoạt động. Hãy tạo loại vé trước.
+                  </p>
+                )}
               </div>
 
               <div className="showtime-form-group">

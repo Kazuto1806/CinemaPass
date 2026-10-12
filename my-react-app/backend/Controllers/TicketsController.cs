@@ -121,8 +121,25 @@ namespace CinemaBackend.Controllers
                 });
             }
 
+            if (showtime.MovieId != request.MovieId)
+            {
+                return BadRequest(new
+                {
+                    message = "Phim không khớp với suất chiếu đã chọn."
+                });
+            }
+
+            if (!request.TicketTypeId.HasValue)
+            {
+                return BadRequest(new
+                {
+                    message = "Vui lòng chọn chính sách vé của suất chiếu."
+                });
+            }
+
             // Kiểm tra loại vé
             TicketType? ticketType = null;
+            decimal? linkedTicketPrice = null;
 
             if (request.TicketTypeId.HasValue)
             {
@@ -150,6 +167,22 @@ namespace CinemaBackend.Controllers
                         message = "Loại vé hiện không hoạt động."
                     });
                 }
+
+                linkedTicketPrice = await _context.ShowtimeTicketTypes
+                    .AsNoTracking()
+                    .Where(assignment =>
+                        assignment.ShowtimeId == showtime.ShowtimeId &&
+                        assignment.TicketTypeId == ticketType.TicketTypeId)
+                    .Select(assignment => (decimal?)assignment.Price)
+                    .FirstOrDefaultAsync();
+
+                if (!linkedTicketPrice.HasValue)
+                {
+                    return BadRequest(new
+                    {
+                        message = "Chính sách vé này không áp dụng cho suất chiếu đã chọn."
+                    });
+                }
             }
 
             var normalizedSeatCodes = request.SeatCodes
@@ -171,17 +204,7 @@ namespace CinemaBackend.Controllers
             // Tính giá vé
             decimal finalTicketPrice;
 
-            if (ticketType != null)
-            {
-                finalTicketPrice = ticketType.Price;
-            }
-            else
-            {
-                finalTicketPrice =
-                    request.TicketPrice > 0
-                        ? request.TicketPrice
-                        : showtime.TicketPrice;
-            }
+            finalTicketPrice = linkedTicketPrice!.Value;
 
             var createdTickets = new List<object>();
 

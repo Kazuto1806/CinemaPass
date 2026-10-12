@@ -67,6 +67,19 @@ namespace CinemaBackend.Controllers
 
                     s.TicketPrice,
 
+                    ticketTypePrices = s.TicketTypeAssignments
+                        .Select(assignment => new
+                        {
+                            ticketTypeId = assignment.TicketTypeId,
+                            name = assignment.TicketType != null
+                                ? assignment.TicketType.Name
+                                : "",
+                            category = assignment.TicketType != null
+                                ? assignment.TicketType.Category
+                                : "Customer",
+                            price = assignment.Price
+                        }),
+
                     Status = NormalizeShowtimeStatus(s.Status),
 
                     s.CreatedAt
@@ -125,6 +138,19 @@ namespace CinemaBackend.Controllers
 
                     s.TicketPrice,
 
+                    ticketTypePrices = s.TicketTypeAssignments
+                        .Select(assignment => new
+                        {
+                            ticketTypeId = assignment.TicketTypeId,
+                            name = assignment.TicketType != null
+                                ? assignment.TicketType.Name
+                                : "",
+                            category = assignment.TicketType != null
+                                ? assignment.TicketType.Category
+                                : "Customer",
+                            price = assignment.Price
+                        }),
+
                     Status = NormalizeShowtimeStatus(s.Status),
 
                     s.CreatedAt
@@ -152,6 +178,14 @@ namespace CinemaBackend.Controllers
         public async Task<IActionResult> CreateShowtime(
             Showtime showtime)
         {
+            var ticketTypeValidation =
+                await ValidateTicketTypePrices(showtime.TicketTypePrices);
+
+            if (ticketTypeValidation != null)
+            {
+                return ticketTypeValidation;
+            }
+
             // =================================================
             // KIỂM TRA PHIM
             // =================================================
@@ -262,6 +296,9 @@ namespace CinemaBackend.Controllers
                 showtime.Status
             );
 
+            showtime.TicketTypeAssignments =
+                MapTicketTypePrices(showtime.TicketTypePrices);
+
 
             // =================================================
             // LƯU DATABASE
@@ -295,6 +332,14 @@ namespace CinemaBackend.Controllers
             int id,
             Showtime updatedShowtime)
         {
+            var ticketTypeValidation =
+                await ValidateTicketTypePrices(updatedShowtime.TicketTypePrices);
+
+            if (ticketTypeValidation != null)
+            {
+                return ticketTypeValidation;
+            }
+
             // =================================================
             // TÌM SUẤT CHIẾU
             // =================================================
@@ -448,6 +493,34 @@ namespace CinemaBackend.Controllers
                 updatedShowtime.Status
             );
 
+            var existingAssignments = await _context.ShowtimeTicketTypes
+                .Where(assignment => assignment.ShowtimeId == id)
+                .ToListAsync();
+
+            var requestedAssignments = MapTicketTypePrices(
+                updatedShowtime.TicketTypePrices
+            ).ToDictionary(assignment => assignment.TicketTypeId);
+
+            foreach (var existingAssignment in existingAssignments)
+            {
+                if (requestedAssignments.Remove(
+                    existingAssignment.TicketTypeId,
+                    out var requestedAssignment))
+                {
+                    existingAssignment.Price = requestedAssignment.Price;
+                }
+                else
+                {
+                    _context.ShowtimeTicketTypes.Remove(existingAssignment);
+                }
+            }
+
+            foreach (var assignment in requestedAssignments.Values)
+            {
+                assignment.ShowtimeId = id;
+                _context.ShowtimeTicketTypes.Add(assignment);
+            }
+
 
             // =================================================
             // SAVE
@@ -461,6 +534,68 @@ namespace CinemaBackend.Controllers
                 message =
                     "Cập nhật suất chiếu thành công"
             });
+        }
+
+        private async Task<IActionResult?> ValidateTicketTypePrices(
+            List<ShowtimeTicketTypeInput>? ticketTypePrices)
+        {
+            if (ticketTypePrices == null || ticketTypePrices.Count == 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Vui lòng chọn ít nhất một chính sách vé cho suất chiếu."
+                });
+            }
+
+            var ticketTypeIds = ticketTypePrices
+                .Select(item => item.TicketTypeId)
+                .ToList();
+
+            if (ticketTypeIds.Any(id => id <= 0) ||
+                ticketTypeIds.Distinct().Count() != ticketTypeIds.Count ||
+                ticketTypePrices.Any(item => item.Price <= 0))
+            {
+                return BadRequest(new
+                {
+                    message = "Danh sách chính sách vé hoặc giá vé không hợp lệ."
+                });
+            }
+
+            var ticketTypes = await _context.TicketTypes
+                .Where(ticketType => ticketTypeIds.Contains(ticketType.TicketTypeId))
+                .Select(ticketType => new
+                {
+                    ticketType.TicketTypeId,
+                    ticketType.Status
+                })
+                .ToListAsync();
+
+            if (ticketTypes.Count != ticketTypeIds.Count ||
+                ticketTypes.Any(ticketType =>
+                    string.Equals(
+                        ticketType.Status,
+                        "Inactive",
+                        StringComparison.OrdinalIgnoreCase)))
+            {
+                return BadRequest(new
+                {
+                    message = "Có loại vé không tồn tại hoặc đang tạm ngưng."
+                });
+            }
+
+            return null;
+        }
+
+        private static List<ShowtimeTicketType> MapTicketTypePrices(
+            IEnumerable<ShowtimeTicketTypeInput> ticketTypePrices)
+        {
+            return ticketTypePrices
+                .Select(item => new ShowtimeTicketType
+                {
+                    TicketTypeId = item.TicketTypeId,
+                    Price = item.Price
+                })
+                .ToList();
         }
 
         private static string NormalizeShowtimeStatus(string? status)

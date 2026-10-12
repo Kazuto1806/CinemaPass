@@ -31,5 +31,25 @@ namespace CinemaBackend.Data
         public DbSet<FoodOrder> FoodOrders { get; set; }
 
         public DbSet<FoodOrderItem> FoodOrderItems { get; set; }
+
+        public DbSet<ShowtimeTicketType> ShowtimeTicketTypes { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ShowtimeTicketType>()
+                .HasKey(item => new { item.ShowtimeId, item.TicketTypeId });
+
+            modelBuilder.Entity<ShowtimeTicketType>()
+                .HasOne(item => item.Showtime)
+                .WithMany(showtime => showtime.TicketTypeAssignments)
+                .HasForeignKey(item => item.ShowtimeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ShowtimeTicketType>()
+                .HasOne(item => item.TicketType)
+                .WithMany(ticketType => ticketType.ShowtimeAssignments)
+                .HasForeignKey(item => item.TicketTypeId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
     }
 }

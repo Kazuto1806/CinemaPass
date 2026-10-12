@@ -17,5 +17,7 @@ namespace CinemaBackend.Models
         public DateTime CreatedAt { get; set; }
 
         public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
+
+        public ICollection<ShowtimeTicketType> ShowtimeAssignments { get; set; } = new List<ShowtimeTicketType>();
     }
 }

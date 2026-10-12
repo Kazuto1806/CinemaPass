@@ -397,6 +397,46 @@ function Booking() {
     selectedTime,
   ]);
 
+  const availableTicketTypes = useMemo(() => {
+    const assignments = selectedShowtime?.ticketTypePrices;
+
+    if (!Array.isArray(assignments)) {
+      return ticketTypes;
+    }
+
+    return assignments
+      .map((assignment) => {
+        const ticketType = ticketTypes.find(
+          (item) =>
+            Number(item.ticketTypeId) === Number(assignment.ticketTypeId)
+        );
+
+        return ticketType
+          ? {
+              ...ticketType,
+              category: assignment.category || ticketType.category,
+              price: Number(assignment.price),
+            }
+          : null;
+      })
+      .filter(Boolean);
+  }, [selectedShowtime, ticketTypes]);
+
+  useEffect(() => {
+    const availableIds = availableTicketTypes.map(
+      (ticketType) => Number(ticketType.ticketTypeId)
+    );
+
+    if (!availableIds.length) {
+      setSelectedTicketTypeId(null);
+      return;
+    }
+
+    if (!availableIds.includes(Number(selectedTicketTypeId))) {
+      setSelectedTicketTypeId(availableIds[0]);
+    }
+  }, [availableTicketTypes, selectedTicketTypeId]);
+
   useEffect(() => {
     if (!selectedShowtime?.showtimeId) {
       setSeatList([]);
@@ -462,12 +502,12 @@ function Booking() {
 
   const selectedTicketType = useMemo(
     () =>
-      ticketTypes.find(
+      availableTicketTypes.find(
         (ticketType) =>
           Number(ticketType.ticketTypeId) ===
           Number(selectedTicketTypeId)
       ) || null,
-    [ticketTypes, selectedTicketTypeId]
+    [availableTicketTypes, selectedTicketTypeId]
   );
 
   const ticketUnitPrice =
@@ -503,14 +543,19 @@ function Booking() {
       return;
     }
 
-    if (!ticketTypes.length) {
+    if (!availableTicketTypes.length) {
       alert(
-        "Hiện chưa có loại vé. Vui lòng thêm loại vé trong trang quản trị."
+        "Suất chiếu này chưa có chính sách vé. Vui lòng chọn suất khác hoặc liên hệ rạp."
       );
       return;
     }
 
-    if (!selectedTicketTypeId) {
+    if (
+      !availableTicketTypes.some(
+        (ticketType) =>
+          Number(ticketType.ticketTypeId) === Number(selectedTicketTypeId)
+      )
+    ) {
       alert("Vui lòng chọn loại vé.");
       return;
     }
@@ -912,7 +957,7 @@ function Booking() {
                     <h2>Chọn loại vé</h2>
                   </div>
 
-                  {ticketTypes.length ? (
+                  {availableTicketTypes.length ? (
                     <div
                       className="ticket-type-list"
                       style={{
@@ -920,7 +965,7 @@ function Booking() {
                         gap: "12px",
                       }}
                     >
-                      {ticketTypes.map(
+                      {availableTicketTypes.map(
                         (ticketType) => {
                           const ticketTypeId =
                             Number(
@@ -974,6 +1019,18 @@ function Booking() {
                                     }
                                   </strong>
 
+                                  <div
+                                    style={{
+                                      marginTop: "4px",
+                                      fontSize: "11px",
+                                      opacity: 0.65,
+                                    }}
+                                  >
+                                    {ticketType.category === "Program"
+                                      ? "Thời điểm / chương trình"
+                                      : "Tư cách khách hàng"}
+                                  </div>
+
                                   {ticketType.description && (
                                     <div
                                       style={{
@@ -1005,8 +1062,8 @@ function Booking() {
                     </div>
                   ) : (
                     <p className="booking-empty-text">
-                      Chưa có loại vé. Vui lòng thêm
-                      loại vé trong trang quản trị.
+                      Suất chiếu này chưa được gán
+                      chính sách vé.
                     </p>
                   )}
                 </div>
