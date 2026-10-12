@@ -2,23 +2,53 @@ using CinemaBackend.Data;
 using CinemaBackend.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 namespace CinemaBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class MoviesController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private readonly IWebHostEnvironment _environment;
+       private readonly AppDbContext _context;
+private readonly IWebHostEnvironment _environment;
+private readonly Cloudinary _cloudinary;
 
-        public MoviesController(
-            AppDbContext context,
-            IWebHostEnvironment environment)
+public MoviesController(
+    AppDbContext context,
+    IWebHostEnvironment environment,
+    IConfiguration configuration)
+{
+    _context = context;
+    _environment = environment;
+
+    var cloudName = configuration["CLOUDINARY_CLOUD_NAME"];
+    var apiKey = configuration["CLOUDINARY_API_KEY"];
+    var apiSecret = configuration["CLOUDINARY_API_SECRET"];
+
+    if (string.IsNullOrWhiteSpace(cloudName) ||
+        string.IsNullOrWhiteSpace(apiKey) ||
+        string.IsNullOrWhiteSpace(apiSecret))
+    {
+        throw new InvalidOperationException(
+            "Chưa cấu hình thông tin Cloudinary."
+        );
+    }
+
+    var account = new Account(
+        cloudName,
+        apiKey,
+        apiSecret
+    );
+
+    _cloudinary = new Cloudinary(account)
+    {
+        Api =
         {
-            _context = context;
-            _environment = environment;
+            Secure = true
         }
+    };
+}
 
         // =========================
         // GET TẤT CẢ PHIM
@@ -265,59 +295,56 @@ namespace CinemaBackend.Controllers
         // LƯU POSTER
         // =========================
 
-        private async Task<string> SavePoster(IFormFile file)
-        {
-            // Chỉ nhận ảnh
-            if (!file.ContentType.StartsWith("image/"))
-            {
-                throw new InvalidOperationException(
-                    "File poster phải là hình ảnh."
-                );
-            }
+        
+private async Task<string> SavePoster(IFormFile file)
+{
+    // Chỉ nhận ảnh
+    if (string.IsNullOrWhiteSpace(file.ContentType) ||
+        !file.ContentType.StartsWith(
+            "image/",
+            StringComparison.OrdinalIgnoreCase))
+    {
+        throw new InvalidOperationException(
+            "File poster phải là hình ảnh."
+        );
+    }
 
-            // Giới hạn 10 MB
-            if (file.Length > 10 * 1024 * 1024)
-            {
-                throw new InvalidOperationException(
-                    "Poster không được lớn hơn 10MB."
-                );
-            }
+    // Giới hạn 10 MB
+    if (file.Length <= 0 ||
+        file.Length > 10 * 1024 * 1024)
+    {
+        throw new InvalidOperationException(
+            "Poster phải lớn hơn 0 byte và không vượt quá 10MB."
+        );
+    }
 
-            var uploadFolder = Path.Combine(
-                _environment.ContentRootPath,
-                "uploads",
-                "posters"
-            );
+    // Tải ảnh lên Cloudinary
+    await using var stream = file.OpenReadStream();
 
-            if (!Directory.Exists(uploadFolder))
-            {
-                Directory.CreateDirectory(uploadFolder);
-            }
+    var uploadParams = new ImageUploadParams
+    {
+        File = new FileDescription(
+            file.FileName,
+            stream
+        ),
+        Folder = "cinemapass/posters"
+    };
 
-            // Lấy đuôi file
-            var extension = Path.GetExtension(
-                file.FileName
-            );
+    var result = await _cloudinary.UploadAsync(uploadParams);
 
-            // Tạo tên file mới
-            var fileName = $"{Guid.NewGuid()}{extension}";
+    if (result.Error != null ||
+        result.SecureUrl == null)
+    {
+        throw new InvalidOperationException(
+            "Tải poster lên Cloudinary thất bại: " +
+            (result.Error?.Message ?? "Không nhận được URL ảnh.")
+        );
+    }
 
-            var filePath = Path.Combine(
-                uploadFolder,
-                fileName
-            );
+    // Lưu URL HTTPS đầy đủ vào SQL Server
+    return result.SecureUrl.ToString();
+}
 
-            // Lưu file
-            using var stream = new FileStream(
-                filePath,
-                FileMode.Create
-            );
-
-            await file.CopyToAsync(stream);
-
-            // URL lưu vào SQL
-            return $"/uploads/posters/{fileName}";
-        }
 
         // =========================
         // XÓA POSTER CŨ
