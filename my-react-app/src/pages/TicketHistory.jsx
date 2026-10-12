@@ -11,9 +11,11 @@ import {
   FaReceipt,
   FaSyncAlt,
 } from "react-icons/fa";
+
+import { API_BASE } from "../constants";
 import "./TicketHistory.css";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = `${API_BASE}/api`;
 
 function formatMoney(value) {
   return Number(value || 0).toLocaleString("vi-VN") + " đ";
@@ -23,7 +25,10 @@ function formatDate(value) {
   if (!value) return "Chưa có thông tin";
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return String(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
 
   return date.toLocaleDateString("vi-VN");
 }
@@ -40,17 +45,35 @@ function Status({ value }) {
   let className = "history-status pending";
 
   if (
-    ["paid", "completed", "success", "confirmed", "đã thanh toán", "đã xác nhận"].includes(status)
+    [
+      "paid",
+      "completed",
+      "success",
+      "confirmed",
+      "đã thanh toán",
+      "đã xác nhận",
+    ].includes(status)
   ) {
     label = "Đã thanh toán";
     className = "history-status success";
   } else if (
-    ["cancelled", "canceled", "failed", "đã hủy", "thất bại"].includes(status)
+    [
+      "cancelled",
+      "canceled",
+      "failed",
+      "đã hủy",
+      "thất bại",
+    ].includes(status)
   ) {
     label = "Đã hủy / Thất bại";
     className = "history-status cancelled";
   } else if (
-    ["pending", "unpaid", "chờ thanh toán", "đang chờ"].includes(status)
+    [
+      "pending",
+      "unpaid",
+      "chờ thanh toán",
+      "đang chờ",
+    ].includes(status)
   ) {
     label = "Chờ thanh toán";
   }
@@ -70,8 +93,14 @@ function TicketHistory() {
   const userId = localStorage.getItem("userId");
 
   const loadHistory = async () => {
-    if (!userId || !Number.isInteger(Number(userId)) || Number(userId) <= 0) {
-      setError("Không tìm thấy UserId. Ông hãy đăng nhập lại rồi thử lại nhé.");
+    if (
+      !userId ||
+      !Number.isInteger(Number(userId)) ||
+      Number(userId) <= 0
+    ) {
+      setError(
+        "Không tìm thấy UserId. Ông hãy đăng nhập lại rồi thử lại nhé."
+      );
       setTickets([]);
       setFoodOrders([]);
       setLoading(false);
@@ -89,7 +118,7 @@ function TicketHistory() {
 
       if (!ticketResponse.ok || !foodResponse.ok) {
         throw new Error(
-          `Không thể tải lịch sử. Vé: ${ticketResponse.status}, bắp nước: ${foodResponse.status}.`
+          `Lỗi API lịch sử mua hàng. Vé: ${ticketResponse.status}, bắp nước: ${foodResponse.status}.`
         );
       }
 
@@ -102,9 +131,15 @@ function TicketHistory() {
       setFoodOrders(Array.isArray(foodData) ? foodData : []);
     } catch (err) {
       console.error("Lỗi tải lịch sử mua hàng:", err);
+
       setError(
-        "Không tải được lịch sử mua hàng. Hãy kiểm tra backend có đang chạy tại localhost:5000 không."
+        err.message?.startsWith("Lỗi API")
+          ? err.message
+          : "Không kết nối được máy chủ. Vui lòng thử lại sau."
       );
+
+      setTickets([]);
+      setFoodOrders([]);
     } finally {
       setLoading(false);
     }
@@ -163,7 +198,9 @@ function TicketHistory() {
         </div>
 
         {loading ? (
-          <div className="history-message">Đang tải lịch sử mua hàng...</div>
+          <div className="history-message">
+            Đang tải lịch sử mua hàng...
+          </div>
         ) : error ? (
           <div className="history-message history-error">
             <p>{error}</p>
@@ -177,7 +214,10 @@ function TicketHistory() {
               <FaTicketAlt />
               <h3>Chưa có vé xem phim</h3>
               <p>Các vé đã đặt sẽ hiển thị tại đây.</p>
-              <button type="button" onClick={() => navigate("/")}>
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+              >
                 Khám phá phim
               </button>
             </div>
@@ -194,19 +234,29 @@ function TicketHistory() {
                     </div>
 
                     <div className="history-card-title">
-                      <h3>{ticket.movieTitle || `Vé #${ticket.ticketId}`}</h3>
+                      <h3>
+                        {ticket.movieTitle ||
+                          `Vé #${ticket.ticketId}`}
+                      </h3>
                       <p>Mã vé: #{ticket.ticketId}</p>
                     </div>
 
-                    <Status value={ticket.paymentStatus || ticket.status} />
+                    <Status
+                      value={
+                        ticket.paymentStatus || ticket.status
+                      }
+                    />
                   </div>
 
                   <div className="history-details">
                     <p>
                       <FaMapMarkerAlt />
                       <span>
-                        {ticket.cinemaName || "Chưa có thông tin rạp"}
-                        {ticket.roomName ? ` · ${ticket.roomName}` : ""}
+                        {ticket.cinemaName ||
+                          "Chưa có thông tin rạp"}
+                        {ticket.roomName
+                          ? ` · ${ticket.roomName}`
+                          : ""}
                       </span>
                     </p>
 
@@ -215,7 +265,9 @@ function TicketHistory() {
                       <span>
                         {formatDate(ticket.showDate)} ·{" "}
                         {formatTime(ticket.startTime)}
-                        {ticket.endTime ? ` - ${formatTime(ticket.endTime)}` : ""}
+                        {ticket.endTime
+                          ? ` - ${formatTime(ticket.endTime)}`
+                          : ""}
                       </span>
                     </p>
 
@@ -239,7 +291,9 @@ function TicketHistory() {
 
                   <div className="history-card-bottom">
                     <span>Giá vé</span>
-                    <strong>{formatMoney(ticket.ticketPrice)}</strong>
+                    <strong>
+                      {formatMoney(ticket.ticketPrice)}
+                    </strong>
                   </div>
                 </article>
               ))}
@@ -250,7 +304,10 @@ function TicketHistory() {
             <FaUtensils />
             <h3>Chưa có đơn bắp nước</h3>
             <p>Các đơn bắp nước của ông sẽ hiển thị tại đây.</p>
-            <button type="button" onClick={() => navigate("/food")}>
+            <button
+              type="button"
+              onClick={() => navigate("/food")}
+            >
               Chọn bắp nước
             </button>
           </div>
@@ -267,15 +324,20 @@ function TicketHistory() {
                   </div>
 
                   <div className="history-card-title">
-                    <h3>Đơn bắp nước #{order.foodOrderId}</h3>
-                    <p>Ngày đặt: {formatDate(order.createdAt)}</p>
+                    <h3>
+                      Đơn bắp nước #{order.foodOrderId}
+                    </h3>
+                    <p>
+                      Ngày đặt: {formatDate(order.createdAt)}
+                    </p>
                   </div>
 
                   <Status value={order.status} />
                 </div>
 
                 <div className="food-order-items">
-                  {Array.isArray(order.items) && order.items.length > 0 ? (
+                  {Array.isArray(order.items) &&
+                  order.items.length > 0 ? (
                     order.items.map((item) => (
                       <div
                         className="food-order-item"
@@ -285,6 +347,7 @@ function TicketHistory() {
                           {item.foodName || `Món #${item.foodId}`}
                           {" "}× {item.quantity}
                         </span>
+
                         <strong>
                           {formatMoney(
                             item.amount ??
@@ -303,7 +366,9 @@ function TicketHistory() {
 
                 <div className="history-card-bottom">
                   <span>Tổng tiền</span>
-                  <strong>{formatMoney(order.totalAmount)}</strong>
+                  <strong>
+                    {formatMoney(order.totalAmount)}
+                  </strong>
                 </div>
               </article>
             ))}
