@@ -12,7 +12,7 @@ namespace CinemaBackend.Controllers
     {
        private readonly AppDbContext _context;
 private readonly IWebHostEnvironment _environment;
-private readonly Cloudinary _cloudinary;
+    private readonly Cloudinary? _cloudinary;
 
 public MoviesController(
     AppDbContext context,
@@ -26,28 +26,24 @@ public MoviesController(
     var apiKey = configuration["CLOUDINARY_API_KEY"];
     var apiSecret = configuration["CLOUDINARY_API_SECRET"];
 
-    if (string.IsNullOrWhiteSpace(cloudName) ||
-        string.IsNullOrWhiteSpace(apiKey) ||
-        string.IsNullOrWhiteSpace(apiSecret))
+    if (!string.IsNullOrWhiteSpace(cloudName) &&
+        !string.IsNullOrWhiteSpace(apiKey) &&
+        !string.IsNullOrWhiteSpace(apiSecret))
     {
-        throw new InvalidOperationException(
-            "Chưa cấu hình thông tin Cloudinary."
+        var account = new Account(
+            cloudName,
+            apiKey,
+            apiSecret
         );
-    }
 
-    var account = new Account(
-        cloudName,
-        apiKey,
-        apiSecret
-    );
-
-    _cloudinary = new Cloudinary(account)
-    {
-        Api =
+        _cloudinary = new Cloudinary(account)
         {
-            Secure = true
-        }
-    };
+            Api =
+            {
+                Secure = true
+            }
+        };
+    }
 }
 
         // =========================
@@ -298,6 +294,10 @@ public MoviesController(
         
 private async Task<string> SavePoster(IFormFile file)
 {
+    var cloudinary = _cloudinary ?? throw new InvalidOperationException(
+        "Chưa cấu hình thông tin Cloudinary."
+    );
+
     // Chỉ nhận ảnh
     if (string.IsNullOrWhiteSpace(file.ContentType) ||
         !file.ContentType.StartsWith(
@@ -330,7 +330,7 @@ private async Task<string> SavePoster(IFormFile file)
         Folder = "cinemapass/posters"
     };
 
-    var result = await _cloudinary.UploadAsync(uploadParams);
+    var result = await cloudinary.UploadAsync(uploadParams);
 
     if (result.Error != null ||
         result.SecureUrl == null)
