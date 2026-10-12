@@ -22,9 +22,12 @@ public MoviesController(
     _context = context;
     _environment = environment;
 
-    var cloudName = configuration["CLOUDINARY_CLOUD_NAME"];
-    var apiKey = configuration["CLOUDINARY_API_KEY"];
-    var apiSecret = configuration["CLOUDINARY_API_SECRET"];
+    var cloudName = configuration["Cloudinary:CloudName"]
+        ?? configuration["CLOUDINARY_CLOUD_NAME"];
+    var apiKey = configuration["Cloudinary:ApiKey"]
+        ?? configuration["CLOUDINARY_API_KEY"];
+    var apiSecret = configuration["Cloudinary:ApiSecret"]
+        ?? configuration["CLOUDINARY_API_SECRET"];
 
     if (!string.IsNullOrWhiteSpace(cloudName) &&
         !string.IsNullOrWhiteSpace(apiKey) &&
@@ -108,6 +111,14 @@ public MoviesController(
                 });
             }
 
+            if (PosterFile != null && PosterFile.Length > 0 && _cloudinary == null)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    message = "Chưa cấu hình Cloudinary. Vui lòng cấu hình Cloudinary:CloudName, Cloudinary:ApiKey và Cloudinary:ApiSecret."
+                });
+            }
+
             // Trạng thái mặc định
             if (string.IsNullOrWhiteSpace(movie.Status))
             {
@@ -179,6 +190,14 @@ public MoviesController(
                 });
             }
 
+            if (PosterFile != null && PosterFile.Length > 0 && _cloudinary == null)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    message = "Chưa cấu hình Cloudinary. Vui lòng cấu hình Cloudinary:CloudName, Cloudinary:ApiKey và Cloudinary:ApiSecret."
+                });
+            }
+
             // =========================
             // CẬP NHẬT THÔNG TIN
             // =========================
@@ -203,11 +222,10 @@ public MoviesController(
 
             if (PosterFile != null && PosterFile.Length > 0)
             {
-                // Xóa poster cũ nếu là file upload
-                DeleteOldPoster(existingMovie.PosterUrl);
-
                 var posterUrl = await SavePoster(PosterFile);
 
+                // Chỉ xóa poster cũ sau khi poster mới đã tải lên thành công.
+                DeleteOldPoster(existingMovie.PosterUrl);
                 existingMovie.PosterUrl = posterUrl;
             }
 
