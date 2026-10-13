@@ -19,7 +19,6 @@ export const Footer = () => {
         {/* Logo Bộ Công Thương */}
         <div className="footer-bct">
           <img
-            src="/assets/dathongbao-removebg-preview.png"
             alt="Đã thông báo Bộ Công Thương"
           />
         </div>
