@@ -4,6 +4,8 @@ using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using System.Net;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +46,77 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseWhen(
+    context => context.Request.Path.StartsWithSegments("/swagger"),
+    swaggerApp =>
+    {
+        swaggerApp.Use(async (context, next) =>
+        {
+            var expectedUser =
+                Environment.GetEnvironmentVariable("SWAGGER_USERNAME");
+            var expectedPassword =
+                Environment.GetEnvironmentVariable("SWAGGER_PASSWORD");
+
+            if (string.IsNullOrWhiteSpace(expectedUser) ||
+                string.IsNullOrWhiteSpace(expectedPassword))
+            {
+                context.Response.StatusCode = 503;
+                await context.Response.WriteAsync(
+                    "Swagger authentication is not configured.");
+                return;
+            }
+
+            var authHeader =
+                context.Request.Headers.Authorization.ToString();
+
+            if (authHeader.StartsWith(
+                    "Basic ", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var encoded = authHeader["Basic ".Length..].Trim();
+                    var decoded = Encoding.UTF8.GetString(
+                        Convert.FromBase64String(encoded));
+
+                    var separator = decoded.IndexOf(':');
+
+                    if (separator >= 0)
+                    {
+                        var username = decoded[..separator];
+                        var password = decoded[(separator + 1)..];
+
+                        if (string.Equals(username, expectedUser,
+                                StringComparison.Ordinal) &&
+                            string.Equals(password, expectedPassword,
+                                StringComparison.Ordinal))
+                        {
+                            await next();
+                            return;
+                        }
+                    }
+                }
+                catch (FormatException)
+                {
+                    // Header không hợp lệ.
+                }
+            }
+
+            context.Response.Headers.WWWAuthenticate =
+                "Basic realm=\"CinemaPass Swagger\", charset=\"UTF-8\"";
+            context.Response.StatusCode =
+                (int)HttpStatusCode.Unauthorized;
+        });
+    });
+
+app.UseSwagger();
+
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint(
+        "/swagger/v1/swagger.json",
+        "Cinema Pass API V1");
+});
 
 var uploadsRoot = Path.Combine(app.Environment.ContentRootPath, "uploads");
 Directory.CreateDirectory(Path.Combine(uploadsRoot, "posters"));
