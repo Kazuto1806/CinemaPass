@@ -2,8 +2,42 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NotificationPopup from "../components/NotificationPopup";
 import "./Login.css";
-import { API_BASE } from '../constants';
+import { API_BASE } from "../constants";
+
 const API_URL = `${API_BASE}/api/auth`;
+
+// Email phải có dạng ten@mien.com, không có khoảng trắng.
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
+
+// Số điện thoại Việt Nam: 10 chữ số và bắt đầu bằng 0.
+const PHONE_REGEX = /^0\d{9}$/;
+
+function getPasswordStrength(password) {
+  if (!password) {
+    return { score: 0, label: "Chưa nhập mật khẩu", color: "#64748b" };
+  }
+
+  const checks = [
+    password.length >= 8,
+    password.length >= 12,
+    /[a-z]/.test(password),
+    /[A-Z]/.test(password),
+    /\d/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+  ];
+
+  const score = checks.filter(Boolean).length;
+
+  if (score <= 2) {
+    return { score, label: "Yếu", color: "#ef4444" };
+  }
+
+  if (score <= 4) {
+    return { score, label: "Trung bình", color: "#f59e0b" };
+  }
+
+  return { score, label: "Mạnh", color: "#22c55e" };
+}
 
 function Login() {
   const navigate = useNavigate();
@@ -100,7 +134,7 @@ function Login() {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         showPopup(
@@ -156,9 +190,22 @@ function Login() {
       setTimeout(() => {
         if (data.role === "Admin") {
           navigate("/admin/movies");
-        } else {
-          navigate("/");
+          return;
         }
+
+        // Neu nguoi dung duoc chuyen den trang dang nhap tu luong dat ve,
+        // quay lai dung trang do sau khi dang nhap thanh cong.
+        const params = new URLSearchParams(window.location.search);
+        const returnUrl = params.get("returnUrl");
+        const safeReturnUrl =
+          returnUrl &&
+          returnUrl.startsWith("/") &&
+          !returnUrl.startsWith("//") &&
+          !returnUrl.includes("\\")
+            ? returnUrl
+            : "/";
+
+        navigate(safeReturnUrl);
       }, 1000);
     } catch (err) {
       console.error(err);
@@ -178,57 +225,86 @@ function Login() {
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    if (!registerName.trim()) {
+    const fullName = registerName.trim();
+    const email = registerEmail.trim().toLowerCase();
+    const phone = registerPhone.trim();
+
+    if (!fullName) {
+      showPopup("warning", "Thiếu thông tin", "Vui lòng nhập họ và tên!");
+      return;
+    }
+
+    if (!email) {
+      showPopup("warning", "Thiếu thông tin", "Vui lòng nhập Email!");
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
       showPopup(
         "warning",
-        "Thiếu thông tin",
-        "Vui lòng nhập họ và tên!"
+        "Email không hợp lệ",
+        "Vui lòng nhập đúng định dạng Email, ví dụ: ten@gmail.com."
       );
       return;
     }
 
-    if (!registerEmail.trim()) {
+    if (!phone) {
+      showPopup("warning", "Thiếu thông tin", "Vui lòng nhập số điện thoại!");
+      return;
+    }
+
+    if (!PHONE_REGEX.test(phone)) {
       showPopup(
         "warning",
-        "Thiếu thông tin",
-        "Vui lòng nhập Email!"
+        "Số điện thoại không hợp lệ",
+        "Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng số 0."
       );
       return;
     }
 
-    if (!registerPhone.trim()) {
+    if (!registerPassword) {
+      showPopup("warning", "Thiếu thông tin", "Vui lòng nhập mật khẩu!");
+      return;
+    }
+
+    if (registerPassword.length < 8) {
       showPopup(
         "warning",
-        "Thiếu thông tin",
-        "Vui lòng nhập số điện thoại!"
+        "Mật khẩu chưa đủ mạnh",
+        "Mật khẩu phải có ít nhất 8 ký tự."
       );
       return;
     }
 
-    if (!registerPassword.trim()) {
+    if (!/[a-z]/.test(registerPassword)) {
       showPopup(
         "warning",
-        "Thiếu thông tin",
-        "Vui lòng nhập mật khẩu!"
+        "Mật khẩu chưa hợp lệ",
+        "Mật khẩu phải có ít nhất một chữ cái viết thường (a-z)."
       );
       return;
     }
 
-    if (registerPassword.length < 6) {
+    if (!/[A-Z]/.test(registerPassword)) {
       showPopup(
         "warning",
-        "Mật khẩu không hợp lệ",
-        "Mật khẩu phải có ít nhất 6 ký tự!"
+        "Mật khẩu chưa hợp lệ",
+        "Mật khẩu phải có ít nhất một chữ cái viết hoa (A-Z)."
       );
       return;
     }
 
-    if (!registerConfirmPassword.trim()) {
+    if (!/\d/.test(registerPassword)) {
       showPopup(
         "warning",
-        "Thiếu thông tin",
-        "Vui lòng xác nhận mật khẩu!"
+        "Mật khẩu chưa hợp lệ",
+        "Mật khẩu phải có ít nhất một chữ số (0-9)."
       );
+      return;
+    }
+
+    if (!registerConfirmPassword) {
+      showPopup("warning", "Thiếu thông tin", "Vui lòng xác nhận mật khẩu!");
       return;
     }
 
@@ -248,20 +324,20 @@ function Login() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          FullName: registerName,
-          Email: registerEmail,
-          Phone: registerPhone,
+          FullName: fullName,
+          Email: email,
+          Phone: phone,
           PasswordHash: registerPassword,
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         showPopup(
           "error",
           "Đăng ký thất bại",
-          data.message || "Đăng ký thất bại!"
+          data.message || "Đăng ký thất bại! Vui lòng kiểm tra thông tin."
         );
         return;
       }
@@ -269,25 +345,21 @@ function Login() {
       showPopup(
         "success",
         "Đăng ký thành công",
-        "Tài khoản Cinema Pass đã được tạo!"
+        "Tài khoản Cinema Pass đã được tạo! Ông có thể đăng nhập."
       );
 
-      // Chuyển về đăng nhập
       setIsRegister(false);
-
-      // Xóa dữ liệu form
       setRegisterName("");
       setRegisterEmail("");
       setRegisterPhone("");
       setRegisterPassword("");
       setRegisterConfirmPassword("");
     } catch (err) {
-      console.error(err);
-
+      console.error("Lỗi đăng ký:", err);
       showPopup(
         "error",
         "Lỗi kết nối",
-        "Không kết nối được server!"
+        "Không kết nối được máy chủ. Vui lòng thử lại sau."
       );
     }
   };
@@ -528,13 +600,20 @@ function Login() {
                 </label>
 
                 <input
-                  type="email"
+                  type="text"
+                  inputMode="email"
+                  autoComplete="email"
                   value={registerEmail}
-                  onChange={(e) =>
-                    setRegisterEmail(e.target.value)
-                  }
-                  placeholder="Nhập Email"
+                  onChange={(e) => setRegisterEmail(e.target.value)}
+                  placeholder="Ví dụ: ten@gmail.com"
+                  aria-describedby="register-email-hint"
                 />
+                <small
+                  id="register-email-hint"
+                  style={{ display: "block", marginTop: 6, color: "#94a3b8", fontSize: 12 }}
+                >
+                  Nhập email đúng định dạng, ví dụ ten@gmail.com.
+                </small>
 
               </div>
 
@@ -549,12 +628,22 @@ function Login() {
 
                 <input
                   type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  maxLength={10}
                   value={registerPhone}
                   onChange={(e) =>
-                    setRegisterPhone(e.target.value)
+                    setRegisterPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
                   }
-                  placeholder="Nhập số điện thoại"
+                  placeholder="Ví dụ: 0912345678"
+                  aria-describedby="register-phone-hint"
                 />
+                <small
+                  id="register-phone-hint"
+                  style={{ display: "block", marginTop: 6, color: "#94a3b8", fontSize: 12 }}
+                >
+                  Chỉ nhập 10 chữ số, bắt đầu bằng số 0.
+                </small>
 
               </div>
 
@@ -579,7 +668,8 @@ function Login() {
                     onChange={(e) =>
                       setRegisterPassword(e.target.value)
                     }
-                    placeholder="Nhập mật khẩu"
+                    autoComplete="new-password"
+                    placeholder="Tối thiểu 8 ký tự, có chữ hoa và số"
                   />
 
                   <button
@@ -597,6 +687,50 @@ function Login() {
                   </button>
 
                 </div>
+
+                {/* ĐỘ MẠNH MẬT KHẨU */}
+                {(() => {
+                  const strength = getPasswordStrength(registerPassword);
+                  const segments = [1, 2, 3, 4, 5, 6];
+
+                  return (
+                    <div style={{ marginTop: 8 }} aria-live="polite">
+                      <div style={{ display: "flex", gap: 4 }}>
+                        {segments.map((segment) => (
+                          <span
+                            key={segment}
+                            style={{
+                              display: "block",
+                              flex: 1,
+                              height: 4,
+                              borderRadius: 4,
+                              backgroundColor:
+                                registerPassword && segment <= strength.score
+                                  ? strength.color
+                                  : "#334155",
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <small
+                        style={{
+                          display: "block",
+                          marginTop: 6,
+                          color: strength.color,
+                          fontSize: 12,
+                        }}
+                      >
+                        Độ mạnh: {strength.label}
+                        {registerPassword ? ` (${registerPassword.length} ký tự)` : ""}
+                      </small>
+                      <small
+                        style={{ display: "block", marginTop: 3, color: "#94a3b8", fontSize: 12 }}
+                      >
+                        Tối thiểu 8 ký tự, gồm chữ hoa, chữ thường và số. Thêm ký tự đặc biệt để mạnh hơn.
+                      </small>
+                    </div>
+                  );
+                })()}
 
               </div>
 
@@ -619,10 +753,9 @@ function Login() {
                     }
                     value={registerConfirmPassword}
                     onChange={(e) =>
-                      setRegisterConfirmPassword(
-                        e.target.value
-                      )
+                      setRegisterConfirmPassword(e.target.value)
                     }
+                    autoComplete="new-password"
                     placeholder="Nhập lại mật khẩu"
                   />
 

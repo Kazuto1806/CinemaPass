@@ -1,3 +1,4 @@
+
 using CinemaBackend.Data;
 using CinemaBackend.Services;
 using CloudinaryDotNet;
@@ -20,16 +21,25 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 // Đăng ký dịch vụ Cloudinary
-var cloudName = builder.Configuration["Cloudinary:CloudName"] 
+var cloudName = builder.Configuration["Cloudinary:CloudName"]
     ?? Environment.GetEnvironmentVariable("Cloudinary__CloudName");
-var apiKey = builder.Configuration["Cloudinary:ApiKey"] 
+
+var apiKey = builder.Configuration["Cloudinary:ApiKey"]
     ?? Environment.GetEnvironmentVariable("Cloudinary__ApiKey");
-var apiSecret = builder.Configuration["Cloudinary:ApiSecret"] 
+
+var apiSecret = builder.Configuration["Cloudinary:ApiSecret"]
     ?? Environment.GetEnvironmentVariable("Cloudinary__ApiSecret");
 
-if (!string.IsNullOrEmpty(cloudName) && !string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(apiSecret))
+if (!string.IsNullOrEmpty(cloudName) &&
+    !string.IsNullOrEmpty(apiKey) &&
+    !string.IsNullOrEmpty(apiSecret))
 {
-    var cloudinaryAccount = new Account(cloudName, apiKey, apiSecret);
+    var cloudinaryAccount = new Account(
+        cloudName,
+        apiKey,
+        apiSecret
+    );
+
     var cloudinary = new Cloudinary(cloudinaryAccount);
     builder.Services.AddSingleton(cloudinary);
 }
@@ -47,6 +57,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Bảo vệ Swagger bằng Basic Authentication
 app.UseWhen(
     context => context.Request.Path.StartsWithSegments("/swagger"),
     swaggerApp =>
@@ -55,6 +66,7 @@ app.UseWhen(
         {
             var expectedUser =
                 Environment.GetEnvironmentVariable("SWAGGER_USERNAME");
+
             var expectedPassword =
                 Environment.GetEnvironmentVariable("SWAGGER_PASSWORD");
 
@@ -62,8 +74,11 @@ app.UseWhen(
                 string.IsNullOrWhiteSpace(expectedPassword))
             {
                 context.Response.StatusCode = 503;
+
                 await context.Response.WriteAsync(
-                    "Swagger authentication is not configured.");
+                    "Swagger authentication is not configured."
+                );
+
                 return;
             }
 
@@ -71,13 +86,16 @@ app.UseWhen(
                 context.Request.Headers.Authorization.ToString();
 
             if (authHeader.StartsWith(
-                    "Basic ", StringComparison.OrdinalIgnoreCase))
+                "Basic ",
+                StringComparison.OrdinalIgnoreCase))
             {
                 try
                 {
                     var encoded = authHeader["Basic ".Length..].Trim();
+
                     var decoded = Encoding.UTF8.GetString(
-                        Convert.FromBase64String(encoded));
+                        Convert.FromBase64String(encoded)
+                    );
 
                     var separator = decoded.IndexOf(':');
 
@@ -86,9 +104,13 @@ app.UseWhen(
                         var username = decoded[..separator];
                         var password = decoded[(separator + 1)..];
 
-                        if (string.Equals(username, expectedUser,
+                        if (string.Equals(
+                                username,
+                                expectedUser,
                                 StringComparison.Ordinal) &&
-                            string.Equals(password, expectedPassword,
+                            string.Equals(
+                                password,
+                                expectedPassword,
                                 StringComparison.Ordinal))
                         {
                             await next();
@@ -104,29 +126,12 @@ app.UseWhen(
 
             context.Response.Headers.WWWAuthenticate =
                 "Basic realm=\"CinemaPass Swagger\", charset=\"UTF-8\"";
+
             context.Response.StatusCode =
                 (int)HttpStatusCode.Unauthorized;
         });
-    });
-
-app.UseSwagger();
-
-app.UseSwaggerUI(options =>
-{
-    options.SwaggerEndpoint(
-        "/swagger/v1/swagger.json",
-        "Cinema Pass API V1");
-});
-
-var uploadsRoot = Path.Combine(app.Environment.ContentRootPath, "uploads");
-Directory.CreateDirectory(Path.Combine(uploadsRoot, "posters"));
-
-app.UseStaticFiles();
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(uploadsRoot),
-    RequestPath = "/uploads"
-});
+    }
+);
 
 app.UseSwagger();
 
@@ -138,39 +143,90 @@ app.UseSwaggerUI(options =>
     );
 });
 
+var uploadsRoot = Path.Combine(
+    app.Environment.ContentRootPath,
+    "uploads"
+);
+
+Directory.CreateDirectory(
+    Path.Combine(uploadsRoot, "posters")
+);
+
+app.UseStaticFiles();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsRoot),
+    RequestPath = "/uploads"
+});
+
 app.UseCors("AllowReact");
+
+// =====================================================
+// DATABASE
+// Development: tạo schema cho database thử nghiệm mới.
+// Môi trường khác: tiếp tục sử dụng EF Core migrations.
+// =====================================================
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    var db = scope.ServiceProvider
+        .GetRequiredService<AppDbContext>();
+
+    if (app.Environment.IsDevelopment())
+    {
+        db.Database.EnsureCreated();
+    }
+    else
+    {
+        db.Database.Migrate();
+    }
 }
 
-// Endpoint upload ảnh lên Cloudinary
-app.MapPost("/api/upload", async (IFormFile file, HttpContext context) =>
-{
-    if (file == null || file.Length == 0)
-        return Results.BadRequest(new { message = "Vui lòng chọn file hợp lệ." });
+// =====================================================
+// UPLOAD ẢNH LÊN CLOUDINARY
+// =====================================================
 
-    var cloudinary = context.RequestServices.GetService<Cloudinary>();
-    if (cloudinary == null)
+app.MapPost(
+    "/api/upload",
+    async (IFormFile file, HttpContext context) =>
     {
-        return Results.Problem(
-            detail: "Chưa cấu hình Cloudinary.",
-            statusCode: StatusCodes.Status503ServiceUnavailable
-        );
+        if (file == null || file.Length == 0)
+        {
+            return Results.BadRequest(new
+            {
+                message = "Vui lòng chọn file hợp lệ."
+            });
+        }
+
+        var cloudinary = context.RequestServices
+            .GetService<Cloudinary>();
+
+        if (cloudinary == null)
+        {
+            return Results.Problem(
+                detail: "Chưa cấu hình Cloudinary.",
+                statusCode: StatusCodes.Status503ServiceUnavailable
+            );
+        }
+
+        await using var stream = file.OpenReadStream();
+
+        var uploadParams = new ImageUploadParams
+        {
+            File = new FileDescription(file.FileName, stream),
+            Folder = "cinemapass/posters"
+        };
+
+        var uploadResult =
+            await cloudinary.UploadAsync(uploadParams);
+
+        return Results.Ok(new
+        {
+            url = uploadResult.SecureUrl.ToString()
+        });
     }
-
-    await using var stream = file.OpenReadStream();
-    var uploadParams = new ImageUploadParams
-    {
-        File = new FileDescription(file.FileName, stream),
-        Folder = "cinemapass/posters"
-    };
-
-    var uploadResult = await cloudinary.UploadAsync(uploadParams);
-    return Results.Ok(new { url = uploadResult.SecureUrl.ToString() });
-});
+);
 
 app.MapControllers();
 

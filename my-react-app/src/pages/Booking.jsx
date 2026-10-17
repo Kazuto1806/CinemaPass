@@ -119,6 +119,42 @@ function Booking() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // CHẶN ĐẶT VÉ KHI CHƯA ĐĂNG NHẬP
+  // Lưu lại trang hiện tại để đăng nhập xong quay lại đúng suất/phim đang chọn.
+  const isAuthenticated = () => {
+    const userId = Number(localStorage.getItem("userId"));
+    return (
+      localStorage.getItem("isLoggedIn") === "true" &&
+      Number.isInteger(userId) &&
+      userId > 0
+    );
+  };
+
+  const redirectToLogin = () => {
+    if (isAuthenticated()) return false;
+
+    const returnTo = `${location.pathname}${location.search}`;
+    navigate(`/login?returnUrl=${encodeURIComponent(returnTo)}`, {
+      replace: true,
+    });
+    return true;
+  };
+
+  useEffect(() => {
+    const userId = Number(localStorage.getItem("userId"));
+    const authenticated =
+      localStorage.getItem("isLoggedIn") === "true" &&
+      Number.isInteger(userId) &&
+      userId > 0;
+
+    if (!authenticated) {
+      const returnTo = `${location.pathname}${location.search}`;
+      navigate(`/login?returnUrl=${encodeURIComponent(returnTo)}`, {
+        replace: true,
+      });
+    }
+  }, [location.pathname, location.search, navigate]);
+
   const queryParams = new URLSearchParams(location.search);
   const selectedMovieNameFromUrl = queryParams.get("movieName")?.trim();
   const selectedMovieIdFromUrl = Number(queryParams.get("movieId"));
@@ -127,6 +163,23 @@ function Booking() {
   const [showtimes, setShowtimes] = useState([]);
   const [seatList, setSeatList] = useState([]);
   const [ticketTypes, setTicketTypes] = useState([]);
+
+  // Mã phiên riêng cho tab trình duyệt này để backend biết
+  // ghế nào đang được chính khách này giữ.
+  const [holdToken] = useState(() => {
+    const storageKey = "cinemapass.seatHoldToken";
+    let token = sessionStorage.getItem(storageKey);
+
+    if (!token) {
+      token = typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+      sessionStorage.setItem(storageKey, token);
+    }
+
+    return token;
+  });
+  const [seatActionLoading, setSeatActionLoading] = useState(false);
 
   const [loading, setLoading] = useState(true);
 
@@ -155,6 +208,9 @@ function Booking() {
   const [bookingResult, setBookingResult] = useState(null);
 
   useEffect(() => {
+    // Khong goi cac API dat ve khi nguoi dung chua dang nhap.
+    if (!isAuthenticated()) return;
+
     const loadData = async () => {
       try {
         setLoading(true);
@@ -438,75 +494,87 @@ function Booking() {
   }, [availableTicketTypes, selectedTicketTypeId]);
 
   useEffect(() => {
-    if (!selectedShowtime?.showtimeId) {
+    const showtimeId = Number(selectedShowtime?.showtimeId);
+    const roomId = Number(selectedShowtime?.roomId);
+
+    if (!showtimeId) {
       setSeatList([]);
       setSelectedSeats([]);
-      return;
+      return undefined;
     }
 
     const controller = new AbortController();
+    let isActive = true;
+
     setSeatList([]);
     setSelectedSeats([]);
 
     const loadSeats = async () => {
       try {
         const response = await fetch(
-          `${SEAT_API_URL}?showtimeId=${selectedShowtime.showtimeId}`,
-          {
-            signal: controller.signal,
-          }
+          `${SEAT_API_URL}?showtimeId=${showtimeId}&holdToken=${encodeURIComponent(holdToken)}`,
+          { signal: controller.signal }
         );
 
         if (!response.ok) {
-          setSeatList([]);
-          return;
+          throw new Error(`Không tải được sơ đồ ghế (${response.status}).`);
         }
 
         const data = await response.json();
         const roomSeats = Array.isArray(data)
-          ? data.filter(
-              (seat) =>
-                Number(seat.roomId) === Number(selectedShowtime.roomId)
-            )
+          ? data.filter((seat) => Number(seat.roomId) === roomId)
           : [];
-        const uniqueSeats = new Map();
 
+        const uniqueSeats = new Map();
         roomSeats.forEach((seat) => {
           const seatCode = String(seat.seatCode || "")
             .trim()
             .toUpperCase();
 
           if (seatCode && !uniqueSeats.has(seatCode)) {
-            uniqueSeats.set(seatCode, seat);
+            uniqueSeats.set(seatCode, { ...seat, seatCode });
           }
         });
 
-        setSeatList([...uniqueSeats.values()]);
+        if (isActive) {
+          setSeatList([...uniqueSeats.values()]);
+        }
       } catch (error) {
-        if (error.name !== "AbortError") {
-          console.error(
-            "Lỗi tải ghế từ backend:",
-            error
-          );
+        if (error.name !== "AbortError" && isActive) {
+          console.error("Lỗi tải ghế từ backend:", error);
           setSeatList([]);
         }
       }
     };
 
+    // Tải ngay và cập nhật định kỳ để khách khác thấy ghế đang được giữ.
     loadSeats();
+    const pollId = window.setInterval(loadSeats, 2500);
 
-    return () => controller.abort();
-  }, [selectedShowtime]);
+    return () => {
+      isActive = false;
+      window.clearInterval(pollId);
+      controller.abort();
+
+      // Khi đổi suất chiếu hoặc rời trang, nhả các ghế của phiên này.
+      fetch(`${SEAT_API_URL}/release-all`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ showtimeId, holdToken }),
+        keepalive: true,
+      }).catch(() => {
+        // Ghế vẫn tự hết hạn sau 5 phút nếu trình duyệt mất kết nối.
+      });
+    };
+  }, [selectedShowtime?.showtimeId, selectedShowtime?.roomId, holdToken]);
 
   useEffect(() => {
     setSelectedSeats((current) =>
-      current.filter(
-        (seat) =>
-          !seatList.some(
-            (item) =>
-              item.isBooked &&
-              item.seatCode === seat
-          )
+      current.filter((seatCode) =>
+        !seatList.some((item) =>
+          String(item.seatCode).toUpperCase() === seatCode &&
+          (item.isBooked || (item.isHeld && !item.isHeldByMe))
+        )
       )
     );
   }, [seatList]);
@@ -514,8 +582,8 @@ function Booking() {
   const reservedSeats = useMemo(
     () =>
       seatList
-        .filter((seat) => seat.isBooked)
-        .map((seat) => seat.seatCode),
+        .filter((seat) => seat.isBooked || (seat.isHeld && !seat.isHeldByMe))
+        .map((seat) => String(seat.seatCode).toUpperCase()),
     [seatList]
   );
 
@@ -537,17 +605,99 @@ function Booking() {
   const totalPrice =
     ticketUnitPrice * selectedSeats.length;
 
-  const toggleSeat = (seat) => {
-    if (reservedSeats.includes(seat)) return;
+  const toggleSeat = async (seat) => {
+    const seatCode = String(seat || "").trim().toUpperCase();
+    const showtimeId = Number(selectedShowtime?.showtimeId);
 
-    setSelectedSeats((current) =>
-      current.includes(seat)
-        ? current.filter((item) => item !== seat)
-        : [...current, seat].slice(-8)
-    );
+    if (!seatCode || !showtimeId || seatActionLoading) return;
+
+    const currentlySelected = selectedSeats.includes(seatCode);
+
+    if (!currentlySelected && reservedSeats.includes(seatCode)) {
+      alert("Ghế này đã được đặt hoặc đang được khách khác giữ. Vui lòng chọn ghế khác.");
+      return;
+    }
+
+    if (!currentlySelected && selectedSeats.length >= 8) {
+      alert("Mỗi lần chỉ có thể chọn tối đa 8 ghế.");
+      return;
+    }
+
+    setSeatActionLoading(true);
+
+    try {
+      const endpoint = currentlySelected ? "release" : "hold";
+      const body = currentlySelected
+        ? { showtimeId, seatCode, holdToken }
+        : {
+            showtimeId,
+            seatCode,
+            holdToken,
+            userId: Number(localStorage.getItem("userId")) || null,
+          };
+
+      const response = await fetch(`${SEAT_API_URL}/${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.message || `Không thể ${currentlySelected ? "nhả" : "giữ"} ghế ${seatCode}.`);
+      }
+
+      if (currentlySelected) {
+        setSelectedSeats((current) => current.filter((item) => item !== seatCode));
+      } else {
+        setSelectedSeats((current) =>
+          current.includes(seatCode) ? current : [...current, seatCode]
+        );
+      }
+
+      // Cập nhật ngay trạng thái ghế trên trình duyệt hiện tại.
+      const refreshResponse = await fetch(
+        `${SEAT_API_URL}?showtimeId=${showtimeId}&holdToken=${encodeURIComponent(holdToken)}`
+      );
+      if (refreshResponse.ok) {
+        const refreshedData = await refreshResponse.json();
+        if (Array.isArray(refreshedData)) {
+          setSeatList(refreshedData.map((item) => ({
+            ...item,
+            seatCode: String(item.seatCode || "").trim().toUpperCase(),
+          })));
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi giữ/nhả ghế:", error);
+      alert(error.message || "Không thể cập nhật ghế. Vui lòng thử lại.");
+
+      // Tải lại sơ đồ ngay nếu ghế vừa bị khách khác giữ.
+      try {
+        const refreshResponse = await fetch(
+          `${SEAT_API_URL}?showtimeId=${showtimeId}&holdToken=${encodeURIComponent(holdToken)}`
+        );
+        if (refreshResponse.ok) {
+          const refreshedData = await refreshResponse.json();
+          if (Array.isArray(refreshedData)) {
+            setSeatList(refreshedData.map((item) => ({
+              ...item,
+              seatCode: String(item.seatCode || "").trim().toUpperCase(),
+            })));
+          }
+        }
+      } catch (refreshError) {
+        console.error("Không thể làm mới sơ đồ ghế:", refreshError);
+      }
+    } finally {
+      setSeatActionLoading(false);
+    }
   };
 
   const handleContinuePayment = () => {
+    if (redirectToLogin()) return;
+
     if (!selectedShowtime) {
       alert(
         "Vui lòng chọn suất chiếu trước khi tiếp tục."
@@ -597,6 +747,8 @@ function Booking() {
   };
 
   const handleBooking = async () => {
+    if (redirectToLogin()) return;
+
     if (!selectedShowtime) {
       alert("Vui lòng chọn suất chiếu.");
       return;
@@ -619,13 +771,10 @@ function Booking() {
       return;
     }
 
-    const userId = Number(
-      localStorage.getItem("userId")
-    );
+    const userId = Number(localStorage.getItem("userId"));
 
-    if (!userId) {
-      alert("Bạn cần đăng nhập để đặt vé.");
-      navigate("/login");
+    if (!Number.isInteger(userId) || userId <= 0) {
+      redirectToLogin();
       return;
     }
 
@@ -646,6 +795,7 @@ function Booking() {
               selectedShowtime.showtimeId
             ),
             seatCodes: selectedSeats,
+            holdToken,
             ticketPrice: Number(ticketUnitPrice),
             ticketTypeId: Number(
               selectedTicketTypeId
@@ -673,6 +823,16 @@ function Booking() {
       });
 
       setBookingSuccess(true);
+
+      // Vé đã được lưu; nhả các lượt giữ tạm để tránh dữ liệu giữ ghế cũ.
+      await fetch(`${SEAT_API_URL}/release-all`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          showtimeId: Number(selectedShowtime.showtimeId),
+          holdToken,
+        }),
+      }).catch(() => {});
     } catch (error) {
       console.error("Lỗi thanh toán:", error);
 
@@ -1055,10 +1215,9 @@ function Booking() {
                       const seatCode =
                         seat.seatCode;
 
-                      const isReserved =
-                        reservedSeats.includes(
-                          seatCode
-                        );
+                      const isBooked = Boolean(seat.isBooked);
+                      const isHeldByOther = Boolean(seat.isHeld && !seat.isHeldByMe);
+                      const isReserved = isBooked || isHeldByOther;
 
                       const isSelected =
                         selectedSeats.includes(
@@ -1083,8 +1242,21 @@ function Booking() {
                               seatCode
                             )
                           }
-                          disabled={isReserved}
-                          aria-label={`Ghế ${seatCode}`}
+                          disabled={isReserved || seatActionLoading}
+                          title={
+                            isBooked
+                              ? `Ghế ${seatCode} đã được đặt`
+                              : isHeldByOther
+                              ? `Ghế ${seatCode} đang được khách khác giữ`
+                              : `Chọn ghế ${seatCode}`
+                          }
+                          aria-label={
+                            isBooked
+                              ? `Ghế ${seatCode} đã được đặt`
+                              : isHeldByOther
+                              ? `Ghế ${seatCode} đang được giữ`
+                              : `Ghế ${seatCode}`
+                          }
                         >
                           {seatCode.replace(
                             /[0-9]/g,

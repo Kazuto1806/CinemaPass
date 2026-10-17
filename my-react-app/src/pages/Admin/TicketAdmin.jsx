@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
   FaSearch,
@@ -11,12 +12,35 @@ import { API_BASE } from "../../constants";
 import "./TicketAdmin.css";
 
 const API_URL = `${API_BASE}/api/tickets`;
+const VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh";
+
+// Đọc thời gian từ API.
+// Nếu chuỗi không có thông tin múi giờ, coi đó là giờ Việt Nam
+// vì backend hiện lưu DateTime dạng DateTime2 không có offset.
+const parseDateTime = (dateString) => {
+  if (!dateString) return null;
+
+  const value = String(dateString).trim();
+
+  const hasTimeZone =
+    /(?:Z|[+-]\d{2}:\d{2})$/i.test(value);
+
+  const date = new Date(
+    !hasTimeZone &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)
+      ? `${value}+07:00`
+      : value
+  );
+
+  return Number.isNaN(date.getTime()) ? null : date;
+};
 
 function TicketAdmin() {
   const [tickets, setTickets] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const [notification, setNotification] = useState({
     show: false,
     type: "success",
@@ -25,13 +49,32 @@ function TicketAdmin() {
     onConfirm: null,
   });
 
-  const showNotification = (type, title, message, onConfirm = null) => {
-    setNotification({ show: true, type, title, message, onConfirm });
+  const showNotification = (
+    type,
+    title,
+    message,
+    onConfirm = null
+  ) => {
+    setNotification({
+      show: true,
+      type,
+      title,
+      message,
+      onConfirm,
+    });
   };
 
   const closeNotification = () => {
-    setNotification((current) => ({ ...current, show: false, onConfirm: null }));
+    setNotification((current) => ({
+      ...current,
+      show: false,
+      onConfirm: null,
+    }));
   };
+
+  // =====================================================
+  // TẢI DANH SÁCH VÉ
+  // =====================================================
 
   const loadTickets = async () => {
     try {
@@ -41,17 +84,17 @@ function TicketAdmin() {
       const response = await fetch(API_URL);
 
       if (!response.ok) {
-        throw new Error("Không thể lấy danh sách vé");
+        throw new Error("Không thể lấy danh sách vé.");
       }
 
       const data = await response.json();
 
-      setTickets(data);
+      setTickets(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Lỗi lấy danh sách vé:", error);
 
       setError(
-        error.message || "Không thể tải danh sách vé"
+        error.message || "Không thể tải danh sách vé."
       );
     } finally {
       setLoading(false);
@@ -61,6 +104,10 @@ function TicketAdmin() {
   useEffect(() => {
     loadTickets();
   }, []);
+
+  // =====================================================
+  // XÓA VÉ
+  // =====================================================
 
   const deleteTicket = async (ticketId) => {
     try {
@@ -72,7 +119,11 @@ function TicketAdmin() {
       );
 
       if (!response.ok) {
-        throw new Error("Không thể xóa vé");
+        const data = await response.json().catch(() => ({}));
+
+        throw new Error(
+          data.message || "Không thể xóa vé."
+        );
       }
 
       setTickets((currentTickets) =>
@@ -80,14 +131,19 @@ function TicketAdmin() {
           (ticket) => ticket.ticketId !== ticketId
         )
       );
-      showNotification("success", "Thành công", "Xóa vé thành công");
+
+      showNotification(
+        "success",
+        "Thành công",
+        "Xóa vé thành công."
+      );
     } catch (error) {
       console.error("Lỗi xóa vé:", error);
 
       showNotification(
         "error",
         "Không thể xóa vé",
-        error.message || "Không thể xóa vé"
+        error.message || "Không thể xóa vé."
       );
     }
   };
@@ -104,25 +160,67 @@ function TicketAdmin() {
     );
   };
 
+  // =====================================================
+  // ĐỊNH DẠNG NGÀY GIỜ THEO GIỜ VIỆT NAM
+  // =====================================================
+
   const formatDateTime = (dateString) => {
-    if (!dateString) {
+    const date = parseDateTime(dateString);
+
+    if (!date) {
       return "Chưa cập nhật";
     }
 
-    const date = new Date(dateString);
-
-    if (Number.isNaN(date.getTime())) {
-      return "Chưa cập nhật";
-    }
-
-    return date.toLocaleString("vi-VN");
+    return new Intl.DateTimeFormat("vi-VN", {
+      timeZone: VIETNAM_TIME_ZONE,
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }).format(date);
   };
+
+  // Ngày và giờ suất chiếu được API trả về riêng.
+  // Giữ nguyên ngày lịch và giờ bắt đầu của suất chiếu.
+  const formatShowtime = (ticket) => {
+    if (!ticket?.showDate) {
+      return "Chưa cập nhật";
+    }
+
+    const match = String(ticket.showDate).match(
+      /^(\d{4})-(\d{2})-(\d{2})/
+    );
+
+    if (!match) {
+      return "Chưa cập nhật";
+    }
+
+    const [, year, month, day] = match;
+
+    const time = String(
+      ticket.startTime || ""
+    ).slice(0, 5);
+
+    return `${day}/${month}/${year} ${time || "--:--"}`;
+  };
+
+  // =====================================================
+  // ĐỊNH DẠNG GIÁ VÉ
+  // =====================================================
 
   const formatPrice = (price) => {
-    return Number(price || 0).toLocaleString(
-      "vi-VN"
-    ) + " ₫";
+    return (
+      Number(price || 0).toLocaleString("vi-VN") +
+      " ₫"
+    );
   };
+
+  // =====================================================
+  // MÀU TRẠNG THÁI
+  // =====================================================
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -140,33 +238,39 @@ function TicketAdmin() {
     }
   };
 
+  // =====================================================
+  // TÌM KIẾM VÉ
+  // =====================================================
+
   const filteredTickets = tickets.filter((ticket) => {
-    const keyword = search
-      .toLowerCase()
-      .trim();
+    const keyword = search.toLowerCase().trim();
 
     if (!keyword) {
       return true;
     }
 
+    const ticketId = String(ticket.ticketId ?? "");
+    const userName = String(ticket.userName ?? "");
+    const movieTitle = String(ticket.movieTitle ?? "");
+    const seatCode = String(
+      ticket.seatCode ??
+      ticket.seatNumber ??
+      ""
+    );
+    const status = String(ticket.status ?? "");
+
     return (
-      ticket.ticketId
-        ?.toString()
-        .includes(keyword) ||
-      ticket.userName
-        ?.toLowerCase()
-        .includes(keyword) ||
-      ticket.movieTitle
-        ?.toLowerCase()
-        .includes(keyword) ||
-      ticket.seatNumber
-        ?.toLowerCase()
-        .includes(keyword) ||
-      ticket.status
-        ?.toLowerCase()
-        .includes(keyword)
+      ticketId.includes(keyword) ||
+      userName.toLowerCase().includes(keyword) ||
+      movieTitle.toLowerCase().includes(keyword) ||
+      seatCode.toLowerCase().includes(keyword) ||
+      status.toLowerCase().includes(keyword)
     );
   });
+
+  // =====================================================
+  // GIAO DIỆN
+  // =====================================================
 
   return (
     <div className="ticket-admin">
@@ -180,6 +284,7 @@ function TicketAdmin() {
         </div>
 
         <button
+          type="button"
           className="ticket-refresh-button"
           onClick={loadTickets}
           disabled={loading}
@@ -204,8 +309,8 @@ function TicketAdmin() {
             type="text"
             placeholder="Tìm mã vé, khách hàng, phim, ghế..."
             value={search}
-            onChange={(e) =>
-              setSearch(e.target.value)
+            onChange={(event) =>
+              setSearch(event.target.value)
             }
           />
         </div>
@@ -256,94 +361,88 @@ function TicketAdmin() {
                 </td>
               </tr>
             ) : filteredTickets.length > 0 ? (
-              filteredTickets.map(
-                (ticket, index) => (
-                  <tr key={ticket.ticketId}>
-                    <td>
-                      {index + 1}
-                    </td>
+              filteredTickets.map((ticket, index) => (
+                <tr key={ticket.ticketId}>
+                  <td>{index + 1}</td>
 
-                    <td>
-                      <span className="ticket-id">
-                        #{ticket.ticketId}
-                      </span>
-                    </td>
+                  <td>
+                    <span className="ticket-id">
+                      #{ticket.ticketId}
+                    </span>
+                  </td>
 
-                    <td>
-                      <div className="ticket-user">
-                        <div className="ticket-avatar">
-                          {ticket.userName
-                            ?.charAt(0)
-                            ?.toUpperCase() || "U"}
-                        </div>
-
-                        <strong>
-                          {ticket.userName ||
-                            "Không xác định"}
-                        </strong>
+                  <td>
+                    <div className="ticket-user">
+                      <div className="ticket-avatar">
+                        {ticket.userName
+                          ?.charAt(0)
+                          ?.toUpperCase() || "U"}
                       </div>
-                    </td>
 
-                    <td>
-                      <span className="ticket-movie">
-                        {ticket.movieTitle ||
+                      <strong>
+                        {ticket.userName ||
                           "Không xác định"}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className="ticket-seat">
-                        {ticket.seatNumber}
-                      </span>
-                    </td>
-
-                    <td>
-                      {formatDateTime(
-                        ticket.showtime
-                      )}
-                    </td>
-
-                    <td>
-                      <strong className="ticket-price">
-                        {formatPrice(
-                          ticket.ticketPrice
-                        )}
                       </strong>
-                    </td>
+                    </div>
+                  </td>
 
-                    <td>
-                      <span
-                        className={`ticket-status ${getStatusClass(
-                          ticket.status
-                        )}`}
-                      >
-                        {ticket.status ||
-                          "Không xác định"}
-                      </span>
-                    </td>
+                  <td>
+                    <span className="ticket-movie">
+                      {ticket.movieTitle ||
+                        "Không xác định"}
+                    </span>
+                  </td>
 
-                    <td>
-                      {formatDateTime(
-                        ticket.createdAt
-                      )}
-                    </td>
+                  <td>
+                    <span className="ticket-seat">
+                      {ticket.seatCode ||
+                        ticket.seatNumber ||
+                        "—"}
+                    </span>
+                  </td>
 
-                    <td>
-                      <button
-                        className="ticket-delete-button"
-                        title="Xóa vé"
-                        onClick={() =>
-                          requestDeleteTicket(
-                            ticket.ticketId
-                          )
-                        }
-                      >
-                        <FaTrash />
-                      </button>
-                    </td>
-                  </tr>
-                )
-              )
+                  <td>
+                    {formatShowtime(ticket)}
+                  </td>
+
+                  <td>
+                    <strong className="ticket-price">
+                      {formatPrice(ticket.ticketPrice)}
+                    </strong>
+                  </td>
+
+                  <td>
+                    <span
+                      className={`ticket-status ${getStatusClass(
+                        ticket.status
+                      )}`}
+                    >
+                      {ticket.status ||
+                        "Không xác định"}
+                    </span>
+                  </td>
+
+                  <td>
+                    {formatDateTime(ticket.createdAt)}
+                  </td>
+
+                  <td>
+                    <button
+                      type="button"
+                      className="ticket-delete-button"
+                      title="Xóa vé"
+                      aria-label={`Xóa vé ${ticket.ticketId}`}
+                      onClick={() =>
+                        requestDeleteTicket(
+                          ticket.ticketId
+                        )
+                      }
+                    >
+                      <FaTrash />
+                    </button>
+                  </td>
+                </tr>
+              ))
             ) : (
               <tr>
                 <td

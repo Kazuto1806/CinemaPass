@@ -257,6 +257,42 @@ namespace CinemaBackend.Migrations
                     b.ToTable("Seats");
                 });
 
+            modelBuilder.Entity("CinemaBackend.Models.SeatHold", b =>
+                {
+                    b.Property<int>("SeatHoldId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SeatHoldId"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("HoldToken")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<int>("SeatId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShowtimeId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("SeatHoldId");
+
+                    b.HasIndex("ShowtimeId", "SeatId")
+                        .IsUnique();
+
+                    b.ToTable("SeatHolds");
+                });
+
             modelBuilder.Entity("CinemaBackend.Models.Showtime", b =>
                 {
                     b.Property<int>("ShowtimeId")

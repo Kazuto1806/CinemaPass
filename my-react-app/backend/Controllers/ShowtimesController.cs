@@ -1,3 +1,4 @@
+
 using System.Globalization;
 using System.Text;
 using CinemaBackend.Data;
@@ -36,7 +37,6 @@ namespace CinemaBackend.Controllers
                 .Select(s => new
                 {
                     s.ShowtimeId,
-
                     s.MovieId,
 
                     MovieTitle = s.Movie != null
@@ -60,35 +60,33 @@ namespace CinemaBackend.Controllers
                             : "",
 
                     s.ShowDate,
-
                     s.StartTime,
-
                     s.EndTime,
-
                     s.TicketPrice,
 
                     ticketTypePrices = s.TicketTypeAssignments
                         .Select(assignment => new
                         {
                             ticketTypeId = assignment.TicketTypeId,
+
                             name = assignment.TicketType != null
                                 ? assignment.TicketType.Name
                                 : "",
+
                             category = assignment.TicketType != null
                                 ? assignment.TicketType.Category
                                 : "Customer",
+
                             price = assignment.Price
                         }),
 
                     Status = NormalizeShowtimeStatus(s.Status),
-
                     s.CreatedAt
                 })
                 .ToListAsync();
 
             return Ok(showtimes);
         }
-
 
         // =====================================================
         // GET: api/showtimes/{id}
@@ -107,7 +105,6 @@ namespace CinemaBackend.Controllers
                 .Select(s => new
                 {
                     s.ShowtimeId,
-
                     s.MovieId,
 
                     MovieTitle = s.Movie != null
@@ -131,28 +128,27 @@ namespace CinemaBackend.Controllers
                             : "",
 
                     s.ShowDate,
-
                     s.StartTime,
-
                     s.EndTime,
-
                     s.TicketPrice,
 
                     ticketTypePrices = s.TicketTypeAssignments
                         .Select(assignment => new
                         {
                             ticketTypeId = assignment.TicketTypeId,
+
                             name = assignment.TicketType != null
                                 ? assignment.TicketType.Name
                                 : "",
+
                             category = assignment.TicketType != null
                                 ? assignment.TicketType.Category
                                 : "Customer",
+
                             price = assignment.Price
                         }),
 
                     Status = NormalizeShowtimeStatus(s.Status),
-
                     s.CreatedAt
                 })
                 .FirstOrDefaultAsync();
@@ -161,13 +157,12 @@ namespace CinemaBackend.Controllers
             {
                 return NotFound(new
                 {
-                    message = "Không tìm thấy suất chiếu"
+                    message = "Không tìm thấy suất chiếu."
                 });
             }
 
             return Ok(showtime);
         }
-
 
         // =====================================================
         // POST: api/showtimes
@@ -179,148 +174,96 @@ namespace CinemaBackend.Controllers
             Showtime showtime)
         {
             var ticketTypeValidation =
-                await ValidateTicketTypePrices(showtime.TicketTypePrices);
+                await ValidateTicketTypePrices(
+                    showtime.TicketTypePrices);
 
             if (ticketTypeValidation != null)
             {
                 return ticketTypeValidation;
             }
 
-            // =================================================
-            // KIỂM TRA PHIM
-            // =================================================
-
             var movieExists = await _context.Movies
-                .AnyAsync(m =>
-                    m.MovieId == showtime.MovieId);
+                .AnyAsync(m => m.MovieId == showtime.MovieId);
 
             if (!movieExists)
             {
                 return BadRequest(new
                 {
-                    message = "Phim không tồn tại"
+                    message = "Phim không tồn tại."
                 });
             }
 
-
-            // =================================================
-            // KIỂM TRA PHÒNG
-            // =================================================
-
             var room = await _context.Rooms
                 .Include(r => r.Cinema)
-                .FirstOrDefaultAsync(r =>
-                    r.RoomId == showtime.RoomId);
+                .FirstOrDefaultAsync(
+                    r => r.RoomId == showtime.RoomId);
 
             if (room == null)
             {
                 return BadRequest(new
                 {
-                    message = "Phòng chiếu không tồn tại"
+                    message = "Phòng chiếu không tồn tại."
                 });
             }
-
-
-            // =================================================
-            // KIỂM TRA RẠP
-            // =================================================
 
             if (room.Cinema == null)
             {
                 return BadRequest(new
                 {
-                    message = "Rạp của phòng chiếu không tồn tại"
+                    message = "Rạp của phòng chiếu không tồn tại."
                 });
             }
-
-
-            // =================================================
-            // KIỂM TRA GIỜ
-            // =================================================
 
             if (showtime.EndTime == showtime.StartTime)
             {
                 return BadRequest(new
                 {
                     message =
-                        "Giờ kết thúc không được trùng giờ bắt đầu"
+                        "Giờ kết thúc không được trùng giờ bắt đầu."
                 });
             }
-
-
-            // =================================================
-            // KIỂM TRA GIÁ
-            // =================================================
 
             if (showtime.TicketPrice <= 0)
             {
                 return BadRequest(new
                 {
-                    message =
-                        "Giá vé phải lớn hơn 0"
+                    message = "Giá vé phải lớn hơn 0."
                 });
             }
-
-
-            // =================================================
-            // KIỂM TRA TRÙNG SUẤT CHIẾU
-            // =================================================
 
             var conflict = await HasScheduleConflict(
                 showtime.RoomId,
                 showtime.ShowDate,
                 showtime.StartTime,
-                showtime.EndTime
-            );
+                showtime.EndTime);
 
             if (conflict)
             {
                 return BadRequest(new
                 {
                     message =
-                        "Phòng chiếu đã có suất chiếu trùng thời gian"
+                        "Phòng chiếu đã có suất chiếu trùng thời gian."
                 });
             }
 
-
-            // =================================================
-            // GÁN GIÁ TRỊ MẶC ĐỊNH
-            // =================================================
-
             showtime.ShowtimeId = 0;
-
-            showtime.CreatedAt =
-                DateTime.Now;
+            showtime.CreatedAt = DateTime.Now;
 
             showtime.Status = NormalizeShowtimeStatus(
-                showtime.Status
-            );
+                showtime.Status);
 
             showtime.TicketTypeAssignments =
                 MapTicketTypePrices(showtime.TicketTypePrices);
 
-
-            // =================================================
-            // LƯU DATABASE
-            // =================================================
-
-            _context.Showtimes.Add(
-                showtime
-            );
-
+            _context.Showtimes.Add(showtime);
             await _context.SaveChangesAsync();
-
 
             return Ok(new
             {
-                message =
-                    "Thêm suất chiếu thành công",
-
-                showtimeId =
-                    showtime.ShowtimeId
+                message = "Thêm suất chiếu thành công.",
+                showtimeId = showtime.ShowtimeId
             });
         }
-
 
         // =====================================================
         // PUT: api/showtimes/{id}
@@ -333,173 +276,143 @@ namespace CinemaBackend.Controllers
             Showtime updatedShowtime)
         {
             var ticketTypeValidation =
-                await ValidateTicketTypePrices(updatedShowtime.TicketTypePrices);
+                await ValidateTicketTypePrices(
+                    updatedShowtime.TicketTypePrices);
 
             if (ticketTypeValidation != null)
             {
                 return ticketTypeValidation;
             }
 
-            // =================================================
-            // TÌM SUẤT CHIẾU
-            // =================================================
-
-            var showtime =
-                await _context.Showtimes
-                    .FirstOrDefaultAsync(
-                        s => s.ShowtimeId == id
-                    );
+            var showtime = await _context.Showtimes
+                .FirstOrDefaultAsync(s => s.ShowtimeId == id);
 
             if (showtime == null)
             {
                 return NotFound(new
                 {
-                    message =
-                        "Không tìm thấy suất chiếu"
+                    message = "Không tìm thấy suất chiếu."
                 });
             }
 
+            // Không cho đổi thông tin cốt lõi của suất chiếu
+            // nếu đã có vé, tránh làm sai lịch sử vé.
+            var hasTickets = await _context.Tickets
+                .AnyAsync(t => t.ShowtimeId == id);
 
-            // =================================================
-            // KIỂM TRA PHIM
-            // =================================================
+            if (hasTickets)
+            {
+                return Conflict(new
+                {
+                    message =
+                        "Không thể cập nhật suất chiếu đã có vé. " +
+                        "Vui lòng giữ nguyên thông tin để bảo vệ lịch sử vé."
+                });
+            }
 
-            var movieExists =
-                await _context.Movies
-                    .AnyAsync(
-                        m =>
-                            m.MovieId ==
-                            updatedShowtime.MovieId
-                    );
+            var hasActiveHolds = await _context.SeatHolds
+                .AnyAsync(h =>
+                    h.ShowtimeId == id &&
+                    h.ExpiresAtUtc > DateTime.UtcNow);
+
+            if (hasActiveHolds)
+            {
+                return Conflict(new
+                {
+                    message =
+                        "Không thể cập nhật suất chiếu khi khách đang giữ ghế. " +
+                        "Vui lòng thử lại sau."
+                });
+            }
+
+            var movieExists = await _context.Movies
+                .AnyAsync(m =>
+                    m.MovieId == updatedShowtime.MovieId);
 
             if (!movieExists)
             {
                 return BadRequest(new
                 {
-                    message =
-                        "Phim không tồn tại"
+                    message = "Phim không tồn tại."
                 });
             }
 
-
-            // =================================================
-            // KIỂM TRA PHÒNG
-            // =================================================
-
-            var room =
-                await _context.Rooms
-                    .Include(r => r.Cinema)
-                    .FirstOrDefaultAsync(
-                        r =>
-                            r.RoomId ==
-                            updatedShowtime.RoomId
-                    );
+            var room = await _context.Rooms
+                .Include(r => r.Cinema)
+                .FirstOrDefaultAsync(
+                    r => r.RoomId == updatedShowtime.RoomId);
 
             if (room == null)
             {
                 return BadRequest(new
                 {
-                    message =
-                        "Phòng chiếu không tồn tại"
+                    message = "Phòng chiếu không tồn tại."
                 });
             }
-
 
             if (room.Cinema == null)
             {
                 return BadRequest(new
                 {
-                    message =
-                        "Rạp của phòng chiếu không tồn tại"
+                    message = "Rạp của phòng chiếu không tồn tại."
                 });
             }
 
-
-            // =================================================
-            // KIỂM TRA GIỜ
-            // =================================================
-
-            if (updatedShowtime.EndTime == updatedShowtime.StartTime)
+            if (updatedShowtime.EndTime ==
+                updatedShowtime.StartTime)
             {
                 return BadRequest(new
                 {
                     message =
-                        "Giờ kết thúc không được trùng giờ bắt đầu"
+                        "Giờ kết thúc không được trùng giờ bắt đầu."
                 });
             }
 
-
-            // =================================================
-            // KIỂM TRA GIÁ
-            // =================================================
-
-            if (
-                updatedShowtime.TicketPrice <= 0
-            )
+            if (updatedShowtime.TicketPrice <= 0)
             {
                 return BadRequest(new
                 {
-                    message =
-                        "Giá vé phải lớn hơn 0"
+                    message = "Giá vé phải lớn hơn 0."
                 });
             }
-
-
-            // =================================================
-            // KIỂM TRA TRÙNG SUẤT CHIẾU
-            // =================================================
 
             var conflict = await HasScheduleConflict(
                 updatedShowtime.RoomId,
                 updatedShowtime.ShowDate,
                 updatedShowtime.StartTime,
                 updatedShowtime.EndTime,
-                id
-            );
+                id);
 
             if (conflict)
             {
                 return BadRequest(new
                 {
                     message =
-                        "Phòng chiếu đã có suất chiếu trùng thời gian"
+                        "Phòng chiếu đã có suất chiếu trùng thời gian."
                 });
             }
 
-
-            // =================================================
-            // CẬP NHẬT
-            // =================================================
-
-            showtime.MovieId =
-                updatedShowtime.MovieId;
-
-            showtime.RoomId =
-                updatedShowtime.RoomId;
-
-            showtime.ShowDate =
-                updatedShowtime.ShowDate;
-
-            showtime.StartTime =
-                updatedShowtime.StartTime;
-
-            showtime.EndTime =
-                updatedShowtime.EndTime;
-
-            showtime.TicketPrice =
-                updatedShowtime.TicketPrice;
+            showtime.MovieId = updatedShowtime.MovieId;
+            showtime.RoomId = updatedShowtime.RoomId;
+            showtime.ShowDate = updatedShowtime.ShowDate;
+            showtime.StartTime = updatedShowtime.StartTime;
+            showtime.EndTime = updatedShowtime.EndTime;
+            showtime.TicketPrice = updatedShowtime.TicketPrice;
 
             showtime.Status = NormalizeShowtimeStatus(
-                updatedShowtime.Status
-            );
+                updatedShowtime.Status);
 
-            var existingAssignments = await _context.ShowtimeTicketTypes
-                .Where(assignment => assignment.ShowtimeId == id)
-                .ToListAsync();
+            var existingAssignments =
+                await _context.ShowtimeTicketTypes
+                    .Where(assignment =>
+                        assignment.ShowtimeId == id)
+                    .ToListAsync();
 
-            var requestedAssignments = MapTicketTypePrices(
-                updatedShowtime.TicketTypePrices
-            ).ToDictionary(assignment => assignment.TicketTypeId);
+            var requestedAssignments =
+                MapTicketTypePrices(
+                    updatedShowtime.TicketTypePrices)
+                .ToDictionary(
+                    assignment => assignment.TicketTypeId);
 
             foreach (var existingAssignment in existingAssignments)
             {
@@ -507,11 +420,13 @@ namespace CinemaBackend.Controllers
                     existingAssignment.TicketTypeId,
                     out var requestedAssignment))
                 {
-                    existingAssignment.Price = requestedAssignment.Price;
+                    existingAssignment.Price =
+                        requestedAssignment.Price;
                 }
                 else
                 {
-                    _context.ShowtimeTicketTypes.Remove(existingAssignment);
+                    _context.ShowtimeTicketTypes.Remove(
+                        existingAssignment);
                 }
             }
 
@@ -521,29 +436,28 @@ namespace CinemaBackend.Controllers
                 _context.ShowtimeTicketTypes.Add(assignment);
             }
 
-
-            // =================================================
-            // SAVE
-            // =================================================
-
             await _context.SaveChangesAsync();
-
 
             return Ok(new
             {
-                message =
-                    "Cập nhật suất chiếu thành công"
+                message = "Cập nhật suất chiếu thành công."
             });
         }
+
+        // =====================================================
+        // Kiểm tra chính sách vé
+        // =====================================================
 
         private async Task<IActionResult?> ValidateTicketTypePrices(
             List<ShowtimeTicketTypeInput>? ticketTypePrices)
         {
-            if (ticketTypePrices == null || ticketTypePrices.Count == 0)
+            if (ticketTypePrices == null ||
+                ticketTypePrices.Count == 0)
             {
                 return BadRequest(new
                 {
-                    message = "Vui lòng chọn ít nhất một chính sách vé cho suất chiếu."
+                    message =
+                        "Vui lòng chọn ít nhất một chính sách vé cho suất chiếu."
                 });
             }
 
@@ -552,17 +466,21 @@ namespace CinemaBackend.Controllers
                 .ToList();
 
             if (ticketTypeIds.Any(id => id <= 0) ||
-                ticketTypeIds.Distinct().Count() != ticketTypeIds.Count ||
+                ticketTypeIds.Distinct().Count() !=
+                    ticketTypeIds.Count ||
                 ticketTypePrices.Any(item => item.Price <= 0))
             {
                 return BadRequest(new
                 {
-                    message = "Danh sách chính sách vé hoặc giá vé không hợp lệ."
+                    message =
+                        "Danh sách chính sách vé hoặc giá vé không hợp lệ."
                 });
             }
 
             var ticketTypes = await _context.TicketTypes
-                .Where(ticketType => ticketTypeIds.Contains(ticketType.TicketTypeId))
+                .Where(ticketType =>
+                    ticketTypeIds.Contains(
+                        ticketType.TicketTypeId))
                 .Select(ticketType => new
                 {
                     ticketType.TicketTypeId,
@@ -579,12 +497,17 @@ namespace CinemaBackend.Controllers
             {
                 return BadRequest(new
                 {
-                    message = "Có loại vé không tồn tại hoặc đang tạm ngưng."
+                    message =
+                        "Có loại vé không tồn tại hoặc đang tạm ngưng."
                 });
             }
 
             return null;
         }
+
+        // =====================================================
+        // Chuyển dữ liệu chính sách vé
+        // =====================================================
 
         private static List<ShowtimeTicketType> MapTicketTypePrices(
             IEnumerable<ShowtimeTicketTypeInput> ticketTypePrices)
@@ -598,7 +521,12 @@ namespace CinemaBackend.Controllers
                 .ToList();
         }
 
-        private static string NormalizeShowtimeStatus(string? status)
+        // =====================================================
+        // Chuẩn hóa trạng thái suất chiếu
+        // =====================================================
+
+        private static string NormalizeShowtimeStatus(
+            string? status)
         {
             if (string.IsNullOrWhiteSpace(status))
             {
@@ -611,12 +539,16 @@ namespace CinemaBackend.Controllers
                 .Replace("?", string.Empty)
                 .Replace("_", " ");
 
-            var normalized = cleaned.Normalize(NormalizationForm.FormD);
+            var normalized =
+                cleaned.Normalize(NormalizationForm.FormD);
+
             var builder = new StringBuilder();
 
             foreach (var ch in normalized)
             {
-                var category = CharUnicodeInfo.GetUnicodeCategory(ch);
+                var category =
+                    CharUnicodeInfo.GetUnicodeCategory(ch);
+
                 if (category != UnicodeCategory.NonSpacingMark)
                 {
                     builder.Append(ch);
@@ -632,39 +564,43 @@ namespace CinemaBackend.Controllers
                 .Replace(".", " ")
                 .Replace(",", " ");
 
-            var lower = string.Join(" ", candidate.Split(
-                new[] { ' ', '\t', '\r', '\n' },
-                StringSplitOptions.RemoveEmptyEntries)).ToLowerInvariant();
+            var lower = string.Join(
+                " ",
+                candidate.Split(
+                    new[] { ' ', '\t', '\r', '\n' },
+                    StringSplitOptions.RemoveEmptyEntries))
+                .ToLowerInvariant();
 
-            if (
-                lower.Contains("active") ||
+            if (lower.Contains("active") ||
                 lower.Contains("dang hoat dong") ||
                 lower.Contains("dang hot dong") ||
                 lower.Contains("hoat dong") ||
-                lower.Contains("dang hoat")
-            )
+                lower.Contains("dang hoat"))
             {
                 return "Đang hoạt động";
             }
 
-            if (lower.Contains("tam ngung") || lower.Contains("ngung"))
+            if (lower.Contains("tam ngung") ||
+                lower.Contains("ngung"))
             {
                 return "Tạm ngưng";
             }
 
-            if (
-                lower.Contains("da ket thuc") ||
+            if (lower.Contains("da ket thuc") ||
                 lower.Contains("ket thuc") ||
                 lower.Contains("kt thuc") ||
                 lower.Contains("da kt thuc") ||
-                lower.Contains("thuc")
-            )
+                lower.Contains("thuc"))
             {
                 return "Đã kết thúc";
             }
 
             return status.Trim();
         }
+
+        // =====================================================
+        // Kiểm tra suất chiếu trùng giờ trong cùng phòng
+        // =====================================================
 
         private async Task<bool> HasScheduleConflict(
             int roomId,
@@ -698,8 +634,11 @@ namespace CinemaBackend.Controllers
                 })
                 .ToListAsync();
 
-            var requestedStart = showDate.Date.Add(startTime);
-            var requestedEnd = showDate.Date.Add(endTime);
+            var requestedStart =
+                showDate.Date.Add(startTime);
+
+            var requestedEnd =
+                showDate.Date.Add(endTime);
 
             if (endTime < startTime)
             {
@@ -708,56 +647,139 @@ namespace CinemaBackend.Controllers
 
             return existingShowtimes.Any(existing =>
             {
-                var existingStart = existing.ShowDate.Date.Add(existing.StartTime);
-                var existingEnd = existing.ShowDate.Date.Add(existing.EndTime);
+                var existingStart =
+                    existing.ShowDate.Date.Add(
+                        existing.StartTime);
+
+                var existingEnd =
+                    existing.ShowDate.Date.Add(
+                        existing.EndTime);
 
                 if (existing.EndTime < existing.StartTime)
                 {
                     existingEnd = existingEnd.AddDays(1);
                 }
 
-                return requestedStart < existingEnd && requestedEnd > existingStart;
+                return requestedStart < existingEnd &&
+                       requestedEnd > existingStart;
             });
         }
 
+        // =====================================================
+        // Lấy giờ hiện tại theo múi giờ Việt Nam
+        // =====================================================
+
+        private static DateTime GetVietnamNow()
+        {
+            TimeZoneInfo vietnamTimeZone;
+
+            try
+            {
+                vietnamTimeZone =
+                    TimeZoneInfo.FindSystemTimeZoneById(
+                        "Asia/Ho_Chi_Minh");
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                vietnamTimeZone =
+                    TimeZoneInfo.FindSystemTimeZoneById(
+                        "SE Asia Standard Time");
+            }
+
+            return TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                vietnamTimeZone);
+        }
 
         // =====================================================
         // DELETE: api/showtimes/{id}
-        // Xóa suất chiếu
+        // Chặn xóa suất chiếu có vé, có người giữ ghế
+        // hoặc đang diễn ra.
         // =====================================================
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteShowtime(
-            int id)
+        public async Task<IActionResult> DeleteShowtime(int id)
         {
-            var showtime =
-                await _context.Showtimes
-                    .FirstOrDefaultAsync(
-                        s =>
-                            s.ShowtimeId == id
-                    );
+            var showtime = await _context.Showtimes
+                .FirstOrDefaultAsync(
+                    s => s.ShowtimeId == id);
 
             if (showtime == null)
             {
                 return NotFound(new
                 {
-                    message =
-                        "Không tìm thấy suất chiếu"
+                    message = "Không tìm thấy suất chiếu."
                 });
             }
 
+            // 1. Không xóa suất chiếu đã có vé.
+            // Giữ lại lịch sử kể cả khi vé đã hủy.
+            var hasTickets = await _context.Tickets
+                .AnyAsync(t => t.ShowtimeId == id);
 
-            _context.Showtimes.Remove(
-                showtime
-            );
+            if (hasTickets)
+            {
+                return Conflict(new
+                {
+                    message =
+                        "Không thể xóa suất chiếu vì đã có vé liên quan. " +
+                        "Vui lòng giữ lại suất chiếu để bảo toàn lịch sử vé."
+                });
+            }
 
+            // 2. Không xóa suất chiếu còn lượt giữ ghế đang hiệu lực.
+            var nowUtc = DateTime.UtcNow;
+
+            var hasActiveHolds = await _context.SeatHolds
+                .AnyAsync(h =>
+                    h.ShowtimeId == id &&
+                    h.ExpiresAtUtc > nowUtc);
+
+            if (hasActiveHolds)
+            {
+                return Conflict(new
+                {
+                    message =
+                        "Không thể xóa suất chiếu vì vẫn có khách đang giữ ghế. " +
+                        "Vui lòng thử lại sau."
+                });
+            }
+
+            // 3. Xác định suất chiếu có đang diễn ra không,
+            // dựa trên giờ Việt Nam, hỗ trợ suất chiếu qua nửa đêm.
+            var nowVietnam = GetVietnamNow();
+
+            var startDateTime = showtime.ShowDate.Date
+                .Add(showtime.StartTime);
+
+            var endDateTime = showtime.ShowDate.Date
+                .Add(showtime.EndTime);
+
+            if (endDateTime <= startDateTime)
+            {
+                endDateTime = endDateTime.AddDays(1);
+            }
+
+            var isCurrentlyRunning =
+                nowVietnam >= startDateTime &&
+                nowVietnam < endDateTime;
+
+            if (isCurrentlyRunning)
+            {
+                return Conflict(new
+                {
+                    message =
+                        "Không thể xóa suất chiếu đang diễn ra."
+                });
+            }
+
+            // 4. Chỉ xóa khi tất cả kiểm tra đều hợp lệ.
+            _context.Showtimes.Remove(showtime);
             await _context.SaveChangesAsync();
-
 
             return Ok(new
             {
-                message =
-                    "Xóa suất chiếu thành công"
+                message = "Xóa suất chiếu thành công."
             });
         }
     }
