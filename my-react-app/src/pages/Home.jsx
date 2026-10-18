@@ -8,6 +8,29 @@ import { API_BASE, getMissingPosterFallback } from "../constants";
 const API_URL = `${API_BASE}/api/movies`;
 const MOVIES_PER_PAGE = 4;
 
+// ==========================================
+// BANNER PARTNER
+// Đặt ảnh banner trong thư mục: public/banners/
+// Sau đó sửa tên file tại đây.
+// ==========================================
+const banners = [
+  {
+    id: 1,
+    image: "/banners/partner-1.jpg",
+    alt: "Partner banner 1",
+  },
+  {
+    id: 2,
+    image: "/banners/partner-2.jpg",
+    alt: "Partner banner 2",
+  },
+  {
+    id: 3,
+    image: "/banners/partner-3.jpg",
+    alt: "Partner banner 3",
+  },
+];
+
 const posterAssets = import.meta.glob(
   "../assets/*.{png,jpg,jpeg,webp}",
   {
@@ -73,6 +96,21 @@ const Home = () => {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Banner bắt đầu từ ảnh đầu tiên
+  const [currentBanner, setCurrentBanner] = useState(0);
+
+  const showPreviousBanner = () => {
+    setCurrentBanner((current) =>
+      (current - 1 + banners.length) % banners.length
+    );
+  };
+
+  const showNextBanner = () => {
+    setCurrentBanner((current) =>
+      (current + 1) % banners.length
+    );
+  };
+
   useEffect(() => {
     let cancelled = false;
 
@@ -125,7 +163,7 @@ const Home = () => {
     (movie) => String(movie.status ?? "").trim() === "ComingSoon"
   );
 
-  // Mỗi mục chỉ hiển thị tối đa 4 phim trên trang chủ
+  // Mỗi mục hiển thị tối đa 4 phim trên trang chủ
   const displayedNowShowingMovies = nowShowingMovies.slice(
     0,
     MOVIES_PER_PAGE
@@ -138,6 +176,54 @@ const Home = () => {
 
   return (
     <main className="home">
+      {/* BANNER PARTNER */}
+      <section className="partner-section" aria-label="Đối tác">
+        <div className="partner-banner">
+          <img
+            key={banners[currentBanner].id}
+            className="partner-banner-image"
+            src={banners[currentBanner].image}
+            alt={banners[currentBanner].alt}
+          />
+
+          {/* MŨI TÊN TRÁI */}
+          <button
+            type="button"
+            className="partner-arrow partner-arrow-left"
+            aria-label="Xem banner trước"
+            onClick={showPreviousBanner}
+          >
+            &#10094;
+          </button>
+
+          {/* MŨI TÊN PHẢI */}
+          <button
+            type="button"
+            className="partner-arrow partner-arrow-right"
+            aria-label="Xem banner tiếp theo"
+            onClick={showNextBanner}
+          >
+            &#10095;
+          </button>
+
+          {/* CHẤM HIỂN THỊ VỊ TRÍ BANNER */}
+          <div className="partner-dots">
+            {banners.map((banner, index) => (
+              <button
+                key={banner.id}
+                type="button"
+                className={`partner-dot ${
+                  index === currentBanner ? "active" : ""
+                }`}
+                aria-label={`Chuyển đến banner ${index + 1}`}
+                aria-current={index === currentBanner ? "true" : undefined}
+                onClick={() => setCurrentBanner(index)}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* PHIM ĐANG CHIẾU */}
       <section className="movie-section">
         <h2>PHIM ĐANG CHIẾU</h2>
@@ -166,7 +252,6 @@ const Home = () => {
           </div>
         )}
 
-        {/* Luôn hiển thị nút XEM THÊM phim đang chiếu */}
         {!loading && (
           <div className="movie-more-container">
             <Link
@@ -198,7 +283,8 @@ const Home = () => {
             {displayedComingSoonMovies.map((movie) => (
               <Link
                 key={movie.movieId}
-                to={`/movie/${encodeURIComponent(movie.title)}`}
+                to={`/movie/${encodeURIComponent(movie.title)}`
+                }
                 className="movie-card-link"
               >
                 <MovieCard movie={movie} />
@@ -207,7 +293,6 @@ const Home = () => {
           </div>
         )}
 
-        {/* Luôn hiển thị nút XEM THÊM phim sắp chiếu */}
         {!loading && (
           <div className="movie-more-container">
             <Link
