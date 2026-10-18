@@ -42,6 +42,34 @@ namespace CinemaBackend.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Food>()
+                .Property(f => f.Price)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<FoodOrder>()
+                .Property(f => f.TotalAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<FoodOrderItem>()
+                .Property(f => f.UnitPrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Showtime>()
+                .Property(s => s.TicketPrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<ShowtimeTicketType>()
+                .Property(s => s.Price)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Ticket>()
+                .Property(t => t.TicketPrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<TicketType>()
+                .Property(t => t.Price)
+                .HasPrecision(18, 2);
+
             // =========================================
             // GIÁ VÉ THEO SUẤT CHIẾU
             // =========================================

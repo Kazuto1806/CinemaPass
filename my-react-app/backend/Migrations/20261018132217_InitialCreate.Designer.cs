@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CinemaBackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261007113028_AddTicketTypes")]
-    partial class AddTicketTypes
+    [Migration("20261018132217_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -82,6 +82,7 @@ namespace CinemaBackend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Status")
@@ -91,6 +92,65 @@ namespace CinemaBackend.Migrations
                     b.HasKey("FoodId");
 
                     b.ToTable("Foods");
+                });
+
+            modelBuilder.Entity("CinemaBackend.Models.FoodOrder", b =>
+                {
+                    b.Property<int>("FoodOrderId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FoodOrderId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("FoodOrderId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("FoodOrders");
+                });
+
+            modelBuilder.Entity("CinemaBackend.Models.FoodOrderItem", b =>
+                {
+                    b.Property<int>("FoodOrderItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FoodOrderItemId"));
+
+                    b.Property<int>("FoodId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FoodOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("FoodOrderItemId");
+
+                    b.HasIndex("FoodId");
+
+                    b.HasIndex("FoodOrderId");
+
+                    b.ToTable("FoodOrderItems");
                 });
 
             modelBuilder.Entity("CinemaBackend.Models.Movie", b =>
@@ -203,6 +263,42 @@ namespace CinemaBackend.Migrations
                     b.ToTable("Seats");
                 });
 
+            modelBuilder.Entity("CinemaBackend.Models.SeatHold", b =>
+                {
+                    b.Property<int>("SeatHoldId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SeatHoldId"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("HoldToken")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<int>("SeatId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShowtimeId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("SeatHoldId");
+
+                    b.HasIndex("ShowtimeId", "SeatId")
+                        .IsUnique();
+
+                    b.ToTable("SeatHolds");
+                });
+
             modelBuilder.Entity("CinemaBackend.Models.Showtime", b =>
                 {
                     b.Property<int>("ShowtimeId")
@@ -234,6 +330,7 @@ namespace CinemaBackend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TicketPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("ShowtimeId");
@@ -243,6 +340,25 @@ namespace CinemaBackend.Migrations
                     b.HasIndex("RoomId");
 
                     b.ToTable("Showtimes");
+                });
+
+            modelBuilder.Entity("CinemaBackend.Models.ShowtimeTicketType", b =>
+                {
+                    b.Property<int>("ShowtimeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TicketTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("ShowtimeId", "TicketTypeId");
+
+                    b.HasIndex("TicketTypeId");
+
+                    b.ToTable("ShowtimeTicketTypes");
                 });
 
             modelBuilder.Entity("CinemaBackend.Models.Ticket", b =>
@@ -259,6 +375,16 @@ namespace CinemaBackend.Migrations
                     b.Property<int>("MovieId")
                         .HasColumnType("int");
 
+                    b.Property<string>("PaymentMethod")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentTransactionId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("SeatId")
                         .HasColumnType("int");
 
@@ -270,7 +396,11 @@ namespace CinemaBackend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TicketPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("TicketTypeId")
+                        .HasColumnType("int");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -283,9 +413,47 @@ namespace CinemaBackend.Migrations
 
                     b.HasIndex("ShowtimeId");
 
+                    b.HasIndex("TicketTypeId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Tickets");
+                });
+
+            modelBuilder.Entity("CinemaBackend.Models.TicketType", b =>
+                {
+                    b.Property<int>("TicketTypeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TicketTypeId"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("TicketTypeId");
+
+                    b.ToTable("TicketTypes");
                 });
 
             modelBuilder.Entity("CinemaBackend.Models.User", b =>
@@ -319,6 +487,36 @@ namespace CinemaBackend.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("CinemaBackend.Models.FoodOrder", b =>
+                {
+                    b.HasOne("CinemaBackend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CinemaBackend.Models.FoodOrderItem", b =>
+                {
+                    b.HasOne("CinemaBackend.Models.Food", "Food")
+                        .WithMany()
+                        .HasForeignKey("FoodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CinemaBackend.Models.FoodOrder", "FoodOrder")
+                        .WithMany("Items")
+                        .HasForeignKey("FoodOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Food");
+
+                    b.Navigation("FoodOrder");
                 });
 
             modelBuilder.Entity("CinemaBackend.Models.Room", b =>
@@ -362,6 +560,25 @@ namespace CinemaBackend.Migrations
                     b.Navigation("Room");
                 });
 
+            modelBuilder.Entity("CinemaBackend.Models.ShowtimeTicketType", b =>
+                {
+                    b.HasOne("CinemaBackend.Models.Showtime", "Showtime")
+                        .WithMany("TicketTypeAssignments")
+                        .HasForeignKey("ShowtimeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CinemaBackend.Models.TicketType", "TicketType")
+                        .WithMany("ShowtimeAssignments")
+                        .HasForeignKey("TicketTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Showtime");
+
+                    b.Navigation("TicketType");
+                });
+
             modelBuilder.Entity("CinemaBackend.Models.Ticket", b =>
                 {
                     b.HasOne("CinemaBackend.Models.Movie", "Movie")
@@ -379,8 +596,12 @@ namespace CinemaBackend.Migrations
                     b.HasOne("CinemaBackend.Models.Showtime", "Showtime")
                         .WithMany()
                         .HasForeignKey("ShowtimeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.HasOne("CinemaBackend.Models.TicketType", "TicketType")
+                        .WithMany("Tickets")
+                        .HasForeignKey("TicketTypeId");
 
                     b.HasOne("CinemaBackend.Models.User", "User")
                         .WithMany()
@@ -394,7 +615,14 @@ namespace CinemaBackend.Migrations
 
                     b.Navigation("Showtime");
 
+                    b.Navigation("TicketType");
+
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CinemaBackend.Models.FoodOrder", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("CinemaBackend.Models.Room", b =>
@@ -402,6 +630,18 @@ namespace CinemaBackend.Migrations
                     b.Navigation("Seats");
 
                     b.Navigation("Showtimes");
+                });
+
+            modelBuilder.Entity("CinemaBackend.Models.Showtime", b =>
+                {
+                    b.Navigation("TicketTypeAssignments");
+                });
+
+            modelBuilder.Entity("CinemaBackend.Models.TicketType", b =>
+                {
+                    b.Navigation("ShowtimeAssignments");
+
+                    b.Navigation("Tickets");
                 });
 #pragma warning restore 612, 618
         }

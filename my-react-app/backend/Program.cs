@@ -175,7 +175,16 @@ using (var scope = app.Services.CreateScope())
 
     if (app.Environment.IsDevelopment())
     {
-        db.Database.EnsureCreated();
+        try
+        {
+            db.Database.CanConnect();
+            db.Database.EnsureCreated();
+        }
+        catch
+        {
+            db.Database.EnsureDeleted();
+            db.Database.EnsureCreated();
+        }
     }
     else
     {

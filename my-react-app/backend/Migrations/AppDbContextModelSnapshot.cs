@@ -79,6 +79,7 @@ namespace CinemaBackend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Status")
@@ -106,6 +107,7 @@ namespace CinemaBackend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("UserId")
@@ -136,6 +138,7 @@ namespace CinemaBackend.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("FoodOrderItemId");
@@ -324,6 +327,7 @@ namespace CinemaBackend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TicketPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("ShowtimeId");
@@ -344,6 +348,7 @@ namespace CinemaBackend.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("ShowtimeId", "TicketTypeId");
@@ -388,6 +393,7 @@ namespace CinemaBackend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TicketPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("TicketTypeId")
@@ -435,6 +441,7 @@ namespace CinemaBackend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Status")
@@ -586,7 +593,7 @@ namespace CinemaBackend.Migrations
                     b.HasOne("CinemaBackend.Models.Showtime", "Showtime")
                         .WithMany()
                         .HasForeignKey("ShowtimeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("CinemaBackend.Models.TicketType", "TicketType")
