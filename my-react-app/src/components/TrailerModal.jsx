@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import "./TrailerModal.css";
 
 const getTrailerEmbedUrl = (url) => {
@@ -79,13 +80,19 @@ function TrailerModal({ isOpen, onClose, title, trailerUrl }) {
     return null;
   }
 
-  return (
+  return createPortal(
     <div
       className="trailer-modal"
       role="dialog"
       aria-modal="true"
       aria-label={`Trailer phim ${title}`}
-      onClick={onClose}
+      onClick={(event) => {
+        event.stopPropagation();
+
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <div
         className="trailer-modal-content"
@@ -119,7 +126,8 @@ function TrailerModal({ isOpen, onClose, title, trailerUrl }) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
