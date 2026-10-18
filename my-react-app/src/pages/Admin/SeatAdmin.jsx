@@ -37,7 +37,8 @@ function SeatAdmin() {
   const [selectedRoomId, setSelectedRoomId] = useState("");
 
   const [searchText, setSearchText] = useState("");
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const seatsPerPage = 10;
   const [showForm, setShowForm] = useState(false);
 
   const [saving, setSaving] = useState(false);
@@ -209,7 +210,19 @@ function SeatAdmin() {
     seats,
     searchText,
   ]);
-
+  const totalPages = Math.ceil(
+    filteredSeats.length / seatsPerPage
+  );
+  const currentSeats = useMemo(()=>{
+    const startIndex = (currentPage - 1)*currentPage;
+    return filteredSeats.slice(
+      startIndex,
+      startIndex + seatsPerPage
+    );
+  },[filteredSeats,currentPage]);
+  useEffect(() => {
+  setCurrentPage(1);
+}, [selectedRoomId, searchText]);
   // =====================================================
   // GROUP SEATS BY ROW
   // =====================================================
@@ -1103,7 +1116,7 @@ function SeatAdmin() {
 
               ) : (
 
-                filteredSeats.map(
+                currentSeats.map(
                   (seat) => (
 
                     <tr
@@ -1183,7 +1196,35 @@ function SeatAdmin() {
             </tbody>
 
           </table>
+          {totalPages > 1 && (
+  <div className="seat-pagination">
+    <button
+      type="button"
+      disabled={currentPage === 1}
+      onClick={() =>
+        setCurrentPage((page) => page - 1)
+      }
+    >
+      Trước
+    </button>
 
+    <span>
+      Trang {currentPage} / {totalPages}
+      {" · "}
+      {filteredSeats.length} ghế
+    </span>
+
+    <button
+      type="button"
+      disabled={currentPage === totalPages}
+      onClick={() =>
+        setCurrentPage((page) => page + 1)
+      }
+    >
+      Sau
+    </button>
+  </div>
+)}
         </div>
 
       </div>

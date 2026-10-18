@@ -1199,3 +1199,27 @@
     padding: 12px;
   }
 }
+.seat-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+}
+
+.seat-pagination button {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}
+
+.seat-pagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.seat-pagination span {
+  font-size: 14px;
+}
