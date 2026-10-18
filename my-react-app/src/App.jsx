@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 
 import Header from "./components/Header";
@@ -9,6 +8,7 @@ import Login from "./pages/Login";
 import Food from "./pages/Food";
 import Account from "./pages/Account";
 import MovieSearch from "./pages/MovieSearch";
+import MovieList from "./pages/MovieList";
 import MovieDetail from "./pages/MovieDetail";
 import Booking from "./pages/Booking";
 import TicketHistory from "./pages/TicketHistory";
@@ -64,6 +64,15 @@ function App() {
         <Route
           path="/search"
           element={<MovieSearch />}
+        />
+
+        {/* =========================
+            DANH SÁCH PHIM
+        ========================= */}
+
+        <Route
+          path="/movies/:type"
+          element={<MovieList />}
         />
 
         {/* =========================

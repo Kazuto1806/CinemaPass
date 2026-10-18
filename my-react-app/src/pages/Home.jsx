@@ -1,12 +1,13 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import MovieCard from "../components/MovieCard";
 import "./Home.css";
-import { API_BASE, getMissingPosterFallback } from '../constants';
-// API lấy phim từ SQL Server
-const API_URL = `${API_BASE}/api/movies`;
+import { API_BASE, getMissingPosterFallback } from "../constants";
 
-// Lấy tất cả ảnh trong src/assets
+const API_URL = `${API_BASE}/api/movies`;
+const MOVIES_PER_PAGE = 4;
+
 const posterAssets = import.meta.glob(
   "../assets/*.{png,jpg,jpeg,webp}",
   {
@@ -16,24 +17,23 @@ const posterAssets = import.meta.glob(
   }
 );
 
-// Tìm poster theo URL trong SQL
 const getPosterUrl = (posterUrl) => {
-  if (!posterUrl) {
-    return "";
-  }
+  if (!posterUrl) return "";
 
   const normalized = String(posterUrl).trim();
+
+  if (!normalized) return "";
+
   const fallback = getMissingPosterFallback(normalized);
 
   if (fallback) return fallback;
 
-  if (
-    normalized.startsWith("http://") ||
-    normalized.startsWith("https://")
-  ) {
+  // URL ảnh từ bên ngoài
+  if (/^https?:\/\//i.test(normalized)) {
     return normalized;
   }
 
+  // Ảnh được upload lên ASP.NET Core
   if (
     normalized.startsWith("/uploads/") ||
     normalized.startsWith("uploads/")
@@ -45,14 +45,25 @@ const getPosterUrl = (posterUrl) => {
     return `${API_BASE}${uploadPath}`;
   }
 
-  const fileName = normalized.split("/").pop();
+  // Tìm ảnh trong src/assets theo tên file
+  const fileName = normalized.split(/[\\/]/).pop();
 
   const asset = Object.entries(posterAssets).find(([path]) =>
-    path.endsWith(`/${fileName}`)
+    path.toLowerCase().endsWith(`/${fileName.toLowerCase()}`)
   );
 
   if (asset) {
     return asset[1];
+  }
+
+  // Nếu ảnh nằm trong public/assets
+  if (
+    normalized.startsWith("/assets/") ||
+    normalized.startsWith("assets/")
+  ) {
+    return normalized.startsWith("/")
+      ? normalized
+      : `/${normalized}`;
   }
 
   return normalized;
@@ -62,11 +73,9 @@ const Home = () => {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // =========================
-  // LẤY PHIM TỪ SQL SERVER
-  // =========================
-
   useEffect(() => {
+    let cancelled = false;
+
     const loadMovies = async () => {
       try {
         setLoading(true);
@@ -84,63 +93,68 @@ const Home = () => {
           posterUrl: getPosterUrl(movie.posterUrl),
         }));
 
-        setMovies(moviesWithPoster);
+        if (!cancelled) {
+          setMovies(moviesWithPoster);
+        }
       } catch (error) {
         console.error("Lỗi lấy danh sách phim:", error);
-        setMovies([]);
+
+        if (!cancelled) {
+          setMovies([]);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     loadMovies();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // =========================
-  // PHIM ĐANG CHIẾU
-  // =========================
+  // Lọc phim theo trạng thái
+  const nowShowingMovies = movies.filter(
+    (movie) => String(movie.status ?? "").trim() === "NowShowing"
+  );
 
-  const nowShowingMovies = movies
-    .filter((movie) => movie.status === "NowShowing")
-    .slice(0, 5);
+  const comingSoonMovies = movies.filter(
+    (movie) => String(movie.status ?? "").trim() === "ComingSoon"
+  );
 
-  // =========================
-  // PHIM SẮP CHIẾU
-  // =========================
+  // Mỗi mục chỉ hiển thị tối đa 4 phim trên trang chủ
+  const displayedNowShowingMovies = nowShowingMovies.slice(
+    0,
+    MOVIES_PER_PAGE
+  );
 
-  const comingSoonMovies = movies
-    .filter((movie) => movie.status === "ComingSoon")
-    .slice(0, 5);
+  const displayedComingSoonMovies = comingSoonMovies.slice(
+    0,
+    MOVIES_PER_PAGE
+  );
 
   return (
     <main className="home">
-
-      {/* =========================
-          PHIM ĐANG CHIẾU
-      ========================= */}
-
+      {/* PHIM ĐANG CHIẾU */}
       <section className="movie-section">
         <h2>PHIM ĐANG CHIẾU</h2>
 
         {loading ? (
-          <p className="movie-loading">
-            Đang tải phim...
-          </p>
+          <p className="movie-loading">Đang tải phim...</p>
         ) : nowShowingMovies.length === 0 ? (
           <div className="movie-empty">
             <div className="movie-empty-content">
               <div className="movie-empty-icon">🎬</div>
-
               <h2>Chưa có phim đang chiếu</h2>
-
-              <p>
-                Hiện tại chưa có phim nào đang được chiếu.
-              </p>
+              <p>Hiện tại chưa có phim nào đang được chiếu.</p>
             </div>
           </div>
         ) : (
           <div className="movie-list">
-            {nowShowingMovies.map((movie) => (
+            {displayedNowShowingMovies.map((movie) => (
               <Link
                 key={movie.movieId}
                 to={`/movie/${encodeURIComponent(movie.title)}`}
@@ -151,34 +165,37 @@ const Home = () => {
             ))}
           </div>
         )}
+
+        {/* Luôn hiển thị nút XEM THÊM phim đang chiếu */}
+        {!loading && (
+          <div className="movie-more-container">
+            <Link
+              to="/movies/now-showing"
+              className="movie-more-button"
+            >
+              XEM THÊM
+            </Link>
+          </div>
+        )}
       </section>
 
-      {/* =========================
-          PHIM SẮP CHIẾU
-      ========================= */}
-
+      {/* PHIM SẮP CHIẾU */}
       <section className="movie-section">
         <h2>PHIM SẮP CHIẾU</h2>
 
         {loading ? (
-          <p className="movie-loading">
-            Đang tải phim...
-          </p>
+          <p className="movie-loading">Đang tải phim...</p>
         ) : comingSoonMovies.length === 0 ? (
           <div className="movie-empty">
             <div className="movie-empty-content">
-             <div className="movie-empty-icon">🎬</div>
-
+              <div className="movie-empty-icon">🎬</div>
               <h2>Chưa có phim sắp chiếu</h2>
-
-              <p>
-                Hiện tại chưa có phim nào sắp chiếu.
-              </p>
+              <p>Hiện tại chưa có phim nào sắp chiếu.</p>
             </div>
           </div>
         ) : (
           <div className="movie-list">
-            {comingSoonMovies.map((movie) => (
+            {displayedComingSoonMovies.map((movie) => (
               <Link
                 key={movie.movieId}
                 to={`/movie/${encodeURIComponent(movie.title)}`}
@@ -189,8 +206,19 @@ const Home = () => {
             ))}
           </div>
         )}
-      </section>
 
+        {/* Luôn hiển thị nút XEM THÊM phim sắp chiếu */}
+        {!loading && (
+          <div className="movie-more-container">
+            <Link
+              to="/movies/coming-soon"
+              className="movie-more-button"
+            >
+              XEM THÊM
+            </Link>
+          </div>
+        )}
+      </section>
     </main>
   );
 };
