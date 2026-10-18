@@ -111,12 +111,14 @@ public class TmdbController : ControllerBase
                     // Lấy trailer từ TMDB
                     var videoResults = await _tmdbService.GetTrailers(tmdbId, cancellationToken);
 
+                    // Lấy trailer từ TMDB: ưu tiên Trailer -> Teaser -> Clip khác trên YouTube
                     var trailer = videoResults.EnumerateArray()
                         .Where(v =>
                             v.TryGetProperty("site", out var site) && site.GetString() == "YouTube" &&
-                            v.TryGetProperty("type", out var type) && type.GetString() == "Trailer" &&
                             v.TryGetProperty("key", out var key) && !string.IsNullOrWhiteSpace(key.GetString()))
-                        .OrderByDescending(v => v.TryGetProperty("official", out var off) && off.ValueKind == JsonValueKind.True)
+                        .OrderByDescending(v => v.TryGetProperty("type", out var t) && t.GetString() == "Trailer")
+                        .ThenByDescending(v => v.TryGetProperty("official", out var off) && off.ValueKind == JsonValueKind.True)
+                        .ThenByDescending(v => v.TryGetProperty("type", out var t) && t.GetString() == "Teaser")
                         .FirstOrDefault();
 
                     if (trailer.ValueKind != JsonValueKind.Undefined)
