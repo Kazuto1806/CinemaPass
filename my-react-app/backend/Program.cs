@@ -173,22 +173,47 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider
         .GetRequiredService<AppDbContext>();
 
-    if (app.Environment.IsDevelopment())
+    try
     {
-        try
+        if (app.Environment.IsDevelopment())
         {
-            db.Database.CanConnect();
             db.Database.EnsureCreated();
         }
-        catch
+        else
         {
-            db.Database.EnsureDeleted();
-            db.Database.EnsureCreated();
+            db.Database.Migrate();
         }
     }
-    else
+    catch (Exception ex) when (ex is InvalidOperationException || ex is Microsoft.Data.SqlClient.SqlException)
     {
-        db.Database.Migrate();
+        var connection = db.Database.GetDbConnection();
+
+        if (connection.State != System.Data.ConnectionState.Open)
+        {
+            connection.Open();
+        }
+
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+            SELECT CASE
+                WHEN EXISTS (
+                    SELECT 1
+                    FROM INFORMATION_SCHEMA.TABLES
+                    WHERE TABLE_NAME = 'Cinemas'
+                ) THEN 1
+                ELSE 0
+            END;";
+
+        var result = Convert.ToInt32(command.ExecuteScalar());
+
+        if (result == 1)
+        {
+            // Database already exists with tables; do not crash startup.
+        }
+        else
+        {
+            throw;
+        }
     }
 }
 
