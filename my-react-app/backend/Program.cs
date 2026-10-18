@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using System.Net;
 using System.Text;
-
+using CinemaBackend.Services;
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddHttpClient<TmdbService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
