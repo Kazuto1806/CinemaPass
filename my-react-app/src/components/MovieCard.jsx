@@ -1,6 +1,7 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import "./MovieCard.css";
+import TrailerModal from "./TrailerModal";
 import { API_BASE, getMissingPosterFallback } from "../constants";
 
 const getPosterUrl = (posterUrl) => {
@@ -41,85 +42,10 @@ const getPosterUrl = (posterUrl) => {
   return normalized;
 };
 
-// Chuyển URL YouTube thành URL có thể phát trong iframe
-const getTrailerEmbedUrl = (url) => {
-  if (!url) return "";
-
-  const normalized = String(url).trim();
-
-  try {
-    const parsed = new URL(normalized);
-    const host = parsed.hostname.replace(/^www\./, "");
-
-    if (host === "youtu.be") {
-      const id = parsed.pathname.split("/").filter(Boolean)[0];
-      return id
-        ? `https://www.youtube.com/embed/${id}`
-        : "";
-    }
-
-    if (
-      host === "youtube.com" ||
-      host === "m.youtube.com" ||
-      host === "youtube-nocookie.com"
-    ) {
-      if (parsed.pathname === "/watch") {
-        const id = parsed.searchParams.get("v");
-        return id
-          ? `https://www.youtube.com/embed/${id}`
-          : "";
-      }
-
-      const match = parsed.pathname.match(
-        /^\/(?:embed|shorts|live)\/([^/?]+)/
-      );
-
-      if (match) {
-        const privacyHost =
-          host === "youtube-nocookie.com"
-            ? "www.youtube-nocookie.com"
-            : "www.youtube.com";
-
-        return `https://${privacyHost}/embed/${match[1]}`;
-      }
-    }
-
-    if (host === "vimeo.com") {
-      const id = parsed.pathname.split("/").filter(Boolean)[0];
-
-      return id && /^\d+$/.test(id)
-        ? `https://player.vimeo.com/video/${id}`
-        : "";
-    }
-
-    return "";
-  } catch {
-    return "";
-  }
-};
-
 function MovieCard({ movie }) {
   const [showTrailer, setShowTrailer] = useState(false);
 
   const trailerUrl = movie?.trailerUrl ?? movie?.TrailerUrl ?? "";
-  const trailerEmbedUrl = getTrailerEmbedUrl(trailerUrl);
-
-  // Đóng popup bằng phím Escape
-  useEffect(() => {
-    if (!showTrailer) return undefined;
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        setShowTrailer(false);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [showTrailer]);
 
   const handleTrailerClick = (event) => {
     event.preventDefault();
@@ -130,18 +56,24 @@ function MovieCard({ movie }) {
       return;
     }
 
-    if (!trailerEmbedUrl && !/\.(mp4|webm|ogg)(\?.*)?$/i.test(trailerUrl)) {
-      window.alert(
-        "Link trailer chưa được hỗ trợ. Ông hãy dùng link YouTube hoặc link video MP4 trực tiếp."
-      );
-      return;
+    const trailerValue = trailerUrl.trim();
+    const isSupportedVideo = /\.(mp4|webm|ogg)(\?.*)?$/i.test(trailerValue);
+
+    if (!isSupportedVideo) {
+      const isYouTubeLike = /youtube\.com|youtu\.be|vimeo\.com/i.test(trailerValue);
+
+      if (!isYouTubeLike) {
+        window.alert(
+          "Link trailer chưa được hỗ trợ. Ông hãy dùng link YouTube hoặc link video MP4 trực tiếp."
+        );
+        return;
+      }
     }
 
     setShowTrailer(true);
   };
 
-  const closeTrailer = (event) => {
-    event?.stopPropagation();
+  const closeTrailer = () => {
     setShowTrailer(false);
   };
 
@@ -241,54 +173,12 @@ function MovieCard({ movie }) {
         </div>
       </div>
 
-      {/* POPUP PHÁT TRAILER */}
-      {showTrailer && (
-        <div
-          className="trailer-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Trailer phim ${movie.title}`}
-          onClick={closeTrailer}
-        >
-          <div
-            className="trailer-modal-content"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="trailer-modal-header">
-              <h2>{movie.title} - Trailer</h2>
-
-              <button
-                type="button"
-                className="trailer-close-btn"
-                onClick={closeTrailer}
-                aria-label="Đóng trailer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="trailer-video-container">
-              {trailerEmbedUrl ? (
-                <iframe
-                  src={`${trailerEmbedUrl}?autoplay=1`}
-                  title={`Trailer ${movie.title}`}
-                  allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                  allowFullScreen
-                />
-              ) : (
-                <video
-                  src={trailerUrl}
-                  controls
-                  autoPlay
-                  playsInline
-                >
-                  Trình duyệt của ông không hỗ trợ phát video.
-                </video>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <TrailerModal
+        isOpen={showTrailer}
+        onClose={closeTrailer}
+        title={movie.title}
+        trailerUrl={trailerUrl}
+      />
     </>
   );
 }
