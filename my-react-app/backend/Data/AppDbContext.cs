@@ -35,6 +35,8 @@ namespace CinemaBackend.Data
 
         public DbSet<ShowtimeTicketType> ShowtimeTicketTypes { get; set; }
 
+        public DbSet<Banner> Banners { get; set; }
+
         // Bảng giữ ghế tạm thời
         public DbSet<SeatHold> SeatHolds { get; set; }
 

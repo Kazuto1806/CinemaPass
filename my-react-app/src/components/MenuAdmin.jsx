@@ -14,6 +14,7 @@ import {
   FaShoppingCart,
   FaCreditCard,
   FaChartBar,
+  FaImages,
 } from "react-icons/fa";
 
 import { NavLink, useNavigate } from "react-router-dom";
@@ -70,6 +71,16 @@ function MenuAdmin() {
         >
           <FaFilm />
           <span>Quản lý phim</span>
+        </NavLink>
+
+        <NavLink
+          to="/admin/banners"
+          className={({ isActive }) =>
+            `menu-admin-item ${isActive ? "active" : ""}`
+          }
+        >
+          <FaImages />
+          <span>Quản lý banner</span>
         </NavLink>
 
         {/* QUẢN LÝ RẠP */}

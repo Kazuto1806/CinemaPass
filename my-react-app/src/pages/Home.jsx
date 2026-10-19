@@ -13,7 +13,7 @@ const MOVIES_PER_PAGE = 4;
 // Đặt ảnh banner trong thư mục: public/banners/
 // Sau đó sửa tên file tại đây.
 // ==========================================
-const banners = [
+const defaultBanners = [
   {
     id: 1,
     image: "/banners/partner-1.jpg",
@@ -94,10 +94,35 @@ const getPosterUrl = (posterUrl) => {
 
 const Home = () => {
   const [movies, setMovies] = useState([]);
+  const [banners, setBanners] = useState(defaultBanners);
   const [loading, setLoading] = useState(true);
 
   // Banner bắt đầu từ ảnh đầu tiên
   const [currentBanner, setCurrentBanner] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch(`${API_BASE}/api/banners`)
+      .then((response) => {
+        if (!response.ok) throw new Error("Không thể tải banner");
+        return response.json();
+      })
+      .then((data) => {
+        if (cancelled || !Array.isArray(data) || data.length === 0) return;
+        setBanners(data.map((banner) => ({
+          id: banner.bannerId,
+          image: banner.imageUrl,
+          alt: banner.altText || "Banner Cinema Pass",
+        })));
+        setCurrentBanner(0);
+      })
+      .catch((error) => console.error("Lỗi lấy danh sách banner:", error));
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const showPreviousBanner = () => {
     setCurrentBanner((current) =>
