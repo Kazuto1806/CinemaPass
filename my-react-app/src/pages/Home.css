@@ -28,7 +28,7 @@
       rgba(8, 15, 35, 0.62) 45%,
       rgba(8, 15, 35, 0.88)
     ),
-    url("/assets/Rạp chiếu phim dưới ánh xanh tím.png") center top / cover no-repeat;
+    url("../assets/Rạp chiếu phim dưới ánh xanh tím.png") center top / cover no-repeat;
 
   filter: saturate(0.85);
 }
