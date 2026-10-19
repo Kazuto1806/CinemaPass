@@ -48,7 +48,7 @@
 .partner-banner {
   position: relative;
   width: 100%;
-  aspect-ratio: 1125 / 338;
+  aspect-ratio: 1125 / 420;
   min-height: 0;
   overflow: hidden;
   background: #171d35;
@@ -356,7 +356,7 @@
   }
 
   .partner-banner {
-    aspect-ratio: 16 / 6;
+    aspect-ratio: 16 / 8;
   }
 
   .partner-arrow {
