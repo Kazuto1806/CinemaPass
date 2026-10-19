@@ -40,22 +40,23 @@
 
 .partner-section {
   width: 100%;
-  max-width: 1125px;
-  margin: 0 auto 28px;
+  max-width: 1320px; /* Tăng giới hạn chiều ngang bằng navbar */
+  margin: 0 auto 36px;
   box-sizing: border-box;
 }
 
 .partner-banner {
   position: relative;
   width: 100%;
-  aspect-ratio: 1125 / 420;
-  min-height: 0;
+  /* Đổi sang tỉ lệ chuẩn 16/7 hoặc 16/6 để tăng chiều cao */
+  aspect-ratio: 16 / 6.5; 
+  min-height: 380px; /* Đảm bảo trên desktop luôn đủ cao */
   overflow: hidden;
   background: #171d35;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  border-radius: 8px;
   box-sizing: border-box;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
 }
 
 .partner-banner-image {
