@@ -178,19 +178,6 @@ using (var scope = app.Services.CreateScope())
         if (app.Environment.IsDevelopment())
         {
             db.Database.EnsureCreated();
-
-            db.Database.ExecuteSqlRaw(@"
-                IF OBJECT_ID(N'dbo.Banners', N'U') IS NULL
-                BEGIN
-                    CREATE TABLE dbo.Banners (
-                        BannerId int IDENTITY(1,1) NOT NULL
-                            CONSTRAINT PK_Banners PRIMARY KEY,
-                        ImageUrl nvarchar(max) NOT NULL,
-                        AltText nvarchar(max) NOT NULL,
-                        DisplayOrder int NOT NULL,
-                        CreatedAt datetime2 NOT NULL
-                    );
-                END;");
         }
         else
         {
@@ -228,6 +215,19 @@ using (var scope = app.Services.CreateScope())
             throw;
         }
     }
+
+    db.Database.ExecuteSqlRaw(@"
+        IF OBJECT_ID(N'dbo.Banners', N'U') IS NULL
+        BEGIN
+            CREATE TABLE dbo.Banners (
+                BannerId int IDENTITY(1,1) NOT NULL
+                    CONSTRAINT PK_Banners PRIMARY KEY,
+                ImageUrl nvarchar(max) NOT NULL,
+                AltText nvarchar(max) NOT NULL,
+                DisplayOrder int NOT NULL,
+                CreatedAt datetime2 NOT NULL
+            );
+        END;");
 }
 
 // =====================================================
