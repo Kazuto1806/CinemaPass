@@ -29,6 +29,7 @@
       rgba(8, 15, 35, 0.72)
     ),
     url("../assets/Rạp chiếu phim dưới ánh xanh tím.png") center top / cover no-repeat;
+  background-attachment: scroll, fixed;
 
   filter: saturate(1.5);
 }
