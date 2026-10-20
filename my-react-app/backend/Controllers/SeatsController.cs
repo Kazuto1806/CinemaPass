@@ -320,13 +320,13 @@ namespace CinemaBackend.Controllers
                 });
             }
 
-           var hold = await _context.SeatHolds
-    .FirstOrDefaultAsync(h =>
-        h.ShowtimeId == request.ShowtimeId &&
-        h.HoldToken == token &&
-        _context.Seats.Any(seat =>
-            seat.SeatId == h.SeatId &&
-            seat.SeatCode == seatCode));
+                 var hold = await _context.SeatHolds
+                 .FirstOrDefaultAsync(h =>
+                    h.ShowtimeId == request.ShowtimeId &&
+                    h.HoldToken == token &&
+                  _context.Seats.Any(seat =>
+                  seat.SeatId == h.SeatId &&
+                  seat.SeatCode == seatCode));
 
             if (hold == null)
             {

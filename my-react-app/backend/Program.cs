@@ -7,8 +7,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using System.Net;
 using System.Text;
-using CinemaBackend.Services;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// =====================================================
+// SERVICES
+// =====================================================
+
 builder.Services.AddHttpClient<TmdbService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -20,7 +25,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     )
 );
 
-// Đăng ký dịch vụ Cloudinary
+// =====================================================
+// CLOUDINARY
+// =====================================================
+
 var cloudName = builder.Configuration["Cloudinary:CloudName"]
     ?? Environment.GetEnvironmentVariable("Cloudinary__CloudName");
 
@@ -30,9 +38,9 @@ var apiKey = builder.Configuration["Cloudinary:ApiKey"]
 var apiSecret = builder.Configuration["Cloudinary:ApiSecret"]
     ?? Environment.GetEnvironmentVariable("Cloudinary__ApiSecret");
 
-if (!string.IsNullOrEmpty(cloudName) &&
-    !string.IsNullOrEmpty(apiKey) &&
-    !string.IsNullOrEmpty(apiSecret))
+if (!string.IsNullOrWhiteSpace(cloudName) &&
+    !string.IsNullOrWhiteSpace(apiKey) &&
+    !string.IsNullOrWhiteSpace(apiSecret))
 {
     var cloudinaryAccount = new Account(
         cloudName,
@@ -44,12 +52,19 @@ if (!string.IsNullOrEmpty(cloudName) &&
     builder.Services.AddSingleton(cloudinary);
 }
 
+// =====================================================
+// CORS
+// =====================================================
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReact", policy =>
     {
         policy
-            .AllowAnyOrigin()
+            .WithOrigins(
+                "https://www.cinemapass.id.vn",
+                "https://cinemapass.id.vn"
+            )
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -57,7 +72,10 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Bảo vệ Swagger bằng Basic Authentication
+// =====================================================
+// SWAGGER BASIC AUTHENTICATION
+// =====================================================
+
 app.UseWhen(
     context => context.Request.Path.StartsWithSegments("/swagger"),
     swaggerApp =>
@@ -73,7 +91,8 @@ app.UseWhen(
             if (string.IsNullOrWhiteSpace(expectedUser) ||
                 string.IsNullOrWhiteSpace(expectedPassword))
             {
-                context.Response.StatusCode = 503;
+                context.Response.StatusCode =
+                    StatusCodes.Status503ServiceUnavailable;
 
                 await context.Response.WriteAsync(
                     "Swagger authentication is not configured."
@@ -133,6 +152,15 @@ app.UseWhen(
     }
 );
 
+// =====================================================
+// HTTP PIPELINE
+// =====================================================
+
+// CORS phải được đặt trước controller endpoints.
+app.UseRouting();
+app.UseCors("AllowReact");
+
+// Swagger vẫn được bảo vệ bằng Basic Authentication.
 app.UseSwagger();
 
 app.UseSwaggerUI(options =>
@@ -142,6 +170,10 @@ app.UseSwaggerUI(options =>
         "Cinema Pass API V1"
     );
 });
+
+// =====================================================
+// STATIC FILES
+// =====================================================
 
 var uploadsRoot = Path.Combine(
     app.Environment.ContentRootPath,
@@ -159,8 +191,6 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(uploadsRoot),
     RequestPath = "/uploads"
 });
-
-app.UseCors("AllowReact");
 
 // =====================================================
 // DATABASE
@@ -184,7 +214,9 @@ using (var scope = app.Services.CreateScope())
             db.Database.Migrate();
         }
     }
-    catch (Exception ex) when (ex is InvalidOperationException || ex is Microsoft.Data.SqlClient.SqlException)
+    catch (Exception ex) when (
+        ex is InvalidOperationException ||
+        ex is Microsoft.Data.SqlClient.SqlException)
     {
         var connection = db.Database.GetDbConnection();
 
@@ -194,6 +226,7 @@ using (var scope = app.Services.CreateScope())
         }
 
         using var command = connection.CreateCommand();
+
         command.CommandText = @"
             SELECT CASE
                 WHEN EXISTS (
@@ -206,14 +239,12 @@ using (var scope = app.Services.CreateScope())
 
         var result = Convert.ToInt32(command.ExecuteScalar());
 
-        if (result == 1)
-        {
-            // Database already exists with tables; do not crash startup.
-        }
-        else
+        if (result != 1)
         {
             throw;
         }
+
+        // Database đã có bảng Cinemas nên không dừng ứng dụng.
     }
 
     db.Database.ExecuteSqlRaw(@"
@@ -231,7 +262,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 // =====================================================
-// UPLOAD ẢNH LÊN CLOUDINARY
+// UPLOAD IMAGE TO CLOUDINARY
 // =====================================================
 
 app.MapPost(
