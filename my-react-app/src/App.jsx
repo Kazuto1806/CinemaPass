@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import { NotificationProvider } from "./components/NotificationProvider";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -33,7 +34,7 @@ import "./App.css";
 
 function App() {
   return (
-    <>
+    <NotificationProvider>
       <Header />
 
       <Routes>
@@ -223,7 +224,7 @@ function App() {
       </Routes>
 
       <Footer />
-    </>
+    </NotificationProvider>
   );
 }
 

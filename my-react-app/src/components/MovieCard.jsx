@@ -2,6 +2,7 @@
 import { useState } from "react";
 import "./MovieCard.css";
 import TrailerModal from "./TrailerModal";
+import { useNotification } from "./useNotification";
 import { API_BASE, getMissingPosterFallback } from "../constants";
 
 const getPosterUrl = (posterUrl) => {
@@ -44,6 +45,7 @@ const getPosterUrl = (posterUrl) => {
 
 function MovieCard({ movie }) {
   const [showTrailer, setShowTrailer] = useState(false);
+  const { notify } = useNotification();
 
   const trailerUrl = movie?.trailerUrl ?? movie?.TrailerUrl ?? "";
 
@@ -52,7 +54,7 @@ function MovieCard({ movie }) {
     event.stopPropagation();
 
     if (!trailerUrl.trim()) {
-      window.alert("Phim này chưa có trailer.");
+      notify("Phim này chưa có trailer.", "warning");
       return;
     }
 
@@ -63,8 +65,9 @@ function MovieCard({ movie }) {
       const isYouTubeLike = /youtube\.com|youtu\.be|vimeo\.com/i.test(trailerValue);
 
       if (!isYouTubeLike) {
-        window.alert(
-          "Link trailer chưa được hỗ trợ. Ông hãy dùng link YouTube hoặc link video MP4 trực tiếp."
+        notify(
+          "Link trailer chưa được hỗ trợ. Ông hãy dùng link YouTube hoặc link video MP4 trực tiếp.",
+          "warning"
         );
         return;
       }

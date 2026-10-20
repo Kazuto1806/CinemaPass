@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useNotification } from "../components/useNotification";
 import {
   FaCalendarAlt,
   FaChair,
@@ -118,6 +119,7 @@ const currency = (value) =>
 function Booking() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { notify } = useNotification();
 
   // CHẶN ĐẶT VÉ KHI CHƯA ĐĂNG NHẬP
   // Lưu lại trang hiện tại để đăng nhập xong quay lại đúng suất/phim đang chọn.
@@ -614,12 +616,12 @@ function Booking() {
     const currentlySelected = selectedSeats.includes(seatCode);
 
     if (!currentlySelected && reservedSeats.includes(seatCode)) {
-      alert("Ghế này đã được đặt hoặc đang được khách khác giữ. Vui lòng chọn ghế khác.");
+      notify("Ghế này đã được đặt hoặc đang được khách khác giữ. Vui lòng chọn ghế khác.", "warning");
       return;
     }
 
     if (!currentlySelected && selectedSeats.length >= 8) {
-      alert("Mỗi lần chỉ có thể chọn tối đa 8 ghế.");
+      notify("Mỗi lần chỉ có thể chọn tối đa 8 ghế.", "warning");
       return;
     }
 
@@ -671,7 +673,7 @@ function Booking() {
       }
     } catch (error) {
       console.error("Lỗi giữ/nhả ghế:", error);
-      alert(error.message || "Không thể cập nhật ghế. Vui lòng thử lại.");
+      notify(error.message || "Không thể cập nhật ghế. Vui lòng thử lại.");
 
       // Tải lại sơ đồ ngay nếu ghế vừa bị khách khác giữ.
       try {
@@ -699,22 +701,19 @@ function Booking() {
     if (redirectToLogin()) return;
 
     if (!selectedShowtime) {
-      alert(
-        "Vui lòng chọn suất chiếu trước khi tiếp tục."
-      );
+      notify("Vui lòng chọn suất chiếu trước khi tiếp tục.", "warning");
       return;
     }
 
     if (!selectedSeats.length) {
-      alert(
-        "Vui lòng chọn ít nhất một ghế trước khi tiếp tục."
-      );
+      notify("Vui lòng chọn ít nhất một ghế trước khi tiếp tục.", "warning");
       return;
     }
 
     if (!availableTicketTypes.length) {
-      alert(
-        "Suất chiếu này chưa có chính sách vé. Vui lòng chọn suất khác hoặc liên hệ rạp."
+      notify(
+        "Suất chiếu này chưa có chính sách vé. Vui lòng chọn suất khác hoặc liên hệ rạp.",
+        "warning"
       );
       return;
     }
@@ -725,7 +724,7 @@ function Booking() {
           Number(ticketType.ticketTypeId) === Number(selectedTicketTypeId)
       )
     ) {
-      alert("Vui lòng chọn loại vé.");
+      notify("Vui lòng chọn loại vé.", "warning");
       return;
     }
 
@@ -750,24 +749,22 @@ function Booking() {
     if (redirectToLogin()) return;
 
     if (!selectedShowtime) {
-      alert("Vui lòng chọn suất chiếu.");
+      notify("Vui lòng chọn suất chiếu.", "warning");
       return;
     }
 
     if (!selectedSeats.length) {
-      alert("Vui lòng chọn ít nhất một ghế.");
+      notify("Vui lòng chọn ít nhất một ghế.", "warning");
       return;
     }
 
     if (!selectedTicketTypeId) {
-      alert("Vui lòng chọn loại vé.");
+      notify("Vui lòng chọn loại vé.", "warning");
       return;
     }
 
     if (!paymentConfirmed) {
-      alert(
-        "Vui lòng xác nhận bạn đã thanh toán trước khi tiếp tục."
-      );
+      notify("Vui lòng xác nhận bạn đã thanh toán trước khi tiếp tục.", "warning");
       return;
     }
 
@@ -836,7 +833,7 @@ function Booking() {
     } catch (error) {
       console.error("Lỗi thanh toán:", error);
 
-      alert(
+      notify(
         error.message ||
           "Có lỗi xảy ra khi thanh toán."
       );

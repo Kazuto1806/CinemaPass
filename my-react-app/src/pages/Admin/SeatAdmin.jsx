@@ -9,6 +9,7 @@ import {
   FaLayerGroup,
 } from "react-icons/fa";
 
+import { useNotification } from "../../components/useNotification";
 import "./SeatAdmin.css";
 
 import { API_BASE } from "../../constants";
@@ -31,6 +32,7 @@ const parseResponse = async (response) => {
   }
 };
 function SeatAdmin() {
+  const { notify, confirm } = useNotification();
   const [rooms, setRooms] = useState([]);
   const [seats, setSeats] = useState([]);
 
@@ -90,9 +92,7 @@ function SeatAdmin() {
     } catch (error) {
       console.error(error);
 
-      alert(
-        "Không thể tải danh sách phòng chiếu."
-      );
+      notify("Không thể tải danh sách phòng chiếu.");
     } finally {
       setLoadingRooms(false);
     }
@@ -131,9 +131,7 @@ function SeatAdmin() {
     } catch (error) {
       console.error(error);
 
-      alert(
-        "Không thể tải danh sách ghế."
-      );
+      notify("Không thể tải danh sách ghế.");
 
       setSeats([]);
     } finally {
@@ -287,9 +285,7 @@ function SeatAdmin() {
 
   const handleAddSeat = () => {
     if (!selectedRoomId) {
-      alert(
-        "Vui lòng chọn phòng chiếu."
-      );
+      notify("Vui lòng chọn phòng chiếu.", "warning");
       return;
     }
 
@@ -340,9 +336,7 @@ function SeatAdmin() {
     event.preventDefault();
 
     if (!selectedRoomId) {
-      alert(
-        "Vui lòng chọn phòng chiếu."
-      );
+      notify("Vui lòng chọn phòng chiếu.", "warning");
       return;
     }
 
@@ -360,37 +354,27 @@ function SeatAdmin() {
       );
 
     if (rows <= 0) {
-      alert(
-        "Số hàng phải lớn hơn 0."
-      );
+      notify("Số hàng phải lớn hơn 0.", "warning");
       return;
     }
 
     if (rows > 26) {
-      alert(
-        "Chỉ hỗ trợ tối đa 26 hàng từ A đến Z."
-      );
+      notify("Chỉ hỗ trợ tối đa 26 hàng từ A đến Z.", "warning");
       return;
     }
 
     if (seatsPerRow <= 0) {
-      alert(
-        "Số ghế mỗi hàng phải lớn hơn 0."
-      );
+      notify("Số ghế mỗi hàng phải lớn hơn 0.", "warning");
       return;
     }
 
     if (seatsPerRow > 50) {
-      alert(
-        "Số ghế mỗi hàng không được vượt quá 50."
-      );
+      notify("Số ghế mỗi hàng không được vượt quá 50.", "warning");
       return;
     }
 
     if (capacity <= 0) {
-      alert(
-        "Phòng chưa có sức chứa hợp lệ."
-      );
+      notify("Phòng chưa có sức chứa hợp lệ.", "warning");
       return;
     }
 
@@ -400,9 +384,7 @@ function SeatAdmin() {
     );
 
     if (seats.length > 0) {
-      alert(
-        "Phòng này đã có ghế. Hãy xóa sơ đồ cũ trước khi tạo lại."
-      );
+      notify("Phòng này đã có ghế. Hãy xóa sơ đồ cũ trước khi tạo lại.", "warning");
       return;
     }
 
@@ -445,9 +427,7 @@ function SeatAdmin() {
         );
       }
 
-      alert(
-        `Đã tạo ${data.createdCount || expectedTotal} ghế thành công.`
-      );
+      notify(`Đã tạo ${data.createdCount || expectedTotal} ghế thành công.`, "success");
 
       setShowForm(false);
 
@@ -457,7 +437,7 @@ function SeatAdmin() {
     } catch (error) {
       console.error(error);
 
-      alert(
+      notify(
         error.message ||
         `Không thể tạo sơ đồ ghế. HTTP ${response.status}`
       );
@@ -473,10 +453,10 @@ function SeatAdmin() {
   const handleDeleteSeat = async (
     seat
   ) => {
-    const confirmed =
-      window.confirm(
-        `Bạn có chắc muốn xóa ghế ${seat.seatCode}?`
-      );
+    const confirmed = await confirm(
+      `Bạn có chắc muốn xóa ghế ${seat.seatCode}?`,
+      { confirmLabel: "Xóa" }
+    );
 
     if (!confirmed) {
       return;
@@ -505,16 +485,11 @@ function SeatAdmin() {
         selectedRoomId
       );
 
-      alert(
-        "Xóa ghế thành công."
-      );
+      notify("Xóa ghế thành công.", "success");
     } catch (error) {
       console.error(error);
 
-      alert(
-        error.message ||
-        "Không thể xóa ghế."
-      );
+      notify(error.message || "Không thể xóa ghế.");
     }
   };
 
@@ -528,16 +503,14 @@ function SeatAdmin() {
     }
 
     if (seats.length === 0) {
-      alert(
-        "Phòng này chưa có ghế."
-      );
+      notify("Phòng này chưa có ghế.", "warning");
       return;
     }
 
-    const confirmed =
-      window.confirm(
-        `Bạn có chắc muốn xóa toàn bộ ${seats.length} ghế của ${selectedRoom?.roomName}?`
-      );
+    const confirmed = await confirm(
+      `Bạn có chắc muốn xóa toàn bộ ${seats.length} ghế của ${selectedRoom?.roomName}?`,
+      { confirmLabel: "Xóa tất cả" }
+    );
 
     if (!confirmed) {
       return;
@@ -568,16 +541,11 @@ function SeatAdmin() {
         selectedRoomId
       );
 
-      alert(
-        "Đã xóa toàn bộ sơ đồ ghế."
-      );
+      notify("Đã xóa toàn bộ sơ đồ ghế.", "success");
     } catch (error) {
       console.error(error);
 
-      alert(
-        error.message ||
-        "Không thể xóa sơ đồ ghế."
-      );
+      notify(error.message || "Không thể xóa sơ đồ ghế.");
     } finally {
       setDeleting(false);
     }

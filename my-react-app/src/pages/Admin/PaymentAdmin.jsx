@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNotification } from "../../components/useNotification";
 import { API_BASE } from "../../constants";
 import "./PaymentAdmin.css";
 
@@ -45,6 +46,7 @@ function getPaymentClass(status) {
 }
 
 export default function PaymentAdmin() {
+  const { notify } = useNotification();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -205,9 +207,7 @@ export default function PaymentAdmin() {
       paymentStatus === "Đã thanh toán" &&
       !paymentMethod
     ) {
-      alert(
-        "Vui lòng chọn phương thức thanh toán."
-      );
+      notify("Vui lòng chọn phương thức thanh toán.", "warning");
       return;
     }
 
@@ -244,18 +244,13 @@ export default function PaymentAdmin() {
         );
       }
 
-      alert(
-        "Cập nhật thanh toán thành công."
-      );
+      notify("Cập nhật thanh toán thành công.", "success");
 
       setSelectedTicket(null);
 
       await loadTickets();
     } catch (err) {
-      alert(
-        err.message ||
-          "Có lỗi khi cập nhật thanh toán."
-      );
+      notify(err.message || "Có lỗi khi cập nhật thanh toán.");
     } finally {
       setSaving(false);
     }

@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 
 import NotificationPopup from "../../components/NotificationPopup";
+import { useNotification } from "../../components/useNotification";
 import { API_BASE } from "../../constants";
 
 import "./TicketTypeAdmin.css";
@@ -41,6 +42,7 @@ const EMPTY_FORM = {
 };
 
 function TicketTypeAdmin() {
+  const { confirm } = useNotification();
   const [ticketTypes, setTicketTypes] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -371,8 +373,9 @@ function TicketTypeAdmin() {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Bạn có chắc muốn xóa loại vé "${name}" không?`
+    const confirmed = await confirm(
+      `Bạn có chắc muốn xóa loại vé "${name}" không?`,
+      { confirmLabel: "Xóa" }
     );
 
     if (!confirmed) {

@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { FaImage, FaTrash, FaUpload } from "react-icons/fa";
 import { API_BASE } from "../../constants";
+import { useNotification } from "../../components/useNotification";
 import "./BannerAdmin.css";
 
 const API_URL = `${API_BASE}/api/banners`;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 function BannerAdmin() {
+	const { confirm } = useNotification();
 	const [banners, setBanners] = useState([]);
 	const [imageFile, setImageFile] = useState(null);
 	const [altText, setAltText] = useState("");
@@ -129,7 +131,10 @@ function BannerAdmin() {
 	};
 
 	const handleDelete = async (bannerId) => {
-		if (!window.confirm("Bạn có chắc muốn xóa banner này?")) return;
+		const confirmed = await confirm("Bạn có chắc muốn xóa banner này?", {
+			confirmLabel: "Xóa",
+		});
+		if (!confirmed) return;
 
 		try {
 			setDeletingId(bannerId);

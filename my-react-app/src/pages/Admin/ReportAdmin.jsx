@@ -11,6 +11,7 @@ import {
   FaSearch,
 } from "react-icons/fa";
 
+import { useNotification } from "../../components/useNotification";
 import { API_BASE } from "../../constants";
 import "./ReportAdmin.css";
 const REPORT_API = `${API_BASE}/api/reports`;
@@ -68,6 +69,7 @@ async function readResponse(response) {
 }
 
 function ReportAdmin() {
+  const { notify } = useNotification();
   const [filters, setFilters] = useState({
     startDate: getDateInput(-29),
     endDate: getDateInput(),
@@ -189,7 +191,7 @@ function ReportAdmin() {
     const rows = report.tickets || [];
 
     if (rows.length === 0) {
-      alert("Không có dữ liệu vé để xuất.");
+      notify("Không có dữ liệu vé để xuất.", "warning");
       return;
     }
 

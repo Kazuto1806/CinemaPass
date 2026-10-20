@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNotification } from "../../components/useNotification";
 import { API_BASE } from "../../constants";
 import "./FoodOrderAdmin.css";
 
 function FoodOrderAdmin() {
+  const { notify } = useNotification();
   const [orders, setOrders] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("Tất cả");
@@ -144,7 +146,7 @@ function FoodOrderAdmin() {
       }
     } catch (err) {
       console.error(err);
-      alert(err.message || "Có lỗi xảy ra khi cập nhật trạng thái.");
+      notify(err.message || "Có lỗi xảy ra khi cập nhật trạng thái.");
     } finally {
       setUpdating(false);
     }
