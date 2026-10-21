@@ -1,11 +1,14 @@
 
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import MovieCard from "../components/MovieCard";
+import QuickBooking from "../components/QuickBooking";
 import "./Home.css";
 import { API_BASE, getMissingPosterFallback } from "../constants";
 
 const API_URL = `${API_BASE}/api/movies`;
+const CINEMA_API_URL = `${API_BASE}/api/cinemas`;
+const SHOWTIME_API_URL = `${API_BASE}/api/showtimes`;
 const MOVIES_PER_PAGE = 4;
 
 // ==========================================
@@ -93,7 +96,14 @@ const getPosterUrl = (posterUrl) => {
 };
 
 const Home = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [movies, setMovies] = useState([]);
+  const [cinemas, setCinemas] = useState([]);
+  const [showtimes, setShowtimes] = useState([]);
+  const [bookingDataError, setBookingDataError] = useState("");
+  const [movieDataError, setMovieDataError] = useState("");
+  const [bookingOptionsLoading, setBookingOptionsLoading] = useState(true);
   const [banners, setBanners] = useState(defaultBanners);
   const [loading, setLoading] = useState(true);
 
@@ -149,21 +159,27 @@ const Home = () => {
           throw new Error("Không thể lấy danh sách phim");
         }
 
-        const data = await response.json();
+        const movieData = await response.json();
 
-        const moviesWithPoster = data.map((movie) => ({
+        const moviesWithPoster = movieData.map((movie) => ({
           ...movie,
           posterUrl: getPosterUrl(movie.posterUrl),
         }));
 
         if (!cancelled) {
           setMovies(moviesWithPoster);
+          setMovieDataError("");
         }
       } catch (error) {
         console.error("Lỗi lấy danh sách phim:", error);
 
         if (!cancelled) {
           setMovies([]);
+          setMovieDataError(
+            error instanceof Error
+              ? error.message
+              : "Không thể tải danh sách phim"
+          );
         }
       } finally {
         if (!cancelled) {
@@ -178,6 +194,110 @@ const Home = () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadBookingOptions = async () => {
+      try {
+        const [cinemaResponse, showtimeResponse] = await Promise.all([
+          fetch(CINEMA_API_URL),
+          fetch(SHOWTIME_API_URL),
+        ]);
+
+        if (!cinemaResponse.ok) {
+          throw new Error("Không thể lấy danh sách rạp");
+        }
+
+        if (!showtimeResponse.ok) {
+          throw new Error("Không thể lấy danh sách suất chiếu");
+        }
+
+        const [cinemaData, showtimeData] = await Promise.all([
+          cinemaResponse.json(),
+          showtimeResponse.json(),
+        ]);
+
+        if (!Array.isArray(cinemaData) || !Array.isArray(showtimeData)) {
+          throw new Error("Dữ liệu đặt vé từ máy chủ không hợp lệ");
+        }
+
+        const activeCinemas = cinemaData
+          .filter((cinema) => {
+            const status = String(cinema.status ?? "").trim().toLowerCase();
+            return !status || status === "active" || status === "đang hoạt động";
+          })
+          .map((cinema) => ({
+            id: cinema.cinemaId,
+            name: cinema.name,
+          }));
+
+        const today = new Date().toLocaleDateString("en-CA");
+        const currentTime = new Date().toTimeString().slice(0, 5);
+        const availableShowtimes = showtimeData
+          .filter((showtime) => {
+            const status = String(showtime.status ?? "").trim().toLowerCase();
+            const date = String(showtime.showDate ?? "").slice(0, 10);
+            const time = String(showtime.startTime ?? "").slice(0, 5);
+            const isActive =
+              !status ||
+              status === "active" ||
+              status === "đang hoạt động";
+
+            return (
+              isActive &&
+              date >= today &&
+              (date !== today || time >= currentTime)
+            );
+          })
+          .map((showtime) => ({
+            id: showtime.showtimeId,
+            cinemaId: showtime.cinemaId,
+            movieId: showtime.movieId,
+            date: String(showtime.showDate).slice(0, 10),
+            time: String(showtime.startTime).slice(0, 5),
+          }));
+
+        if (!cancelled) {
+          setCinemas(activeCinemas);
+          setShowtimes(availableShowtimes);
+          setBookingDataError("");
+        }
+      } catch (error) {
+        console.error("Lỗi tải rạp và suất chiếu:", error);
+
+        if (!cancelled) {
+          setCinemas([]);
+          setShowtimes([]);
+          setBookingDataError(
+            error instanceof Error
+              ? error.message
+              : "Không thể tải dữ liệu đặt vé"
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setBookingOptionsLoading(false);
+        }
+      }
+    };
+
+    loadBookingOptions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (location.hash !== "#quick-booking") return;
+
+    requestAnimationFrame(() => {
+      document
+        .getElementById("quick-booking")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }, [location.hash, location.pathname]);
 
   // Lọc phim theo trạng thái
   const nowShowingMovies = movies.filter(
@@ -248,6 +368,20 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      <QuickBooking
+        cinemas={cinemas}
+        movies={movies.map((movie) => ({
+          id: movie.movieId,
+          title: movie.title,
+        }))}
+        showtimes={showtimes}
+        loading={loading || bookingOptionsLoading}
+        error={movieDataError || bookingDataError}
+        onBook={({ showtimeId }) =>
+          navigate(`/booking?showtimeId=${encodeURIComponent(showtimeId)}`)
+        }
+      />
 
       {/* PHIM ĐANG CHIẾU */}
       <section className="movie-section">

@@ -298,9 +298,7 @@ function Header() {
             <button
               type="button"
               className="header-btn booking-btn"
-              onClick={() =>
-                navigate("/booking")
-              }
+              onClick={() => navigate("/#quick-booking")}
             >
               <FaTicketAlt />
 

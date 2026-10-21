@@ -160,6 +160,7 @@ function Booking() {
   const queryParams = new URLSearchParams(location.search);
   const selectedMovieNameFromUrl = queryParams.get("movieName")?.trim();
   const selectedMovieIdFromUrl = Number(queryParams.get("movieId"));
+  const selectedShowtimeIdFromUrl = Number(queryParams.get("showtimeId"));
 
   const [movies, setMovies] = useState([]);
   const [showtimes, setShowtimes] = useState([]);
@@ -303,15 +304,43 @@ function Booking() {
       }
     }
 
+    const showtimeFromUrl = showtimes.find(
+      (showtime) =>
+        Number(showtime.showtimeId) === selectedShowtimeIdFromUrl
+    );
+
+    if (showtimeFromUrl) {
+      setSelectedMovieId(Number(showtimeFromUrl.movieId));
+      return;
+    }
+
+    if (
+      Number.isInteger(selectedMovieIdFromUrl) &&
+      selectedMovieIdFromUrl > 0 &&
+      movies.some(
+        (movie) => Number(movie.movieId) === selectedMovieIdFromUrl
+      )
+    ) {
+      setSelectedMovieId(selectedMovieIdFromUrl);
+      return;
+    }
+
     if (
       !selectedMovieId ||
       !movies.some(
-        (movie) => movie.movieId === selectedMovieId
+        (movie) => Number(movie.movieId) === Number(selectedMovieId)
       )
     ) {
       setSelectedMovieId(movies[0].movieId);
     }
-  }, [movies, selectedMovieId, selectedMovieNameFromUrl]);
+  }, [
+    movies,
+    selectedMovieId,
+    selectedMovieIdFromUrl,
+    selectedMovieNameFromUrl,
+    selectedShowtimeIdFromUrl,
+    showtimes,
+  ]);
 
   const selectedMovie = useMemo(
     () =>
@@ -336,7 +365,7 @@ function Booking() {
   const dates = useMemo(() => {
     const uniqueDates = [
       ...new Set(
-        movieShowtimes.map((item) => item.showDate)
+        movieShowtimes.map((item) => String(item.showDate).slice(0, 10))
       ),
     ];
 
@@ -351,20 +380,30 @@ function Booking() {
       return;
     }
 
+    const requestedShowtime = movieShowtimes.find(
+      (item) =>
+        Number(item.showtimeId) === selectedShowtimeIdFromUrl
+    );
+    const requestedDate = requestedShowtime
+      ? String(requestedShowtime.showDate).slice(0, 10)
+      : "";
     const firstDate = dates[0];
 
     setSelectedDate((current) =>
-      current && dates.includes(current)
-        ? current
-        : firstDate
+      requestedDate && dates.includes(requestedDate)
+        ? requestedDate
+        : current && dates.includes(current)
+          ? current
+          : firstDate
     );
-  }, [dates]);
+  }, [dates, movieShowtimes, selectedShowtimeIdFromUrl]);
 
   const timeOptions = useMemo(() => {
     if (!selectedDate) return [];
 
     const filtered = movieShowtimes.filter(
-      (item) => item.showDate === selectedDate
+      (item) =>
+        String(item.showDate).slice(0, 10) === selectedDate
     );
 
     const unique = filtered.reduce((acc, item) => {
@@ -406,32 +445,51 @@ function Booking() {
     }
 
     const firstGroup = timeOptions[0];
+    const requestedShowtime = movieShowtimes.find(
+      (item) =>
+        Number(item.showtimeId) === selectedShowtimeIdFromUrl &&
+        String(item.showDate).slice(0, 10) === selectedDate
+    );
+    const requestedCinema = requestedShowtime?.cinemaName || "";
+    const preferredCinema =
+      requestedCinema &&
+      timeOptions.some((group) => group.cinemaName === requestedCinema)
+        ? requestedCinema
+        : "";
 
-    if (
-      !selectedCinema ||
-      !timeOptions.some(
-        (group) => group.cinemaName === selectedCinema
-      )
-    ) {
-      setSelectedCinema(firstGroup.cinemaName);
-    }
+    const currentCinemaIsAvailable = timeOptions.some(
+      (group) => group.cinemaName === selectedCinema
+    );
+    const nextCinema = preferredCinema ||
+      (currentCinemaIsAvailable ? selectedCinema : firstGroup.cinemaName);
+    setSelectedCinema(nextCinema);
 
     const currentGroup =
       timeOptions.find(
-        (group) => group.cinemaName === selectedCinema
+        (group) => group.cinemaName === nextCinema
       ) || firstGroup;
 
     const firstTime =
       currentGroup?.times[0]?.time || "";
+    const requestedTime = requestedShowtime
+      ? formatTime(requestedShowtime.startTime)
+      : "";
 
     setSelectedTime((value) =>
-      currentGroup?.times.some(
-        (item) => item.time === value
-      )
-        ? value
-        : firstTime
+      requestedTime &&
+      currentGroup?.times.some((item) => item.time === requestedTime)
+        ? requestedTime
+        : currentGroup?.times.some((item) => item.time === value)
+          ? value
+          : firstTime
     );
-  }, [selectedCinema, selectedDate, timeOptions]);
+  }, [
+    movieShowtimes,
+    selectedCinema,
+    selectedDate,
+    selectedShowtimeIdFromUrl,
+    timeOptions,
+  ]);
 
   const selectedShowtime = useMemo(() => {
     if (
@@ -442,9 +500,19 @@ function Booking() {
       return null;
     }
 
+    const requestedShowtime = movieShowtimes.find(
+      (item) =>
+        Number(item.showtimeId) === selectedShowtimeIdFromUrl &&
+        String(item.showDate).slice(0, 10) === selectedDate &&
+        (item.cinemaName || "") === selectedCinema &&
+        formatTime(item.startTime) === selectedTime
+    );
+
+    if (requestedShowtime) return requestedShowtime;
+
     return movieShowtimes.find(
       (item) =>
-        item.showDate === selectedDate &&
+        String(item.showDate).slice(0, 10) === selectedDate &&
         (item.cinemaName || "") === selectedCinema &&
         formatTime(item.startTime) === selectedTime
     );
@@ -452,6 +520,7 @@ function Booking() {
     movieShowtimes,
     selectedCinema,
     selectedDate,
+    selectedShowtimeIdFromUrl,
     selectedTime,
   ]);
 
