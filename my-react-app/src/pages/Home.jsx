@@ -295,7 +295,7 @@ const Home = () => {
     requestAnimationFrame(() => {
       document
         .getElementById("quick-booking")
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }, [location.hash, location.pathname]);
 
@@ -318,9 +318,26 @@ const Home = () => {
     0,
     MOVIES_PER_PAGE
   );
+  const showQuickBooking = location.hash === "#quick-booking";
 
   return (
     <main className="home">
+      {showQuickBooking && (
+        <QuickBooking
+          cinemas={cinemas}
+          movies={movies.map((movie) => ({
+            id: movie.movieId,
+            title: movie.title,
+          }))}
+          showtimes={showtimes}
+          loading={loading || bookingOptionsLoading}
+          error={movieDataError || bookingDataError}
+          onBook={({ showtimeId }) =>
+            navigate(`/booking?showtimeId=${encodeURIComponent(showtimeId)}`)
+          }
+        />
+      )}
+
       {/* BANNER PARTNER */}
       <section className="partner-section" aria-label="Đối tác">
         <div className="partner-banner">
@@ -368,20 +385,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      <QuickBooking
-        cinemas={cinemas}
-        movies={movies.map((movie) => ({
-          id: movie.movieId,
-          title: movie.title,
-        }))}
-        showtimes={showtimes}
-        loading={loading || bookingOptionsLoading}
-        error={movieDataError || bookingDataError}
-        onBook={({ showtimeId }) =>
-          navigate(`/booking?showtimeId=${encodeURIComponent(showtimeId)}`)
-        }
-      />
 
       {/* PHIM ĐANG CHIẾU */}
       <section className="movie-section">
