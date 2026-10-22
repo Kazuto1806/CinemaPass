@@ -257,20 +257,29 @@
   gap: 12px;
 }
 
+
 .ticket-type-option {
   width: 100%;
+  box-sizing: border-box;
   padding: 16px;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  background: #fff;
-  color: #172033;
+  border: 1px solid #334563;
+  border-radius: 14px;
+  background: #17243d;
+  color: #f1f5ff;
   text-align: left;
   cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.ticket-type-option:hover {
+  background: #202e49;
+  border-color: #8b5cf6;
 }
 
 .ticket-type-option.active {
-  border: 2px solid #d4af37;
-  background: rgba(212, 175, 55, 0.08);
+  border: 2px solid #facc15;
+  background: #202b40;
+  color: #ffffff;
 }
 
 .ticket-type-option-content {
@@ -278,20 +287,23 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  color: white;
+  color: #ffffff;
 }
 
 .ticket-type-category-label {
   margin-top: 4px;
+  color: #aab7cf;
   font-size: 11px;
-  opacity: 0.65;
+  opacity: 1;
 }
 
 .ticket-type-description {
   margin-top: 4px;
+  color: #91a1bd;
   font-size: 13px;
-  opacity: 0.7;
+  opacity: 1;
 }
+
 
 .booking-summary {
   align-self: start;
