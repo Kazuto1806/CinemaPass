@@ -100,12 +100,15 @@
   font-size: 12px;
 }
 
+
 .booking-content {
   display: grid;
-  grid-template-columns: 1.4fr 0.9fr;
+  grid-template-columns: 0.9fr 1.4fr;
   gap: 24px;
   margin-top: 26px;
+  align-items: start;
 }
+
 
 .booking-panel {
   border-radius: 22px;
@@ -254,20 +257,29 @@
   gap: 12px;
 }
 
+
 .ticket-type-option {
   width: 100%;
+  box-sizing: border-box;
   padding: 16px;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  background: #fff;
-  color: #172033;
+  border: 1px solid #334563;
+  border-radius: 14px;
+  background: #17243d;
+  color: #f1f5ff;
   text-align: left;
   cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.ticket-type-option:hover {
+  background: #202e49;
+  border-color: #8b5cf6;
 }
 
 .ticket-type-option.active {
-  border: 2px solid #d4af37;
-  background: rgba(212, 175, 55, 0.08);
+  border: 2px solid #facc15;
+  background: #202b40;
+  color: #ffffff;
 }
 
 .ticket-type-option-content {
@@ -275,20 +287,23 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  color: white;
+  color: #ffffff;
 }
 
 .ticket-type-category-label {
   margin-top: 4px;
+  color: #aab7cf;
   font-size: 11px;
-  opacity: 0.65;
+  opacity: 1;
 }
 
 .ticket-type-description {
   margin-top: 4px;
+  color: #91a1bd;
   font-size: 13px;
-  opacity: 0.7;
+  opacity: 1;
 }
+
 
 .booking-summary {
   align-self: start;
@@ -313,12 +328,14 @@
   box-shadow: 0 0 16px rgba(169, 215, 255, 0.35);
 }
 
+
 .seat-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 8px;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
 }
+
 
 .seat-grid > .booking-empty-text {
   grid-column: 1 / -1;
@@ -338,6 +355,8 @@
   font-weight: 700;
   cursor: pointer;
   transition: 0.15s ease;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .seat:hover:not(:disabled) {
@@ -1079,4 +1098,118 @@
   .fake-card-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* =========================
+   CINEMAPASS - DARK CINEMA THEME
+========================= */
+
+:root {
+  --booking-bg: #080f20;
+  --booking-card: #111c33;
+  --booking-card-inner: #17243d;
+  --booking-border: #2b3d5e;
+  --booking-text: #f1f5ff;
+  --booking-muted: #9baac5;
+  --booking-purple: #8b5cf6;
+  --booking-purple-hover: #a78bfa;
+  --booking-yellow: #facc15;
+}
+
+/* Nền toàn trang */
+.booking-page {
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(124, 58, 237, 0.13),
+      transparent 42%
+    ),
+    linear-gradient(180deg, #0b1429, #070d1b);
+  color: var(--booking-text);
+}
+
+/* Hai khung chính */
+.booking-panel,
+.booking-left,
+.booking-right,
+.booking-content > div {
+  color: var(--booking-text);
+}
+
+/* Các thẻ nội dung */
+.booking-card,
+.booking-summary,
+.booking-info,
+.booking-content .ticket-card {
+  background: var(--booking-card-inner);
+  border: 1px solid var(--booking-border);
+  color: var(--booking-text);
+  border-radius: 14px;
+}
+
+/* Tên phim, thông tin nổi bật */
+.booking-page h1,
+.booking-page h2,
+.booking-page h3 {
+  color: #ffffff;
+}
+
+/* Nội dung phụ */
+.booking-page small,
+.booking-page .muted {
+  color: var(--booking-muted);
+}
+
+/* Giá tiền */
+.booking-page .price,
+.booking-page .total-price {
+  color: var(--booking-yellow);
+  font-weight: 700;
+}
+
+/* Nút chính */
+.booking-page button.primary,
+.booking-page .continue-button,
+.booking-page .payment-button {
+  background: linear-gradient(
+    135deg,
+    #7c3aed,
+    #a855f7
+  );
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  transition: filter 0.2s ease;
+}
+
+.booking-page button.primary:hover,
+.booking-page .continue-button:hover,
+.booking-page .payment-button:hover {
+  filter: brightness(1.12);
+}
+
+/* Thẻ loại vé được chọn */
+.booking-page .ticket-card.active,
+.booking-page .ticket-card.selected {
+  background: #202b40;
+  border: 2px solid var(--booking-yellow);
+  color: #ffffff;
+}
+
+/* Thẻ loại vé chưa chọn */
+.booking-page .ticket-card:not(.active):not(.selected) {
+  background: var(--booking-card-inner);
+  border: 1px solid var(--booking-border);
+  color: var(--booking-text);
+}
+
+/* Chú thích và thông tin ghế */
+.booking-page .seat-legend,
+.booking-page .booking-description {
+  color: var(--booking-muted);
+}
+
+/* Đường phân cách */
+.booking-page hr {
+  border-color: var(--booking-border);
 }

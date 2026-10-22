@@ -1,0 +1,116 @@
+
+.quick-booking {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  width: 100%;
+  padding: 24px 32px;
+  margin: 0 auto 48px;
+  box-sizing: border-box;
+  background: #edf1ff;
+  border-radius: 5px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.quick-booking h2 {
+  flex-shrink: 0;
+  margin: 0;
+  color: #343b4b;
+  font-size: 27px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.quick-booking-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.quick-booking-message {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #343b4b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.quick-booking-message[role="alert"] {
+  color: #b42318;
+}
+
+.quick-booking-fields select,
+.quick-booking-fields input {
+  width: 100%;
+  min-width: 0;
+  height: 58px;
+  padding: 0 14px;
+  border: 1px solid #aaa3a3;
+  border-radius: 11px;
+  background: #fff;
+  color: #6934a4;
+  font-size: 16px;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+.quick-booking-fields select {
+  cursor: pointer;
+}
+
+.quick-booking-fields button {
+  height: 58px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 11px;
+  background: #6934a4;
+  color: white;
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.quick-booking-fields button:hover:not(:disabled) {
+  background: #512582;
+  transform: translateY(-2px);
+}
+
+.quick-booking-fields button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1100px) {
+  .quick-booking {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .quick-booking-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .quick-booking {
+    padding: 20px 14px;
+  }
+
+  .quick-booking h2 {
+    font-size: 23px;
+  }
+
+  .quick-booking-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-booking-fields button {
+    width: 100%;
+  }
+}
