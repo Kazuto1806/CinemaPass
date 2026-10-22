@@ -35,9 +35,7 @@ function Account() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // =========================
-  // POPUP
-  // =========================
+  // POPUP THÔNG BÁO
   const [popup, setPopup] = useState({
     show: false,
     type: "success",
@@ -61,12 +59,19 @@ function Account() {
     }));
   };
 
-  // =========================
-  // LƯU THÔNG TIN
-  // =========================
+  // LƯU THÔNG TIN CÁ NHÂN
   const handleSaveInfo = () => {
-    localStorage.setItem("userName", userName);
-    localStorage.setItem("phone", phone);
+    if (!userName.trim()) {
+      showPopup(
+        "warning",
+        "Thiếu thông tin",
+        "Vui lòng nhập họ và tên!"
+      );
+      return;
+    }
+
+    localStorage.setItem("userName", userName.trim());
+    localStorage.setItem("phone", phone.trim());
     localStorage.setItem("birthDate", birthDate);
 
     window.dispatchEvent(new Event("userLogin"));
@@ -78,9 +83,7 @@ function Account() {
     );
   };
 
-  // =========================
   // ĐỔI MẬT KHẨU
-  // =========================
   const handleChangePassword = () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
       showPopup(
@@ -100,20 +103,15 @@ function Account() {
       return;
     }
 
+    // Chưa kết nối API đổi mật khẩu
     showPopup(
-      "success",
-      "Thành công",
-      "Đổi mật khẩu thành công!"
+      "warning",
+      "Chưa kết nối hệ thống",
+      "Chức năng đổi mật khẩu cần được kết nối với backend."
     );
-
-    setOldPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
   };
 
-  // =========================
   // ĐĂNG XUẤT
-  // =========================
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("userId");
@@ -130,30 +128,22 @@ function Account() {
 
   return (
     <div className="account-page">
-
       <div className="account-container">
 
         {/* SIDEBAR */}
         <aside className="account-sidebar">
-
           <div className="account-profile">
-
             <div className="account-avatar">
               <FaUserCircle />
             </div>
 
-            <h2>
-              {userName || "Khách hàng"}
-            </h2>
-
-            <p>
-              Thành viên CinemaPass
-            </p>
-
+            <h2>{userName || "Khách hàng"}</h2>
+            <p>Thành viên CinemaPass</p>
           </div>
 
           <div className="account-menu">
 
+            {/* THÔNG TIN KHÁCH HÀNG */}
             <button
               type="button"
               className="account-menu-item active"
@@ -162,21 +152,17 @@ function Account() {
               <span>Thông tin khách hàng</span>
             </button>
 
+            {/* THÀNH VIÊN CINEMAPASS - CHỈ CÒN MỘT NÚT */}
             <button
               type="button"
               className="account-menu-item"
-              onClick={() =>
-                showPopup(
-                  "warning",
-                  "Thông báo",
-                  "Chức năng thành viên đang được phát triển!"
-                )
-              }
+              onClick={() => navigate("/membership")}
             >
               <FaUsers />
               <span>Thành viên CinemaPass</span>
             </button>
 
+            {/* LỊCH SỬ MUA HÀNG */}
             <button
               type="button"
               className="account-menu-item"
@@ -186,6 +172,7 @@ function Account() {
               <span>Lịch sử mua hàng</span>
             </button>
 
+            {/* ĐĂNG XUẤT */}
             <button
               type="button"
               className="account-menu-item logout"
@@ -196,70 +183,56 @@ function Account() {
             </button>
 
           </div>
-
         </aside>
 
-        {/* CONTENT */}
+        {/* NỘI DUNG TÀI KHOẢN */}
         <main className="account-content">
 
           {/* THÔNG TIN CÁ NHÂN */}
           <section className="account-box">
-
             <div className="account-box-title">
               <FaUser />
               <h2>Thông tin cá nhân</h2>
             </div>
 
             <div className="account-form">
-
               <div className="account-field">
                 <label>Họ và tên</label>
-
                 <input
                   type="text"
                   value={userName}
-                  onChange={(e) =>
-                    setUserName(e.target.value)
-                  }
+                  onChange={(e) => setUserName(e.target.value)}
                   placeholder="Nhập họ và tên"
                 />
               </div>
 
               <div className="account-field">
                 <label>Ngày sinh</label>
-
                 <input
                   type="date"
                   value={birthDate}
-                  onChange={(e) =>
-                    setBirthDate(e.target.value)
-                  }
+                  onChange={(e) => setBirthDate(e.target.value)}
                 />
               </div>
 
               <div className="account-field">
                 <label>Số điện thoại</label>
-
                 <input
-                  type="text"
+                  type="tel"
                   value={phone}
-                  onChange={(e) =>
-                    setPhone(e.target.value)
-                  }
+                  onChange={(e) => setPhone(e.target.value)}
                   placeholder="Nhập số điện thoại"
                 />
               </div>
 
               <div className="account-field">
                 <label>Email</label>
-
                 <input
                   type="email"
                   value={userEmail}
                   readOnly
                 />
               </div>
-
             </div>
 
             <button
@@ -269,48 +242,40 @@ function Account() {
             >
               LƯU THÔNG TIN
             </button>
-
           </section>
 
           {/* ĐỔI MẬT KHẨU */}
           <section className="account-box password-box">
-
             <div className="account-box-title">
               <FaLock />
               <h2>Đổi mật khẩu</h2>
             </div>
 
             <div className="password-form">
-
               <div className="account-field">
                 <label>Mật khẩu cũ *</label>
-
                 <input
                   type="password"
                   value={oldPassword}
-                  onChange={(e) =>
-                    setOldPassword(e.target.value)
-                  }
+                  onChange={(e) => setOldPassword(e.target.value)}
                   placeholder="Nhập mật khẩu cũ"
+                  autoComplete="current-password"
                 />
               </div>
 
               <div className="account-field">
                 <label>Mật khẩu mới *</label>
-
                 <input
                   type="password"
                   value={newPassword}
-                  onChange={(e) =>
-                    setNewPassword(e.target.value)
-                  }
+                  onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Nhập mật khẩu mới"
+                  autoComplete="new-password"
                 />
               </div>
 
               <div className="account-field">
                 <label>Xác nhận mật khẩu *</label>
-
                 <input
                   type="password"
                   value={confirmPassword}
@@ -318,9 +283,9 @@ function Account() {
                     setConfirmPassword(e.target.value)
                   }
                   placeholder="Nhập lại mật khẩu mới"
+                  autoComplete="new-password"
                 />
               </div>
-
             </div>
 
             <button
@@ -330,11 +295,9 @@ function Account() {
             >
               ĐỔI MẬT KHẨU
             </button>
-
           </section>
 
         </main>
-
       </div>
 
       {/* POPUP THÔNG BÁO */}
@@ -345,7 +308,6 @@ function Account() {
         message={popup.message}
         onClose={closePopup}
       />
-
     </div>
   );
 }

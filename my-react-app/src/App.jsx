@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 
 import Header from "./components/Header";
@@ -8,6 +9,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Food from "./pages/Food";
 import Account from "./pages/Account";
+import Membership from "./pages/Membership";
 import MovieSearch from "./pages/MovieSearch";
 import MovieList from "./pages/MovieList";
 import MovieDetail from "./pages/MovieDetail";
@@ -49,6 +51,12 @@ function App() {
         <Route path="/food" element={<Food />} />
 
         <Route path="/account" element={<Account />} />
+
+        {/* THÀNH VIÊN CINEMAPASS */}
+        <Route
+          path="/membership"
+          element={<Membership />}
+        />
 
         {/* =========================
             LỊCH SỬ MUA HÀNG

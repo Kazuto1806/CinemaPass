@@ -1074,66 +1074,112 @@ function Food() {
 
 
 
-  const handleOrder = () => {
-    // Chỉ kiểm tra đăng nhập khi khách bấm ĐẶT HÀNG,
-    // không chặn khách xem thực đơn hoặc chọn món.
-    if (!selectedCinema) {
-
-      showNotification(
-
-        "warning",
-
-        "Chưa chọn rạp",
-
-        "Vui lòng chọn rạp trước khi đặt hàng."
-
-      );
-
-
-
-      return;
-
-    }
-
-
-
-    if (totalItems === 0) {
-      showNotification(
-        "warning",
-        "Giỏ hàng trống",
-        "Vui lòng chọn ít nhất một sản phẩm."
-      );
-      return;
-    }
-
-    const isLoggedIn =
-      localStorage.getItem("isLoggedIn") === "true" &&
-      Boolean(localStorage.getItem("userId"));
-
-    if (!isLoggedIn) {
-      // Giữ rạp và giỏ hàng để khách không phải chọn lại sau khi đăng nhập.
-      sessionStorage.setItem("foodCheckoutCinema", String(selectedCinema));
-      sessionStorage.setItem(
-        "foodCheckoutQuantities",
-        JSON.stringify(quantities)
-      );
-
-      const returnUrl = `${location.pathname}${location.search}`;
-      navigate(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
-      return;
-    }
-
+  
+const handleOrder = async () => {
+  // 1. Kiểm tra đã chọn rạp chưa
+  if (!selectedCinema) {
     showNotification(
+      "warning",
+      "Chưa chọn rạp",
+      "Vui lòng chọn rạp trước khi đặt hàng."
+    );
+    return;
+  }
 
-      "success",
+  // 2. Kiểm tra giỏ hàng
+  if (totalItems === 0 || cartItems.length === 0) {
+    showNotification(
+      "warning",
+      "Giỏ hàng trống",
+      "Vui lòng chọn ít nhất một sản phẩm."
+    );
+    return;
+  }
 
-      "Đặt hàng thành công",
+  // 3. Kiểm tra đăng nhập và UserId
+  const isLoggedIn =
+    localStorage.getItem("isLoggedIn") === "true";
 
-      `Rạp: ${selectedCinemaName} | Số sản phẩm: ${totalItems} | Tổng tiền: ${formatPrice(totalPrice)}`
+  const userId = Number(localStorage.getItem("userId"));
 
+  if (
+    !isLoggedIn ||
+    !Number.isInteger(userId) ||
+    userId <= 0
+  ) {
+    // Lưu lại rạp và giỏ hàng khi chuyển sang đăng nhập
+    sessionStorage.setItem(
+      "foodCheckoutCinema",
+      String(selectedCinema)
     );
 
-  };
+    sessionStorage.setItem(
+      "foodCheckoutQuantities",
+      JSON.stringify(quantities)
+    );
+
+    const returnUrl = `${location.pathname}${location.search}`;
+
+    navigate(
+      `/login?returnUrl=${encodeURIComponent(returnUrl)}`
+    );
+
+    return;
+  }
+
+  // 4. Gửi đơn hàng lên backend
+  try {
+    const response = await fetch(
+      `${API_BASE}/api/FoodOrders`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: userId,
+          items: cartItems.map((product) => ({
+            foodId: Number(product.id),
+            quantity: Number(quantities[product.id]),
+          })),
+        }),
+      }
+    );
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        result.message ||
+          `Đặt hàng thất bại. Mã lỗi: ${response.status}`
+      );
+    }
+
+    // 5. Chỉ xóa giỏ sau khi backend xác nhận thành công
+    setQuantities({});
+    setIsCartOpen(false);
+
+    sessionStorage.removeItem("foodCheckoutCinema");
+    sessionStorage.removeItem("foodCheckoutQuantities");
+
+    // 6. Thông báo mã đơn thực tế do backend trả về
+    showNotification(
+      "success",
+      "Đặt hàng thành công",
+      `Mã đơn: #${result.foodOrderId} | Rạp: ${selectedCinemaName} | Tổng tiền: ${formatPrice(result.totalAmount)}. Đơn đã được lưu vào hệ thống.`
+    );
+  } catch (error) {
+    console.error("Lỗi tạo đơn bắp nước:", error);
+
+    showNotification(
+      "error",
+      "Không thể đặt hàng",
+      error.message ||
+        "Không kết nối được máy chủ. Vui lòng thử lại."
+    );
+  }
+};
+
 
 
 

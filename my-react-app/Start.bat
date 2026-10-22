@@ -40,8 +40,12 @@ echo Swagger:  http://localhost:5000/swagger
 echo Frontend: http://localhost:5173
 echo.
 
+t
 timeout /t 5 /nobreak >nul
+
 start "" http://localhost:5173
+start "" http://localhost:5000/swagger
 
 endlocal
 exit /b
+
