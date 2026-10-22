@@ -316,12 +316,14 @@
   box-shadow: 0 0 16px rgba(169, 215, 255, 0.35);
 }
 
+
 .seat-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 8px;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
 }
+
 
 .seat-grid > .booking-empty-text {
   grid-column: 1 / -1;
@@ -341,6 +343,8 @@
   font-weight: 700;
   cursor: pointer;
   transition: 0.15s ease;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .seat:hover:not(:disabled) {
