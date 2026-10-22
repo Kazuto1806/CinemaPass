@@ -1087,3 +1087,117 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================
+   CINEMAPASS - DARK CINEMA THEME
+========================= */
+
+:root {
+  --booking-bg: #080f20;
+  --booking-card: #111c33;
+  --booking-card-inner: #17243d;
+  --booking-border: #2b3d5e;
+  --booking-text: #f1f5ff;
+  --booking-muted: #9baac5;
+  --booking-purple: #8b5cf6;
+  --booking-purple-hover: #a78bfa;
+  --booking-yellow: #facc15;
+}
+
+/* Nền toàn trang */
+.booking-page {
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(124, 58, 237, 0.13),
+      transparent 42%
+    ),
+    linear-gradient(180deg, #0b1429, #070d1b);
+  color: var(--booking-text);
+}
+
+/* Hai khung chính */
+.booking-panel,
+.booking-left,
+.booking-right,
+.booking-content > div {
+  color: var(--booking-text);
+}
+
+/* Các thẻ nội dung */
+.booking-card,
+.booking-summary,
+.booking-info,
+.booking-content .ticket-card {
+  background: var(--booking-card-inner);
+  border: 1px solid var(--booking-border);
+  color: var(--booking-text);
+  border-radius: 14px;
+}
+
+/* Tên phim, thông tin nổi bật */
+.booking-page h1,
+.booking-page h2,
+.booking-page h3 {
+  color: #ffffff;
+}
+
+/* Nội dung phụ */
+.booking-page small,
+.booking-page .muted {
+  color: var(--booking-muted);
+}
+
+/* Giá tiền */
+.booking-page .price,
+.booking-page .total-price {
+  color: var(--booking-yellow);
+  font-weight: 700;
+}
+
+/* Nút chính */
+.booking-page button.primary,
+.booking-page .continue-button,
+.booking-page .payment-button {
+  background: linear-gradient(
+    135deg,
+    #7c3aed,
+    #a855f7
+  );
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  transition: filter 0.2s ease;
+}
+
+.booking-page button.primary:hover,
+.booking-page .continue-button:hover,
+.booking-page .payment-button:hover {
+  filter: brightness(1.12);
+}
+
+/* Thẻ loại vé được chọn */
+.booking-page .ticket-card.active,
+.booking-page .ticket-card.selected {
+  background: #202b40;
+  border: 2px solid var(--booking-yellow);
+  color: #ffffff;
+}
+
+/* Thẻ loại vé chưa chọn */
+.booking-page .ticket-card:not(.active):not(.selected) {
+  background: var(--booking-card-inner);
+  border: 1px solid var(--booking-border);
+  color: var(--booking-text);
+}
+
+/* Chú thích và thông tin ghế */
+.booking-page .seat-legend,
+.booking-page .booking-description {
+  color: var(--booking-muted);
+}
+
+/* Đường phân cách */
+.booking-page hr {
+  border-color: var(--booking-border);
+}
