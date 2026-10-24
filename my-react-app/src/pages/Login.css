@@ -20,7 +20,7 @@
 /* Ảnh nền sảnh rạp chiếu phim */
 .login-page::before {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: -2;
   pointer-events: none;
