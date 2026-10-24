@@ -20,17 +20,16 @@
 /* Ảnh nền sảnh rạp chiếu phim */
 .login-page::before {
   content: "";
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: -2;
   pointer-events: none;
 
   background:
     url("../assets/Sảnh rạp chiếu phim tương lai neon.png")
-    center center / cover no-repeat;
+    center center / cover no-repeat fixed;
 
   filter: saturate(0.85);
-  transform: scale(1.02);
 }
 
 /* =====================================================
