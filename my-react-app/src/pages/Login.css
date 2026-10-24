@@ -4,38 +4,34 @@
 
 .login-page {
   min-height: calc(100vh - 80px);
-
   position: relative;
+  isolation: isolate;
 
   display: flex;
-
   justify-content: center;
-
   align-items: center;
 
   padding: 60px 20px 80px;
-
   overflow: hidden;
 
-  background:
-    radial-gradient(
-      circle at 20% 20%,
-      rgba(105, 54, 173, 0.35),
-      transparent 35%
-    ),
-    radial-gradient(
-      circle at 80% 70%,
-      rgba(57, 111, 210, 0.28),
-      transparent 35%
-    ),
-    linear-gradient(
-      135deg,
-      #080f21 0%,
-      #101a35 50%,
-      #20133b 100%
-    );
+  background: #0b1024;
 }
 
+/* Ảnh nền sảnh rạp chiếu phim */
+.login-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+
+  background:
+    url("/images/Sảnh rạp chiếu phim tương lai neon.png")
+    center center / cover no-repeat;
+
+  filter: saturate(0.85);
+  transform: scale(1.02);
+}
 
 /* =====================================================
    BACKGROUND
@@ -43,14 +39,20 @@
 
 .login-overlay {
   position: absolute;
-
   inset: 0;
+  z-index: -1;
 
   background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgba(105, 54, 173, 0.25),
+      transparent 38%
+    ),
     linear-gradient(
       135deg,
-      rgba(8, 15, 33, 0.2),
-      rgba(24, 14, 50, 0.5)
+      rgba(8, 15, 33, 0.68),
+      rgba(13, 20, 43, 0.58),
+      rgba(24, 14, 50, 0.72)
     );
 
   pointer-events: none;
