@@ -8,6 +8,7 @@ const MOVIE_API_URL = `${API_BASE}/api/movies`;
 const CINEMA_API_URL = `${API_BASE}/api/cinemas`;
 const TICKET_TYPES_API_URL = `${API_BASE}/api/tickettypes`;
 
+// Chuẩn hóa trạng thái suất chiếu
 const normalizeShowtimeStatus = (status) => {
   const value = String(status || "").trim();
 
@@ -29,16 +30,11 @@ const normalizeShowtimeStatus = (status) => {
     "active",
     "dang hoat dong",
     "dang hot dong",
-    "dang hoat dong",
     "hoat dong",
-    "đang hoat dong",
-    "đang hoạt động",
-    "dang hoat dong",
   ];
 
   const pausedPatterns = [
     "tam ngung",
-    "tạm ngưng",
     "ngung",
   ];
 
@@ -47,12 +43,6 @@ const normalizeShowtimeStatus = (status) => {
     "da kt thuc",
     "ket thuc",
     "kt thuc",
-    "đã ket thuc",
-    "đã kt thuc",
-    "kết thúc",
-    "kt thúc",
-    "đã kết thúc",
-    "đã kt thúc",
   ];
 
   if (activePatterns.some((term) => normalized.includes(term))) {
@@ -70,165 +60,13 @@ const normalizeShowtimeStatus = (status) => {
   return value;
 };
 
-function ShowtimeAdmin() {
-  const [showtimes, setShowtimes] = useState([]);
-  const [movies, setMovies] = useState([]);
-  const [cinemas, setCinemas] = useState([]);
-  const [ticketTypes, setTicketTypes] = useState([]);
-  const [notification, setNotification] = useState({
-    show: false,
-    type: "success",
-    title: "",
-    message: "",
-    onConfirm: null,
-  });
-
-  const showNotification = (type, title, message, onConfirm = null) => {
-    setNotification({ show: true, type, title, message, onConfirm });
-  };
-
-  const closeNotification = () => {
-    setNotification((current) => ({ ...current, show: false, onConfirm: null }));
-  };
-
-  const [search, setSearch] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-
-  const [formData, setFormData] = useState({
-  movieId: "",
-  roomId: "",
-  startTime: "",
-  endTime: "",
-  ticketPrice: "",
-  ticketTypePrices: [],
-  status: "Đang hoạt động",
-});
-
-  useEffect(() => {
-    loadShowtimes();
-    loadMovies();
-    loadCinemas();
-    loadTicketTypes();
-
-    const refreshInterval = window.setInterval(loadShowtimes, 30_000);
-
-    return () => window.clearInterval(refreshInterval);
-  }, []);
-
-  const loadShowtimes = async () => {
-    try {
-      const response = await fetch(API_URL);
-
-      if (!response.ok) {
-        throw new Error("Không thể tải danh sách suất chiếu");
-      }
-
-      const data = await response.json();
-      setShowtimes(
-        data.map((showtime) => ({
-          ...showtime,
-          status: normalizeShowtimeStatus(showtime.status),
-        }))
-      );
-    } catch (error) {
-      console.error(error);
-      showNotification("error", "Lỗi tải dữ liệu", "Không thể tải danh sách suất chiếu");
-    }
-  };
-
-  const loadMovies = async () => {
-    try {
-      const response = await fetch(MOVIE_API_URL);
-
-      if (!response.ok) {
-        throw new Error("Không thể tải danh sách phim");
-      }
-
-      const data = await response.json();
-      setMovies(data);
-    } catch (error) {
-      console.error(error);
-      showNotification("error", "Lỗi tải dữ liệu", "Không thể tải danh sách phim");
-    }
-  };
-
-  const loadCinemas = async () => {
-    try {
-      const response = await fetch(CINEMA_API_URL);
-
-      if (!response.ok) {
-        throw new Error("Không thể tải danh sách rạp");
-      }
-
-      const data = await response.json();
-      setCinemas(data);
-    } catch (error) {
-      console.error(error);
-      showNotification("error", "Lỗi tải dữ liệu", "Không thể tải danh sách rạp");
-    }
-  };
-
-  const loadTicketTypes = async () => {
-    try {
-      const response = await fetch(TICKET_TYPES_API_URL);
-
-      if (!response.ok) {
-        throw new Error("Không thể tải danh sách chính sách vé");
-      }
-
-      const data = await response.json();
-      setTicketTypes(
-        Array.isArray(data)
-          ? data.filter(
-              (ticketType) =>
-                String(ticketType.status || "Active").toLowerCase() !==
-                "inactive"
-            )
-          : []
-      );
-    } catch (error) {
-      console.error(error);
-      showNotification(
-        "error",
-        "Lỗi tải dữ liệu",
-        "Không thể tải danh sách chính sách vé"
-      );
-    }
-  };
-
-  const calculateEndDateTime = (movieId, startDateTime) => {
-    const movie = movies.find(
-      (item) => String(item.movieId) === String(movieId)
-    );
-    const duration = Number(movie?.duration);
-
-    if (!startDateTime || !Number.isFinite(duration) || duration <= 0) {
-      return "";
-    }
-
-    const endDate = new Date(startDateTime);
-
-    if (Number.isNaN(endDate.getTime())) {
-      return "";
-    }
-
-    endDate.setMinutes(endDate.getMinutes() + duration);
-
-    const pad = (value) => String(value).padStart(2, "0");
-
-    return `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(
-      endDate.getDate()
-    )}T${pad(endDate.getHours())}:${pad(endDate.getMinutes())}`;
-  };
-
+// Định dạng ngày giờ hiển thị
 const formatShowtime = (showDate, time) => {
   if (!showDate || !time) {
     return "-";
   }
 
   const date = String(showDate).substring(0, 10);
-
   const timeText = String(time).substring(0, 5);
 
   const [year, month, day] = date.split("-");
@@ -236,6 +74,7 @@ const formatShowtime = (showDate, time) => {
   return `${day}/${month}/${year} ${timeText}`;
 };
 
+// Xác định ngày kết thúc nếu suất chiếu qua ngày mới
 const getShowtimeEndDate = (showtime) => {
   const showDate = String(showtime.showDate || "").substring(0, 10);
   const startTime = String(showtime.startTime || "").substring(0, 5);
@@ -250,101 +89,335 @@ const getShowtimeEndDate = (showtime) => {
 
   const pad = (value) => String(value).padStart(2, "0");
 
-  return `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(
-    endDate.getDate()
-  )}`;
+  return `${endDate.getFullYear()}-${pad(
+    endDate.getMonth() + 1
+  )}-${pad(endDate.getDate())}`;
 };
-  const resetForm = () => {
-  setFormData({
+
+// Kiểm tra loại vé trẻ em
+const isChildTicket = (ticketType) => {
+  const name = String(ticketType?.name || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  return (
+    name.includes("tre em") ||
+    name.includes("thieu nhi") ||
+    name.includes("child") ||
+    name.includes("kid")
+  );
+};
+
+// Kiểm tra loại vé người lớn
+const isAdultTicket = (ticketType) => {
+  const name = String(ticketType?.name || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  return /nguoi lon|adult/.test(name);
+};
+
+function ShowtimeAdmin() {
+  const [showtimes, setShowtimes] = useState([]);
+  const [movies, setMovies] = useState([]);
+  const [cinemas, setCinemas] = useState([]);
+  const [ticketTypes, setTicketTypes] = useState([]);
+
+  const [notification, setNotification] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
+
+  const [search, setSearch] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+
+  // Không còn sử dụng ticketPrice chung trong form.
+  // Mỗi loại vé có giá riêng trong ticketTypePrices.
+  const [formData, setFormData] = useState({
     movieId: "",
+    cinemaId: "",
     roomId: "",
     startTime: "",
     endTime: "",
-    ticketPrice: "",
     ticketTypePrices: [],
     status: "Đang hoạt động",
   });
 
-  setEditingId(null);
-};
+  // Phim đang được chọn
+  const selectedMovie = movies.find(
+    (movie) => Number(movie.movieId) === Number(formData.movieId)
+  );
 
+  // Phim T18 không được chọn loại vé trẻ em
+  const isT18Movie = /^T18$/i.test(
+    String(selectedMovie?.ageRating || "").trim()
+  );
+
+  const availableTicketTypes = ticketTypes.filter(
+    (ticketType) => !(isT18Movie && isChildTicket(ticketType))
+  );
+
+  // Thông báo
+  const showNotification = (
+    type,
+    title,
+    message,
+    onConfirm = null
+  ) => {
+    setNotification({
+      show: true,
+      type,
+      title,
+      message,
+      onConfirm,
+    });
+  };
+
+  const closeNotification = () => {
+    setNotification((current) => ({
+      ...current,
+      show: false,
+      onConfirm: null,
+    }));
+  };
+
+  // Tải dữ liệu ban đầu
+  useEffect(() => {
+    loadShowtimes();
+    loadMovies();
+    loadCinemas();
+    loadTicketTypes();
+
+    const refreshInterval = window.setInterval(loadShowtimes, 30000);
+
+    return () => window.clearInterval(refreshInterval);
+  }, []);
+
+  // Tải danh sách suất chiếu
+  const loadShowtimes = async () => {
+    try {
+      const response = await fetch(API_URL);
+
+      if (!response.ok) {
+        throw new Error("Không thể tải danh sách suất chiếu");
+      }
+
+      const data = await response.json();
+
+      setShowtimes(
+        Array.isArray(data)
+          ? data.map((showtime) => ({
+              ...showtime,
+              status: normalizeShowtimeStatus(showtime.status),
+            }))
+          : []
+      );
+    } catch (error) {
+      console.error(error);
+
+      showNotification(
+        "error",
+        "Lỗi tải dữ liệu",
+        "Không thể tải danh sách suất chiếu"
+      );
+    }
+  };
+
+  // Tải danh sách phim
+  const loadMovies = async () => {
+    try {
+      const response = await fetch(MOVIE_API_URL);
+
+      if (!response.ok) {
+        throw new Error("Không thể tải danh sách phim");
+      }
+
+      const data = await response.json();
+      setMovies(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error(error);
+
+      showNotification(
+        "error",
+        "Lỗi tải dữ liệu",
+        "Không thể tải danh sách phim"
+      );
+    }
+  };
+
+  // Tải danh sách rạp
+  const loadCinemas = async () => {
+    try {
+      const response = await fetch(CINEMA_API_URL);
+
+      if (!response.ok) {
+        throw new Error("Không thể tải danh sách rạp");
+      }
+
+      const data = await response.json();
+      setCinemas(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error(error);
+
+      showNotification(
+        "error",
+        "Lỗi tải dữ liệu",
+        "Không thể tải danh sách rạp"
+      );
+    }
+  };
+
+  // Tải danh sách loại vé đang hoạt động
+  const loadTicketTypes = async () => {
+    try {
+      const response = await fetch(TICKET_TYPES_API_URL);
+
+      if (!response.ok) {
+        throw new Error("Không thể tải danh sách chính sách vé");
+      }
+
+      const data = await response.json();
+
+      setTicketTypes(
+        Array.isArray(data)
+          ? data.filter(
+              (ticketType) =>
+                String(ticketType.status || "Active").toLowerCase() !==
+                "inactive"
+            )
+          : []
+      );
+    } catch (error) {
+      console.error(error);
+
+      showNotification(
+        "error",
+        "Lỗi tải dữ liệu",
+        "Không thể tải danh sách chính sách vé"
+      );
+    }
+  };
+
+  // Tính giờ kết thúc theo thời lượng phim
+  const calculateEndDateTime = (movieId, startDateTime) => {
+    const movie = movies.find(
+      (item) => String(item.movieId) === String(movieId)
+    );
+
+    const duration = Number(movie?.duration);
+
+    if (
+      !startDateTime ||
+      !Number.isFinite(duration) ||
+      duration <= 0
+    ) {
+      return "";
+    }
+
+    const endDate = new Date(startDateTime);
+
+    if (Number.isNaN(endDate.getTime())) {
+      return "";
+    }
+
+    endDate.setMinutes(endDate.getMinutes() + duration);
+
+    const pad = (value) => String(value).padStart(2, "0");
+
+    return `${endDate.getFullYear()}-${pad(
+      endDate.getMonth() + 1
+    )}-${pad(endDate.getDate())}T${pad(
+      endDate.getHours()
+    )}:${pad(endDate.getMinutes())}`;
+  };
+
+  // Đặt lại form
+  const resetForm = () => {
+    setFormData({
+      movieId: "",
+      cinemaId: "",
+      roomId: "",
+      startTime: "",
+      endTime: "",
+      ticketTypePrices: [],
+      status: "Đang hoạt động",
+    });
+
+    setEditingId(null);
+  };
+
+  // Mở form thêm suất chiếu
   const openAddModal = () => {
     resetForm();
     setShowModal(true);
   };
 
-  const openEditModal = (showtime) => {
-  setEditingId(showtime.showtimeId);
-
+  // Chuyển giờ từ dữ liệu Backend sang input
   const formatTime = (time) => {
-    if (!time) return "";
+    if (!time) {
+      return "";
+    }
 
-    // TimeSpan từ ASP.NET thường có dạng:
-    // 12:54:00
-    // hoặc 12:54:00.0000000
     return String(time).substring(0, 5);
   };
 
-  const showDate = showtime.showDate
-    ? String(showtime.showDate).substring(0, 10)
-    : "";
+  // Mở form sửa suất chiếu
+  const openEditModal = (showtime) => {
+    setEditingId(showtime.showtimeId);
 
-  const startTime = formatTime(showtime.startTime);
-  const endTime = formatTime(showtime.endTime);
-  const startDateTime =
-    showDate && startTime
-      ? `${showDate}T${startTime}`
+    const showDate = showtime.showDate
+      ? String(showtime.showDate).substring(0, 10)
       : "";
 
-  setFormData({
-    movieId: showtime.movieId?.toString() || "",
-    roomId: showtime.roomId?.toString() || "",
+    const startTime = formatTime(showtime.startTime);
+    const endTime = formatTime(showtime.endTime);
 
-    startTime: startDateTime,
+    const startDateTime =
+      showDate && startTime
+        ? `${showDate}T${startTime}`
+        : "";
 
-    endTime:
-      calculateEndDateTime(showtime.movieId, startDateTime) ||
-      (showDate && endTime ? `${showDate}T${endTime}` : ""),
-
-    ticketPrice:
-      showtime.ticketPrice?.toString() || "",
-
-    ticketTypePrices: Array.isArray(showtime.ticketTypePrices)
+    const ticketTypePrices = Array.isArray(showtime.ticketTypePrices)
       ? showtime.ticketTypePrices.map((assignment) => ({
           ticketTypeId: Number(assignment.ticketTypeId),
-          price: Number(assignment.price),
+          price:
+            assignment.price === null ||
+            assignment.price === undefined
+              ? ""
+              : String(assignment.price),
         }))
-      : [],
+      : [];
 
-    status: normalizeShowtimeStatus(showtime.status),
-  });
+    setFormData({
+      movieId: showtime.movieId?.toString() || "",
+      cinemaId: showtime.cinemaId?.toString() || "",
+      roomId: showtime.roomId?.toString() || "",
+      startTime: startDateTime,
+      endTime:
+        calculateEndDateTime(showtime.movieId, startDateTime) ||
+        (showDate && endTime
+          ? `${showDate}T${endTime}`
+          : ""),
+      ticketTypePrices,
+      status: normalizeShowtimeStatus(showtime.status),
+    });
 
-  setShowModal(true);
-};
+    setShowModal(true);
+  };
 
+  // Đóng form
   const closeModal = () => {
     setShowModal(false);
     resetForm();
   };
 
-  const formatDateTimeForInput = (dateString) => {
-    if (!dateString) return "";
-
-    const date = new Date(dateString);
-
-    if (Number.isNaN(date.getTime())) {
-      return "";
-    }
-
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
-
+  // Xử lý thay đổi dữ liệu form
   const handleChange = (event) => {
     const { name, value } = event.target;
 
@@ -354,6 +427,7 @@ const getShowtimeEndDate = (showtime) => {
         [name]: value,
       };
 
+      // Tự động tính giờ kết thúc khi đổi phim hoặc giờ bắt đầu
       if (name === "movieId" || name === "startTime") {
         next.endTime = calculateEndDateTime(
           name === "movieId" ? value : previous.movieId,
@@ -361,19 +435,47 @@ const getShowtimeEndDate = (showtime) => {
         );
       }
 
+      // Nếu chọn phim T18, loại bỏ vé trẻ em đã chọn
+      if (name === "movieId") {
+        const movie = movies.find(
+          (item) => Number(item.movieId) === Number(value)
+        );
+
+        const selectedIsT18 = /^T18$/i.test(
+          String(movie?.ageRating || "").trim()
+        );
+
+        if (selectedIsT18) {
+          next.ticketTypePrices =
+            previous.ticketTypePrices.filter((assignment) => {
+              const ticketType = ticketTypes.find(
+                (item) =>
+                  Number(item.ticketTypeId) ===
+                  Number(assignment.ticketTypeId)
+              );
+
+              return ticketType && !isChildTicket(ticketType);
+            });
+        }
+      }
+
       return next;
     });
   };
 
+  // Chọn hoặc bỏ chọn một loại vé
   const toggleTicketType = (ticketType, checked) => {
     setFormData((previous) => ({
       ...previous,
+
       ticketTypePrices: checked
         ? [
             ...previous.ticketTypePrices,
             {
               ticketTypeId: Number(ticketType.ticketTypeId),
-              price: Number(ticketType.price || previous.ticketPrice || 0),
+
+              // Để trống để người dùng tự nhập giá
+              price: "",
             },
           ]
         : previous.ticketTypePrices.filter(
@@ -384,99 +486,131 @@ const getShowtimeEndDate = (showtime) => {
     }));
   };
 
+  // Cập nhật giá riêng cho từng loại vé
   const updateTicketTypePrice = (ticketTypeId, price) => {
     setFormData((previous) => ({
       ...previous,
+
       ticketTypePrices: previous.ticketTypePrices.map((assignment) =>
         Number(assignment.ticketTypeId) === Number(ticketTypeId)
-          ? { ...assignment, price }
+          ? {
+              ...assignment,
+              price,
+            }
           : assignment
       ),
     }));
   };
 
+  // Kiểm tra dữ liệu và lưu suất chiếu
   const handleSubmit = async (event) => {
-  event.preventDefault();
+    event.preventDefault();
 
-  // ==============================
-  // KIỂM TRA DỮ LIỆU
-  // ==============================
+    // Kiểm tra thông tin bắt buộc
+    if (
+      !formData.movieId ||
+      !formData.roomId ||
+      !formData.startTime ||
+      !formData.endTime ||
+      formData.ticketTypePrices.length === 0
+    ) {
+      showNotification(
+        "warning",
+        "Thiếu thông tin",
+        "Vui lòng nhập đầy đủ thông tin và chọn ít nhất một loại vé."
+      );
 
-  if (
-    !formData.movieId ||
-    !formData.roomId ||
-    !formData.startTime ||
-    !formData.endTime ||
-    !formData.ticketPrice ||
-    !formData.ticketTypePrices.length ||
-    formData.ticketTypePrices.some(
+      return;
+    }
+
+    // Kiểm tra giá của từng loại vé
+    const hasInvalidPrice = formData.ticketTypePrices.some(
       (assignment) =>
-        assignment.price === "" || Number(assignment.price) <= 0
-    )
-  ) {
-    showNotification(
-      "warning",
-      "Thiếu thông tin",
-      "Nhập đầy đủ thông tin, chọn ít nhất một chính sách vé và đặt giá lớn hơn 0 cho từng chính sách."
+        assignment.price === "" ||
+        assignment.price === null ||
+        assignment.price === undefined ||
+        !Number.isFinite(Number(assignment.price)) ||
+        Number(assignment.price) <= 0 ||
+        !Number.isInteger(Number(assignment.price))
     );
-    return;
-  }
 
-  // ==============================
-  // TÁCH NGÀY + GIỜ
-  // ==============================
+    if (hasInvalidPrice) {
+      showNotification(
+        "warning",
+        "Giá vé không hợp lệ",
+        "Vui lòng nhập giá cho từng loại vé. Giá vé phải là số nguyên lớn hơn 0."
+      );
 
-  const [showDate, startTime] =
-    formData.startTime.split("T");
+      return;
+    }
 
-  let endTime = "";
+    // Tách ngày và giờ
+    const [showDate, startTime] = formData.startTime.split("T");
 
-  if (formData.endTime) {
-    const parts = formData.endTime.split("T");
+    const [, endTime] = formData.endTime.split("T");
 
-    endTime = parts[1] || "";
-  }
+    if (!showDate || !startTime || !endTime) {
+      showNotification(
+        "warning",
+        "Thời gian không hợp lệ",
+        "Vui lòng kiểm tra thời gian bắt đầu và kết thúc."
+      );
 
-  // ==============================
-  // PAYLOAD MỚI
-  // ==============================
+      return;
+    }
 
-  const payload = {
-    movieId: Number(formData.movieId),
+    // Tìm giá vé người lớn nếu có
+    const adultTicket = formData.ticketTypePrices.find(
+      (assignment) => {
+        const ticketType = ticketTypes.find(
+          (item) =>
+            Number(item.ticketTypeId) ===
+            Number(assignment.ticketTypeId)
+        );
 
-    roomId: Number(formData.roomId),
+        return ticketType && isAdultTicket(ticketType);
+      }
+    );
 
-    showDate: showDate,
+    // Giá dự phòng để tương thích với Backend hiện tại.
+    // Giá thực tế của từng loại vé vẫn được gửi riêng bên dưới.
+    const fallbackTicketPrice =
+      adultTicket?.price ??
+      formData.ticketTypePrices[0]?.price;
 
-    startTime: `${startTime}:00`,
+    const payload = {
+      movieId: Number(formData.movieId),
 
-    endTime: endTime
-      ? `${endTime}:00`
-      : `${startTime}:00`,
+      roomId: Number(formData.roomId),
 
-    ticketPrice: Number(formData.ticketPrice),
+      showDate,
 
-    ticketTypePrices: formData.ticketTypePrices.map((assignment) => ({
-      ticketTypeId: Number(assignment.ticketTypeId),
-      price: Number(assignment.price),
-    })),
+      startTime: `${startTime}:00`,
 
-    status: formData.status || "Đang hoạt động",
-  };
+      endTime: `${endTime}:00`,
 
-  console.log("PAYLOAD GỬI BACKEND:", payload);
+      // Giữ trường này nếu DTO Backend hiện tại còn yêu cầu.
+      ticketPrice: Number(fallbackTicketPrice),
 
-  try {
-    let response;
+      // Giá riêng của từng loại vé
+      ticketTypePrices: formData.ticketTypePrices.map(
+        (assignment) => ({
+          ticketTypeId: Number(assignment.ticketTypeId),
+          price: Number(assignment.price),
+        })
+      ),
 
-    // ==============================
-    // UPDATE
-    // ==============================
+      status: formData.status || "Đang hoạt động",
+    };
 
-    if (editingId) {
-      response = await fetch(
-        `${API_URL}/${editingId}`,
-        {
+    console.log("PAYLOAD GỬI BACKEND:", payload);
+
+    try {
+      let response;
+
+      if (editingId) {
+        // Cập nhật suất chiếu
+        response = await fetch(`${API_URL}/${editingId}`, {
           method: "PUT",
 
           headers: {
@@ -484,18 +618,10 @@ const getShowtimeEndDate = (showtime) => {
           },
 
           body: JSON.stringify(payload),
-        }
-      );
-    }
-
-    // ==============================
-    // CREATE
-    // ==============================
-
-    else {
-      response = await fetch(
-        API_URL,
-        {
+        });
+      } else {
+        // Thêm suất chiếu
+        response = await fetch(API_URL, {
           method: "POST",
 
           headers: {
@@ -503,77 +629,97 @@ const getShowtimeEndDate = (showtime) => {
           },
 
           body: JSON.stringify(payload),
-        }
+        });
+      }
+
+      // Đọc phản hồi, kể cả khi Backend không trả JSON hợp lệ
+      const responseText = await response.text();
+
+      let data = {};
+
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        data = {};
+      }
+
+      console.log("BACKEND RESPONSE:", data);
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            data.title ||
+            responseText ||
+            "Có lỗi xảy ra khi lưu suất chiếu."
+        );
+      }
+
+      showNotification(
+        "success",
+        "Thành công",
+        editingId
+          ? "Cập nhật suất chiếu thành công."
+          : "Thêm suất chiếu thành công."
+      );
+
+      closeModal();
+
+      await loadShowtimes();
+    } catch (error) {
+      console.error("Lỗi lưu suất chiếu:", error);
+
+      showNotification(
+        "error",
+        "Không thể lưu suất chiếu",
+        error.message || "Không thể lưu suất chiếu."
       );
     }
+  };
 
-    // ==============================
-    // ĐỌC RESPONSE
-    // ==============================
-
-    const data = await response.json();
-
-    console.log("BACKEND RESPONSE:", data);
-
-    if (!response.ok) {
-      throw new Error(
-        data.message ||
-        data.title ||
-        "Có lỗi xảy ra"
-      );
-    }
-
-    // ==============================
-    // THÀNH CÔNG
-    // ==============================
-
-    showNotification(
-      "success",
-      "Thành công",
-      editingId
-        ? "Cập nhật suất chiếu thành công"
-        : "Thêm suất chiếu thành công"
-    );
-
-    closeModal();
-
-    await loadShowtimes();
-
-  } catch (error) {
-    console.error(
-      "Lỗi lưu suất chiếu:",
-      error
-    );
-
-    showNotification(
-      "error",
-      "Không thể lưu suất chiếu",
-      error.message ||
-      "Không thể lưu suất chiếu"
-    );
-  }
-};
-
+  // Xóa suất chiếu
   const deleteShowtime = async (id) => {
     try {
       const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
 
-      if (!response.ok) {
-        throw new Error(data.message || "Không thể xóa suất chiếu");
+      let data = {};
+
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        data = {};
       }
 
-      showNotification("success", "Thành công", "Xóa suất chiếu thành công");
-      loadShowtimes();
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            data.title ||
+            "Không thể xóa suất chiếu."
+        );
+      }
+
+      showNotification(
+        "success",
+        "Thành công",
+        "Xóa suất chiếu thành công."
+      );
+
+      await loadShowtimes();
     } catch (error) {
       console.error(error);
-      showNotification("error", "Không thể xóa suất chiếu", error.message || "Không thể xóa suất chiếu");
+
+      showNotification(
+        "error",
+        "Không thể xóa suất chiếu",
+        error.message || "Không thể xóa suất chiếu."
+      );
     }
   };
 
+  // Xác nhận trước khi xóa
   const handleDelete = (id) => {
     showNotification(
       "warning",
@@ -586,28 +732,12 @@ const getShowtimeEndDate = (showtime) => {
     );
   };
 
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-
-    const date = new Date(dateString);
-
-    if (Number.isNaN(date.getTime())) {
-      return "-";
-    }
-
-    return date.toLocaleString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
+  // Định dạng tiền Việt Nam
   const formatPrice = (price) => {
     return Number(price || 0).toLocaleString("vi-VN") + " đ";
   };
 
+  // Lọc danh sách suất chiếu
   const filteredShowtimes = showtimes.filter((showtime) => {
     const keyword = search.toLowerCase().trim();
 
@@ -625,17 +755,22 @@ const getShowtimeEndDate = (showtime) => {
 
   return (
     <div className="showtime-admin">
+      {/* Tiêu đề */}
       <div className="showtime-admin-header">
         <div>
           <h1>Quản lý suất chiếu</h1>
           <p>Quản lý lịch chiếu phim tại các rạp</p>
         </div>
 
-        <button className="showtime-add-btn" onClick={openAddModal}>
+        <button
+          className="showtime-add-btn"
+          onClick={openAddModal}
+        >
           + Thêm suất chiếu
         </button>
       </div>
 
+      {/* Tìm kiếm */}
       <div className="showtime-toolbar">
         <input
           type="text"
@@ -645,6 +780,7 @@ const getShowtimeEndDate = (showtime) => {
         />
       </div>
 
+      {/* Bảng suất chiếu */}
       <div className="showtime-table-container">
         <table className="showtime-table">
           <thead>
@@ -654,7 +790,7 @@ const getShowtimeEndDate = (showtime) => {
               <th>Rạp</th>
               <th>Thời gian</th>
               <th>Phòng</th>
-              <th>Giá vé</th>
+              <th>Giá vé theo loại</th>
               <th>Trạng thái</th>
               <th>Thao tác</th>
             </tr>
@@ -677,27 +813,51 @@ const getShowtimeEndDate = (showtime) => {
                   <td>{showtime.cinemaName || "-"}</td>
 
                   <td>
-  <div>
-    {formatShowtime(
-      showtime.showDate,
-      showtime.startTime
-    )}
-  </div>
+                    <div>
+                      {formatShowtime(
+                        showtime.showDate,
+                        showtime.startTime
+                      )}
+                    </div>
 
-  {showtime.endTime && (
-    <small>
-      đến{" "}
-      {formatShowtime(
-        getShowtimeEndDate(showtime),
-        showtime.endTime
-      )}
-    </small>
-  )}
-</td>
+                    {showtime.endTime && (
+                      <small>
+                        đến{" "}
+                        {formatShowtime(
+                          getShowtimeEndDate(showtime),
+                          showtime.endTime
+                        )}
+                      </small>
+                    )}
+                  </td>
 
                   <td>{showtime.roomName || "-"}</td>
 
-                  <td>{formatPrice(showtime.ticketPrice)}</td>
+                  <td>
+                    {Array.isArray(showtime.ticketTypePrices) &&
+                    showtime.ticketTypePrices.length > 0 ? (
+                      showtime.ticketTypePrices.map((assignment) => {
+                        const ticketType = ticketTypes.find(
+                          (item) =>
+                            Number(item.ticketTypeId) ===
+                            Number(assignment.ticketTypeId)
+                        );
+
+                        return (
+                          <div key={assignment.ticketTypeId}>
+                            <strong>
+                              {ticketType?.name ||
+                                `Loại vé #${assignment.ticketTypeId}`}
+                              :
+                            </strong>{" "}
+                            {formatPrice(assignment.price)}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      formatPrice(showtime.ticketPrice)
+                    )}
+                  </td>
 
                   <td>
                     <span
@@ -737,6 +897,7 @@ const getShowtimeEndDate = (showtime) => {
         </table>
       </div>
 
+      {/* Modal thêm / sửa suất chiếu */}
       {showModal && (
         <div className="showtime-modal-overlay">
           <div className="showtime-modal">
@@ -748,6 +909,7 @@ const getShowtimeEndDate = (showtime) => {
               </h2>
 
               <button
+                type="button"
                 className="showtime-close-btn"
                 onClick={closeModal}
               >
@@ -756,6 +918,7 @@ const getShowtimeEndDate = (showtime) => {
             </div>
 
             <form onSubmit={handleSubmit}>
+              {/* Chọn phim */}
               <div className="showtime-form-group">
                 <label>Phim *</label>
 
@@ -779,14 +942,19 @@ const getShowtimeEndDate = (showtime) => {
 
                 {formData.movieId && (
                   <small className="showtime-rating-hint">
-                    Phân loại phim: {movies.find(
-                      (movie) =>
-                        Number(movie.movieId) === Number(formData.movieId)
-                    )?.ageRating || "Chưa cập nhật"}
+                    Phân loại phim:{" "}
+                    {selectedMovie?.ageRating || "Chưa cập nhật"}
+                  </small>
+                )}
+
+                {isT18Movie && (
+                  <small className="showtime-rating-hint">
+                    Phim T18 không áp dụng loại vé trẻ em.
                   </small>
                 )}
               </div>
 
+              {/* Chọn rạp */}
               <div className="showtime-form-group">
                 <label>Rạp *</label>
 
@@ -809,6 +977,7 @@ const getShowtimeEndDate = (showtime) => {
                 </select>
               </div>
 
+              {/* Thời gian */}
               <div className="showtime-form-row">
                 <div className="showtime-form-group">
                   <label>Bắt đầu *</label>
@@ -834,45 +1003,36 @@ const getShowtimeEndDate = (showtime) => {
                 </div>
               </div>
 
+              {/* Phòng */}
               <div className="showtime-form-row">
                 <div className="showtime-form-group">
                   <label>Phòng *</label>
 
                   <input
-  type="number"
-  name="roomId"
-  placeholder="Nhập Room ID, ví dụ: 4"
-  min="1"
-  value={formData.roomId}
-  onChange={handleChange}
-  required
-/>
-                </div>
-
-                <div className="showtime-form-group">
-                  <label>Giá vé *</label>
-
-                  <input
                     type="number"
-                    name="ticketPrice"
-                    placeholder="Ví dụ: 75000"
-                    min="0"
-                    value={formData.ticketPrice}
+                    name="roomId"
+                    placeholder="Nhập Room ID, ví dụ: 4"
+                    min="1"
+                    step="1"
+                    value={formData.roomId}
                     onChange={handleChange}
                     required
                   />
                 </div>
               </div>
 
+              {/* Chính sách và giá riêng từng loại vé */}
               <div className="showtime-form-group">
                 <label>Chính sách vé áp dụng *</label>
+
                 <small className="showtime-policy-hint">
-                  Chọn chính sách phù hợp với suất chiếu và nhập giá áp dụng riêng cho suất này.
+                  Chọn loại vé và tự nhập giá áp dụng cho từng loại.
+                  Mỗi loại vé có mức giá độc lập.
                 </small>
 
-                {ticketTypes.length ? (
+                {availableTicketTypes.length > 0 ? (
                   <div className="showtime-policy-list">
-                    {ticketTypes.map((ticketType) => {
+                    {availableTicketTypes.map((ticketType) => {
                       const assignment = formData.ticketTypePrices.find(
                         (item) =>
                           Number(item.ticketTypeId) ===
@@ -889,11 +1049,16 @@ const getShowtimeEndDate = (showtime) => {
                               type="checkbox"
                               checked={Boolean(assignment)}
                               onChange={(event) =>
-                                toggleTicketType(ticketType, event.target.checked)
+                                toggleTicketType(
+                                  ticketType,
+                                  event.target.checked
+                                )
                               }
                             />
+
                             <span>
                               <strong>{ticketType.name}</strong>
+
                               <small>
                                 {ticketType.category === "Program"
                                   ? "Thời điểm / chương trình"
@@ -903,21 +1068,28 @@ const getShowtimeEndDate = (showtime) => {
                           </label>
 
                           {assignment && (
-                            <input
-                              className="showtime-policy-price"
-                              type="number"
-                              min="1"
-                              step="1000"
-                              aria-label={`Giá ${ticketType.name}`}
-                              value={assignment.price}
-                              onChange={(event) =>
-                                updateTicketTypePrice(
-                                  ticketType.ticketTypeId,
-                                  event.target.value
-                                )
-                              }
-                              required
-                            />
+                            <div className="showtime-policy-price-wrapper">
+                              <label>
+                                Giá {ticketType.name} (VNĐ)
+                              </label>
+
+                              <input
+                                className="showtime-policy-price"
+                                type="number"
+                                min="1"
+                                step="1"
+                                placeholder="Nhập giá vé"
+                                aria-label={`Giá ${ticketType.name}`}
+                                value={assignment.price}
+                                onChange={(event) =>
+                                  updateTicketTypePrice(
+                                    ticketType.ticketTypeId,
+                                    event.target.value
+                                  )
+                                }
+                                required
+                              />
+                            </div>
                           )}
                         </div>
                       );
@@ -925,11 +1097,14 @@ const getShowtimeEndDate = (showtime) => {
                   </div>
                 ) : (
                   <p className="showtime-policy-hint">
-                    Chưa có chính sách vé đang hoạt động. Hãy tạo loại vé trước.
+                    {isT18Movie
+                      ? "Không có loại vé phù hợp cho phim T18. Hãy kiểm tra danh sách chính sách vé."
+                      : "Chưa có chính sách vé đang hoạt động. Hãy tạo loại vé trước."}
                   </p>
                 )}
               </div>
 
+              {/* Trạng thái */}
               <div className="showtime-form-group">
                 <label>Trạng thái</label>
 
@@ -952,6 +1127,7 @@ const getShowtimeEndDate = (showtime) => {
                 </select>
               </div>
 
+              {/* Nút thao tác */}
               <div className="showtime-modal-actions">
                 <button
                   type="button"
@@ -965,7 +1141,9 @@ const getShowtimeEndDate = (showtime) => {
                   type="submit"
                   className="showtime-save-btn"
                 >
-                  {editingId ? "Cập nhật" : "Thêm suất chiếu"}
+                  {editingId
+                    ? "Cập nhật"
+                    : "Thêm suất chiếu"}
                 </button>
               </div>
             </form>
@@ -973,6 +1151,7 @@ const getShowtimeEndDate = (showtime) => {
         </div>
       )}
 
+      {/* Thông báo */}
       <NotificationPopup
         show={notification.show}
         type={notification.type}
