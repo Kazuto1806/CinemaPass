@@ -1,5 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import MovieCard from "../components/MovieCard";
 import { API_BASE, getMissingPosterFallback } from "../constants";
 import "./MovieList.css";
 
@@ -18,19 +20,15 @@ const getPosterUrl = (posterUrl) => {
   if (!posterUrl) return "";
 
   const normalized = String(posterUrl).trim();
-
   if (!normalized) return "";
 
   const fallback = getMissingPosterFallback(normalized);
-
   if (fallback) return fallback;
 
-  // Nếu đã là URL đầy đủ
   if (/^https?:\/\//i.test(normalized)) {
     return normalized;
   }
 
-  // Poster được upload lên ASP.NET Core
   if (
     normalized.startsWith("/uploads/") ||
     normalized.startsWith("uploads/")
@@ -42,19 +40,14 @@ const getPosterUrl = (posterUrl) => {
     return `${API_BASE}${uploadPath}`;
   }
 
-  // Lấy tên file để tìm ảnh trong src/assets
   const fileName = normalized.split(/[\\/]/).pop();
 
   const asset = Object.entries(posterAssets).find(([path]) =>
     path.endsWith(`/${fileName}`)
   );
 
-  // Nếu tìm thấy ảnh trong src/assets thì dùng URL do Vite cung cấp
-  if (asset) {
-    return asset[1];
-  }
+  if (asset) return asset[1];
 
-  // Nếu ảnh nằm trong public/assets thì giữ đường dẫn public
   if (
     normalized.startsWith("/assets/") ||
     normalized.startsWith("assets/")
@@ -64,7 +57,6 @@ const getPosterUrl = (posterUrl) => {
       : `/${normalized}`;
   }
 
-  // Giữ nguyên đường dẫn nếu không tìm thấy ảnh trong assets
   return normalized;
 };
 
@@ -149,7 +141,6 @@ function MovieList() {
         <h1>
           {isNowShowing ? "PHIM ĐANG CHIẾU" : "PHIM SẮP CHIẾU"}
         </h1>
-
         <p>Khám phá danh sách phim tại CinemaPass</p>
       </header>
 
@@ -166,95 +157,9 @@ function MovieList() {
       ) : (
         <div className="catalog-grid">
           {movies.map((movie) => (
-            <article className="catalog-card" key={movie.movieId}>
-              <Link
-                className="catalog-poster-link"
-                to={`/movie/${encodeURIComponent(movie.title)}`}
-              >
-                {movie.posterUrl ? (
-                  <img
-                    className="catalog-poster"
-                    src={movie.posterUrl}
-                    alt={movie.title}
-                    loading="lazy"
-                    onError={(event) => {
-                      console.error(
-                        `Không tải được poster phim "${movie.title}":`,
-                        movie.posterUrl
-                      );
-
-                      event.currentTarget.onerror = null;
-                      event.currentTarget.src =
-                        "data:image/svg+xml;charset=UTF-8," +
-                        encodeURIComponent(`
-                          <svg xmlns="http://www.w3.org/2000/svg"
-                               width="400"
-                               height="600"
-                               viewBox="0 0 400 600">
-                            <rect width="400" height="600" fill="#1f2937"/>
-                            <text
-                              x="200"
-                              y="300"
-                              fill="white"
-                              font-family="Arial, sans-serif"
-                              font-size="24"
-                              text-anchor="middle"
-                              dominant-baseline="middle">
-                              NO POSTER
-                            </text>
-                          </svg>
-                        `);
-                    }}
-                  />
-                ) : (
-                  <div className="catalog-poster-placeholder">
-                    🎬
-                  </div>
-                )}
-
-                <span className="catalog-age">
-                  {movie.ageRating || "P"}
-                </span>
-              </Link>
-
-              <Link
-                className="catalog-title"
-                to={`/movie/${encodeURIComponent(movie.title)}`
-                }
-              >
-                {movie.title}
-              </Link>
-
-              <div className="catalog-actions">
-                {movie.trailerUrl ? (
-                  <a
-                    className="catalog-trailer"
-                    href={movie.trailerUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Xem Trailer
-                  </a>
-                ) : (
-                  <span className="catalog-trailer catalog-trailer-disabled">
-                    Chưa có trailer
-                  </span>
-                )}
-
-                {isNowShowing ? (
-                  <Link
-                    className="catalog-book"
-                    to={`/movie/${encodeURIComponent(movie.title)}`}
-                  >
-                    ĐẶT VÉ
-                  </Link>
-                ) : (
-                  <span className="catalog-coming-soon">
-                    SẮP CHIẾU
-                  </span>
-                )}
-              </div>
-            </article>
+            <div className="catalog-card" key={movie.movieId}>
+              <MovieCard movie={movie} />
+            </div>
           ))}
         </div>
       )}
