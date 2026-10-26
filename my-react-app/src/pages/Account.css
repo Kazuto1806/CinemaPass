@@ -383,3 +383,81 @@
     font-size: 17px;
   }
 }
+
+/* Nội dung thành viên và lịch sử bên trong trang tài khoản */
+
+.account-content > .membership-embedded,
+.account-content > .ticket-history-embedded {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.account-content > .membership-embedded .membership-container,
+.account-content > .ticket-history-embedded .ticket-history-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.account-content > .membership-embedded .membership-back,
+.account-content > .ticket-history-embedded .history-back-button {
+  display: none;
+}
+
+.account-content > .membership-embedded .membership-heading,
+.account-content > .ticket-history-embedded .history-heading {
+  margin-top: 0;
+}
+
+.account-content > .membership-embedded .membership-heading h1,
+.account-content > .ticket-history-embedded .history-heading h1 {
+  overflow-wrap: anywhere;
+}
+
+.account-content > .membership-embedded .membership-card {
+  width: 100%;
+}
+
+.account-content > .membership-embedded .membership-benefit-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .account-container {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+
+  .account-content > .membership-embedded .membership-benefit-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .account-container {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .account-content {
+    min-width: 0;
+  }
+
+  .account-content > .membership-embedded,
+  .account-content > .ticket-history-embedded {
+    padding: 0;
+  }
+
+  .account-content > .membership-embedded .membership-card-top {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .account-content > .ticket-history-embedded .history-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

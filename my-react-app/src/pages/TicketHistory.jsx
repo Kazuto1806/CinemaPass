@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -26,9 +26,7 @@ function formatDate(value) {
 
   const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return String(value);
-  }
+  if (Number.isNaN(date.getTime())) return String(value);
 
   return date.toLocaleDateString("vi-VN");
 }
@@ -81,7 +79,7 @@ function Status({ value }) {
   return <span className={className}>{label}</span>;
 }
 
-function TicketHistory() {
+function TicketHistory({ embedded = false }) {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("tickets");
@@ -92,7 +90,7 @@ function TicketHistory() {
 
   const userId = localStorage.getItem("userId");
 
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     if (
       !userId ||
       !Number.isInteger(Number(userId)) ||
@@ -143,22 +141,28 @@ function TicketHistory() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     loadHistory();
-  }, [userId]);
+  }, [loadHistory]);
 
   return (
-    <div className="ticket-history-page">
+    <div
+      className={`ticket-history-page ${
+        embedded ? "ticket-history-embedded" : ""
+      }`}
+    >
       <div className="ticket-history-container">
-        <button
-          type="button"
-          className="history-back-button"
-          onClick={() => navigate("/account")}
-        >
-          <FaArrowLeft /> Quay lại tài khoản
-        </button>
+        {!embedded && (
+          <button
+            type="button"
+            className="history-back-button"
+            onClick={() => navigate("/account")}
+          >
+            <FaArrowLeft /> Quay lại tài khoản
+          </button>
+        )}
 
         <div className="history-heading">
           <div>
@@ -214,10 +218,7 @@ function TicketHistory() {
               <FaTicketAlt />
               <h3>Chưa có vé xem phim</h3>
               <p>Các vé đã đặt sẽ hiển thị tại đây.</p>
-              <button
-                type="button"
-                onClick={() => navigate("/")}
-              >
+              <button type="button" onClick={() => navigate("/")}>
                 Khám phá phim
               </button>
             </div>
@@ -242,9 +243,7 @@ function TicketHistory() {
                     </div>
 
                     <Status
-                      value={
-                        ticket.paymentStatus || ticket.status
-                      }
+                      value={ticket.paymentStatus || ticket.status}
                     />
                   </div>
 
@@ -252,11 +251,8 @@ function TicketHistory() {
                     <p>
                       <FaMapMarkerAlt />
                       <span>
-                        {ticket.cinemaName ||
-                          "Chưa có thông tin rạp"}
-                        {ticket.roomName
-                          ? ` · ${ticket.roomName}`
-                          : ""}
+                        {ticket.cinemaName || "Chưa có thông tin rạp"}
+                        {ticket.roomName ? ` · ${ticket.roomName}` : ""}
                       </span>
                     </p>
 
@@ -291,9 +287,7 @@ function TicketHistory() {
 
                   <div className="history-card-bottom">
                     <span>Giá vé</span>
-                    <strong>
-                      {formatMoney(ticket.ticketPrice)}
-                    </strong>
+                    <strong>{formatMoney(ticket.ticketPrice)}</strong>
                   </div>
                 </article>
               ))}
@@ -324,12 +318,8 @@ function TicketHistory() {
                   </div>
 
                   <div className="history-card-title">
-                    <h3>
-                      Đơn bắp nước #{order.foodOrderId}
-                    </h3>
-                    <p>
-                      Ngày đặt: {formatDate(order.createdAt)}
-                    </p>
+                    <h3>Đơn bắp nước #{order.foodOrderId}</h3>
+                    <p>Ngày đặt: {formatDate(order.createdAt)}</p>
                   </div>
 
                   <Status value={order.status} />
@@ -366,9 +356,7 @@ function TicketHistory() {
 
                 <div className="history-card-bottom">
                   <span>Tổng tiền</span>
-                  <strong>
-                    {formatMoney(order.totalAmount)}
-                  </strong>
+                  <strong>{formatMoney(order.totalAmount)}</strong>
                 </div>
               </article>
             ))}

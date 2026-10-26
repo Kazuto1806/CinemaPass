@@ -12,7 +12,6 @@ import {
   FaShieldAlt,
 } from "react-icons/fa";
 
-import { API_BASE } from "../constants";
 import "./Membership.css";
 
 const formatDate = (value) => {
@@ -20,15 +19,15 @@ const formatDate = (value) => {
 
   const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) return "—";
-
-  return date.toLocaleDateString("vi-VN");
+  return Number.isNaN(date.getTime())
+    ? "—"
+    : date.toLocaleDateString("vi-VN");
 };
 
 const formatPoints = (value) =>
   Number(value || 0).toLocaleString("vi-VN");
 
-function Membership() {
+function Membership({ embedded = false }) {
   const navigate = useNavigate();
 
   const [userName] = useState(
@@ -42,8 +41,6 @@ function Membership() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Chưa tự tạo điểm. Các giá trị này chỉ được cập nhật
-  // khi backend trả về dữ liệu thành viên hợp lệ.
   const [membership, setMembership] = useState({
     tier: "Member",
     points: 0,
@@ -56,6 +53,9 @@ function Membership() {
     let cancelled = false;
 
     const loadMembership = async () => {
+      setLoading(true);
+      setError("");
+
       if (!userId) {
         setError(
           "Không tìm thấy mã tài khoản. Vui lòng đăng nhập lại để xem thông tin thành viên."
@@ -65,16 +65,8 @@ function Membership() {
       }
 
       try {
-        setLoading(true);
-        setError("");
-
-        /*
-         * Chưa gọi API thành viên ở đây vì cần backend cung cấp
-         * endpoint và quy tắc tính điểm chính thức.
-         *
-         * Không lấy điểm từ localStorage và không tự cộng điểm.
-         * Khi có API, thay phần này bằng dữ liệu thực từ backend.
-         */
+        // Chưa có API thành viên chính thức.
+        // Không tự tạo điểm hoặc lịch sử giao dịch.
         if (!cancelled) {
           setMembership({
             tier: "Member",
@@ -91,7 +83,9 @@ function Membership() {
           );
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
@@ -111,16 +105,22 @@ function Membership() {
   );
 
   return (
-    <main className="membership-page">
+    <main
+      className={`membership-page ${
+        embedded ? "membership-embedded" : ""
+      }`}
+    >
       <div className="membership-container">
-        <button
-          type="button"
-          className="membership-back"
-          onClick={() => navigate("/account")}
-        >
-          <FaArrowLeft />
-          <span>Quay lại tài khoản</span>
-        </button>
+        {!embedded && (
+          <button
+            type="button"
+            className="membership-back"
+            onClick={() => navigate("/account")}
+          >
+            <FaArrowLeft />
+            <span>Quay lại tài khoản</span>
+          </button>
+        )}
 
         <header className="membership-heading">
           <span className="membership-eyebrow">
@@ -161,6 +161,7 @@ function Membership() {
             <div className="membership-member-info">
               <span>THÀNH VIÊN</span>
               <h2>{userName}</h2>
+
               <div className="membership-tier">
                 <FaCrown />
                 <span>{membership.tier}</span>
@@ -234,16 +235,13 @@ function Membership() {
               </div>
 
               <p className="membership-progress-note">
-                {membership.points >= membership.nextTierPoints
-                  ? "Bạn đã đạt mốc điểm tham khảo."
-                  : `Mốc tham khảo tiếp theo: ${formatPoints(
-                      membership.nextTierPoints
-                    )} điểm.`}
+                Mốc tham khảo tiếp theo:{" "}
+                {formatPoints(membership.nextTierPoints)} điểm.
               </p>
 
               <p className="membership-disclaimer">
-                Mốc điểm trên hiện là thông tin giao diện minh họa,
-                chưa phải quy tắc xếp hạng chính thức của hệ thống.
+                Mốc điểm hiện chỉ dùng để minh họa giao diện,
+                chưa phải quy tắc xếp hạng chính thức.
               </p>
             </>
           )}
@@ -268,7 +266,7 @@ function Membership() {
               </div>
               <h3>Ưu đãi vé xem phim</h3>
               <p>
-                Hiển thị ưu đãi khi chính sách thành viên được cấu hình.
+                Khu vực dành cho các ưu đãi vé khi chính sách được cấu hình.
               </p>
             </article>
 
@@ -288,14 +286,14 @@ function Membership() {
               </div>
               <h3>Tích lũy điểm</h3>
               <p>
-                Điểm chỉ nên được ghi nhận từ giao dịch hợp lệ theo quy định.
+                Điểm cần được ghi nhận từ giao dịch hợp lệ theo quy định.
               </p>
             </article>
           </div>
 
           <p className="membership-disclaimer">
-            Quyền lợi ở trên là phần giới thiệu giao diện, chưa xác nhận
-            rằng các ưu đãi đã được triển khai hoặc áp dụng cho tài khoản.
+            Quyền lợi trên là phần giới thiệu giao diện, chưa xác nhận
+            các ưu đãi đã được triển khai.
           </p>
         </section>
 
@@ -324,18 +322,9 @@ function Membership() {
               <h3>Chưa có lịch sử tích điểm</h3>
 
               <p>
-                Lịch sử sẽ hiển thị sau khi backend có API điểm thành viên
+                Lịch sử sẽ hiển thị khi backend có API điểm thành viên
                 và ghi nhận giao dịch hợp lệ.
               </p>
-
-              <button
-                type="button"
-                className="membership-action-button"
-                onClick={() => navigate("/tickets")}
-              >
-                <FaTicketAlt />
-                Xem lịch sử mua hàng
-              </button>
             </div>
           ) : (
             <div className="membership-history-list">

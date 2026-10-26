@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,23 +11,23 @@ import {
 } from "react-icons/fa";
 
 import NotificationPopup from "../components/NotificationPopup";
+import Membership from "./Membership";
+import TicketHistory from "./TicketHistory";
 import "./Account.css";
 
 function Account() {
   const navigate = useNavigate();
 
+  const [activeSection, setActiveSection] = useState("account");
   const [userName, setUserName] = useState(
     localStorage.getItem("userName") || ""
   );
-
   const [userEmail] = useState(
     localStorage.getItem("userEmail") || ""
   );
-
   const [phone, setPhone] = useState(
     localStorage.getItem("phone") || ""
   );
-
   const [birthDate, setBirthDate] = useState(
     localStorage.getItem("birthDate") || ""
   );
@@ -35,7 +36,6 @@ function Account() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // POPUP THÔNG BÁO
   const [popup, setPopup] = useState({
     show: false,
     type: "success",
@@ -44,22 +44,16 @@ function Account() {
   });
 
   const showPopup = (type, title, message) => {
-    setPopup({
-      show: true,
-      type,
-      title,
-      message,
-    });
+    setPopup({ show: true, type, title, message });
   };
 
   const closePopup = () => {
-    setPopup((prev) => ({
-      ...prev,
+    setPopup((previous) => ({
+      ...previous,
       show: false,
     }));
   };
 
-  // LƯU THÔNG TIN CÁ NHÂN
   const handleSaveInfo = () => {
     if (!userName.trim()) {
       showPopup(
@@ -83,7 +77,6 @@ function Account() {
     );
   };
 
-  // ĐỔI MẬT KHẨU
   const handleChangePassword = () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
       showPopup(
@@ -103,7 +96,6 @@ function Account() {
       return;
     }
 
-    // Chưa kết nối API đổi mật khẩu
     showPopup(
       "warning",
       "Chưa kết nối hệ thống",
@@ -111,7 +103,6 @@ function Account() {
     );
   };
 
-  // ĐĂNG XUẤT
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("userId");
@@ -122,15 +113,12 @@ function Account() {
     localStorage.removeItem("role");
 
     window.dispatchEvent(new Event("userLogout"));
-
     navigate("/");
   };
 
   return (
     <div className="account-page">
       <div className="account-container">
-
-        {/* SIDEBAR */}
         <aside className="account-sidebar">
           <div className="account-profile">
             <div className="account-avatar">
@@ -141,38 +129,40 @@ function Account() {
             <p>Thành viên CinemaPass</p>
           </div>
 
-          <div className="account-menu">
-
-            {/* THÔNG TIN KHÁCH HÀNG */}
+          <nav className="account-menu">
             <button
               type="button"
-              className="account-menu-item active"
+              className={`account-menu-item ${
+                activeSection === "account" ? "active" : ""
+              }`}
+              onClick={() => setActiveSection("account")}
             >
               <FaUser />
               <span>Thông tin khách hàng</span>
             </button>
 
-            {/* THÀNH VIÊN CINEMAPASS - CHỈ CÒN MỘT NÚT */}
             <button
               type="button"
-              className="account-menu-item"
-              onClick={() => navigate("/membership")}
+              className={`account-menu-item ${
+                activeSection === "membership" ? "active" : ""
+              }`}
+              onClick={() => setActiveSection("membership")}
             >
               <FaUsers />
               <span>Thành viên CinemaPass</span>
             </button>
 
-            {/* LỊCH SỬ MUA HÀNG */}
             <button
               type="button"
-              className="account-menu-item"
-              onClick={() => navigate("/tickets")}
+              className={`account-menu-item ${
+                activeSection === "history" ? "active" : ""
+              }`}
+              onClick={() => setActiveSection("history")}
             >
               <FaHistory />
               <span>Lịch sử mua hàng</span>
             </button>
 
-            {/* ĐĂNG XUẤT */}
             <button
               type="button"
               className="account-menu-item logout"
@@ -181,126 +171,141 @@ function Account() {
               <FaSignOutAlt />
               <span>Đăng xuất</span>
             </button>
-
-          </div>
+          </nav>
         </aside>
 
-        {/* NỘI DUNG TÀI KHOẢN */}
         <main className="account-content">
+          {activeSection === "account" && (
+            <>
+              <section className="account-box">
+                <div className="account-box-title">
+                  <FaUser />
+                  <h2>Thông tin cá nhân</h2>
+                </div>
 
-          {/* THÔNG TIN CÁ NHÂN */}
-          <section className="account-box">
-            <div className="account-box-title">
-              <FaUser />
-              <h2>Thông tin cá nhân</h2>
-            </div>
+                <div className="account-form">
+                  <div className="account-field">
+                    <label>Họ và tên</label>
+                    <input
+                      type="text"
+                      value={userName}
+                      onChange={(event) =>
+                        setUserName(event.target.value)
+                      }
+                      placeholder="Nhập họ và tên"
+                    />
+                  </div>
 
-            <div className="account-form">
-              <div className="account-field">
-                <label>Họ và tên</label>
-                <input
-                  type="text"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  placeholder="Nhập họ và tên"
-                />
-              </div>
+                  <div className="account-field">
+                    <label>Ngày sinh</label>
+                    <input
+                      type="date"
+                      value={birthDate}
+                      onChange={(event) =>
+                        setBirthDate(event.target.value)
+                      }
+                    />
+                  </div>
 
-              <div className="account-field">
-                <label>Ngày sinh</label>
-                <input
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                />
-              </div>
+                  <div className="account-field">
+                    <label>Số điện thoại</label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(event) =>
+                        setPhone(event.target.value)
+                      }
+                      placeholder="Nhập số điện thoại"
+                    />
+                  </div>
 
-              <div className="account-field">
-                <label>Số điện thoại</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Nhập số điện thoại"
-                />
-              </div>
+                  <div className="account-field">
+                    <label>Email</label>
+                    <input
+                      type="email"
+                      value={userEmail}
+                      readOnly
+                    />
+                  </div>
+                </div>
 
-              <div className="account-field">
-                <label>Email</label>
-                <input
-                  type="email"
-                  value={userEmail}
-                  readOnly
-                />
-              </div>
-            </div>
+                <button
+                  type="button"
+                  className="account-save-button"
+                  onClick={handleSaveInfo}
+                >
+                  LƯU THÔNG TIN
+                </button>
+              </section>
 
-            <button
-              type="button"
-              className="account-save-button"
-              onClick={handleSaveInfo}
-            >
-              LƯU THÔNG TIN
-            </button>
-          </section>
+              <section className="account-box password-box">
+                <div className="account-box-title">
+                  <FaLock />
+                  <h2>Đổi mật khẩu</h2>
+                </div>
 
-          {/* ĐỔI MẬT KHẨU */}
-          <section className="account-box password-box">
-            <div className="account-box-title">
-              <FaLock />
-              <h2>Đổi mật khẩu</h2>
-            </div>
+                <div className="password-form">
+                  <div className="account-field">
+                    <label>Mật khẩu cũ *</label>
+                    <input
+                      type="password"
+                      value={oldPassword}
+                      onChange={(event) =>
+                        setOldPassword(event.target.value)
+                      }
+                      placeholder="Nhập mật khẩu cũ"
+                      autoComplete="current-password"
+                    />
+                  </div>
 
-            <div className="password-form">
-              <div className="account-field">
-                <label>Mật khẩu cũ *</label>
-                <input
-                  type="password"
-                  value={oldPassword}
-                  onChange={(e) => setOldPassword(e.target.value)}
-                  placeholder="Nhập mật khẩu cũ"
-                  autoComplete="current-password"
-                />
-              </div>
+                  <div className="account-field">
+                    <label>Mật khẩu mới *</label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(event) =>
+                        setNewPassword(event.target.value)
+                      }
+                      placeholder="Nhập mật khẩu mới"
+                      autoComplete="new-password"
+                    />
+                  </div>
 
-              <div className="account-field">
-                <label>Mật khẩu mới *</label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Nhập mật khẩu mới"
-                  autoComplete="new-password"
-                />
-              </div>
+                  <div className="account-field">
+                    <label>Xác nhận mật khẩu *</label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(event) =>
+                        setConfirmPassword(event.target.value)
+                      }
+                      placeholder="Nhập lại mật khẩu mới"
+                      autoComplete="new-password"
+                    />
+                  </div>
+                </div>
 
-              <div className="account-field">
-                <label>Xác nhận mật khẩu *</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) =>
-                    setConfirmPassword(e.target.value)
-                  }
-                  placeholder="Nhập lại mật khẩu mới"
-                  autoComplete="new-password"
-                />
-              </div>
-            </div>
+                <button
+                  type="button"
+                  className="account-save-button"
+                  onClick={handleChangePassword}
+                >
+                  ĐỔI MẬT KHẨU
+                </button>
+              </section>
+            </>
+          )}
 
-            <button
-              type="button"
-              className="account-save-button"
-              onClick={handleChangePassword}
-            >
-              ĐỔI MẬT KHẨU
-            </button>
-          </section>
+          {activeSection === "membership" && (
+            <Membership embedded />
+          )}
 
+          {activeSection === "history" && (
+            <TicketHistory embedded />
+          )}
         </main>
       </div>
 
-      {/* POPUP THÔNG BÁO */}
       <NotificationPopup
         show={popup.show}
         type={popup.type}
