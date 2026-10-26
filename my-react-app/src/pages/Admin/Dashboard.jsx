@@ -286,7 +286,7 @@ function Dashboard() {
               </strong>
 
               <small>
-                Dữ liệu từ SQL Server
+                Dữ liệu từ hệ thống
               </small>
 
             </div>
@@ -357,7 +357,7 @@ function Dashboard() {
               </strong>
 
               <small>
-                Dữ liệu từ SQL Server
+                Dữ liệu từ hệ thống
               </small>
 
             </div>
