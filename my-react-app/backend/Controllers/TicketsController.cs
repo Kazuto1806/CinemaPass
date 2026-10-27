@@ -686,6 +686,8 @@ namespace CinemaBackend.Controllers
                 {
                     ticketId = t.TicketId,
                     userId = t.UserId,
+                    qrCodeToken = t.QrCodeToken,
+
 
                     movieId = t.MovieId,
 
@@ -760,6 +762,8 @@ namespace CinemaBackend.Controllers
                 .Select(t => new
                 {
                     ticketId = t.TicketId,
+                    qrCodeToken = t.QrCodeToken,
+
 
                     userId = t.UserId,
 
