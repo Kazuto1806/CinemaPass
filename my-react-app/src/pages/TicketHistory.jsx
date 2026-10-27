@@ -1,5 +1,6 @@
 
 import { useCallback, useEffect, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { useNavigate } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -224,73 +225,147 @@ function TicketHistory({ embedded = false }) {
             </div>
           ) : (
             <div className="history-list">
-              {tickets.map((ticket) => (
-                <article
-                  className="history-card"
-                  key={ticket.ticketId}
-                >
-                  <div className="history-card-top">
-                    <div className="history-card-icon">
-                      <FaTicketAlt />
+              {tickets.map((ticket) => {
+                const token =
+                  ticket.qrCodeToken ||
+                  ticket.QrCodeToken ||
+                  ticket.qrCode ||
+                  ticket.QrCode;
+
+                const ticketId =
+                  ticket.ticketId ?? ticket.TicketId;
+
+                const qrUrl = token
+                  ? `https://www.cinemapass.id.vn/verify-ticket/${encodeURIComponent(
+                      token
+                    )}`
+                  : "";
+
+                return (
+                  <article
+                    className="history-card"
+                    key={ticketId}
+                  >
+                    <div className="history-card-top">
+                      <div className="history-card-icon">
+                        <FaTicketAlt />
+                      </div>
+
+                      <div className="history-card-title">
+                        <h3>
+                          {ticket.movieTitle ||
+                            ticket.MovieTitle ||
+                            `Vé #${ticketId}`}
+                        </h3>
+                        <p>Mã vé: #{ticketId}</p>
+                      </div>
+
+                      <Status
+                        value={
+                          ticket.paymentStatus ||
+                          ticket.PaymentStatus ||
+                          ticket.status ||
+                          ticket.Status
+                        }
+                      />
                     </div>
 
-                    <div className="history-card-title">
-                      <h3>
-                        {ticket.movieTitle ||
-                          `Vé #${ticket.ticketId}`}
-                      </h3>
-                      <p>Mã vé: #{ticket.ticketId}</p>
+                    <div className="history-details">
+                      <p>
+                        <FaMapMarkerAlt />
+                        <span>
+                          {ticket.cinemaName ||
+                            ticket.CinemaName ||
+                            "Chưa có thông tin rạp"}
+                          {(ticket.roomName || ticket.RoomName)
+                            ? ` · ${ticket.roomName || ticket.RoomName}`
+                            : ""}
+                        </span>
+                      </p>
+
+                      <p>
+                        <FaCalendarAlt />
+                        <span>
+                          {formatDate(
+                            ticket.showDate || ticket.ShowDate
+                          )}{" "}
+                          ·{" "}
+                          {formatTime(
+                            ticket.startTime || ticket.StartTime
+                          )}
+                          {(ticket.endTime || ticket.EndTime)
+                            ? ` - ${formatTime(
+                                ticket.endTime || ticket.EndTime
+                              )}`
+                            : ""}
+                        </span>
+                      </p>
+
+                      <p>
+                        <FaChair />
+                        <span>
+                          Ghế:{" "}
+                          {ticket.seatCode ||
+                            ticket.SeatCode ||
+                            "Chưa có thông tin"}
+                          {(ticket.ticketTypeName ||
+                            ticket.TicketTypeName)
+                            ? ` · ${
+                                ticket.ticketTypeName ||
+                                ticket.TicketTypeName
+                              }`
+                            : ""}
+                        </span>
+                      </p>
+
+                      <p>
+                        <FaReceipt />
+                        <span>
+                          Ngày đặt:{" "}
+                          {formatDate(
+                            ticket.createdAt || ticket.CreatedAt
+                          )}
+                        </span>
+                      </p>
                     </div>
 
-                    <Status
-                      value={ticket.paymentStatus || ticket.status}
-                    />
-                  </div>
+                    <div className="history-card-bottom">
+                      <span>Giá vé</span>
+                      <strong>
+                        {formatMoney(
+                          ticket.ticketPrice ?? ticket.TicketPrice
+                        )}
+                      </strong>
+                    </div>
 
-                  <div className="history-details">
-                    <p>
-                      <FaMapMarkerAlt />
-                      <span>
-                        {ticket.cinemaName || "Chưa có thông tin rạp"}
-                        {ticket.roomName ? ` · ${ticket.roomName}` : ""}
-                      </span>
-                    </p>
+                    <div className="ticket-qr-section">
+                      <div className="ticket-qr-info">
+                        <h4>QR vé xem phim</h4>
+                        <p>Mã vé: #{ticketId}</p>
+                        <p>
+                          Đưa mã QR này cho nhân viên để kiểm tra vé.
+                        </p>
+                      </div>
 
-                    <p>
-                      <FaCalendarAlt />
-                      <span>
-                        {formatDate(ticket.showDate)} ·{" "}
-                        {formatTime(ticket.startTime)}
-                        {ticket.endTime
-                          ? ` - ${formatTime(ticket.endTime)}`
-                          : ""}
-                      </span>
-                    </p>
-
-                    <p>
-                      <FaChair />
-                      <span>
-                        Ghế: {ticket.seatCode || "Chưa có thông tin"}
-                        {ticket.ticketTypeName
-                          ? ` · ${ticket.ticketTypeName}`
-                          : ""}
-                      </span>
-                    </p>
-
-                    <p>
-                      <FaReceipt />
-                      <span>
-                        Ngày đặt: {formatDate(ticket.createdAt)}
-                      </span>
-                    </p>
-                  </div>
-
-                  <div className="history-card-bottom">
-                    <span>Giá vé</span>
-                    <strong>{formatMoney(ticket.ticketPrice)}</strong>
-                  </div>
-                </article>
-              ))}
+                      {qrUrl ? (
+                        <div className="ticket-qr-image">
+                          <QRCodeSVG
+                            value={qrUrl}
+                            size={160}
+                            level="H"
+                            includeMargin
+                          />
+                          <span>Quét mã để xác minh vé</span>
+                        </div>
+                      ) : (
+                        <p className="ticket-qr-missing">
+                          Vé này chưa có mã QR từ máy chủ.
+                        </p>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )
         ) : foodOrders.length === 0 ? (
@@ -318,8 +393,12 @@ function TicketHistory({ embedded = false }) {
                   </div>
 
                   <div className="history-card-title">
-                    <h3>Đơn bắp nước #{order.foodOrderId}</h3>
-                    <p>Ngày đặt: {formatDate(order.createdAt)}</p>
+                    <h3>
+                      Đơn bắp nước #{order.foodOrderId}
+                    </h3>
+                    <p>
+                      Ngày đặt: {formatDate(order.createdAt)}
+                    </p>
                   </div>
 
                   <Status value={order.status} />
@@ -356,7 +435,13 @@ function TicketHistory({ embedded = false }) {
 
                 <div className="history-card-bottom">
                   <span>Tổng tiền</span>
-                  <strong>{formatMoney(order.totalAmount)}</strong>
+                  <strong>
+                    {formatMoney(
+                      order.totalAmount ??
+                        order.totalPrice ??
+                        order.amount
+                    )}
+                  </strong>
                 </div>
               </article>
             ))}

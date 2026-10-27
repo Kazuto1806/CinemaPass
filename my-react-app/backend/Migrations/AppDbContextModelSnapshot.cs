@@ -409,6 +409,11 @@ namespace CinemaBackend.Migrations
                     b.Property<string>("PaymentTransactionId")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("QrCodeToken")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<int>("SeatId")
                         .HasColumnType("int");
 
@@ -432,6 +437,9 @@ namespace CinemaBackend.Migrations
                     b.HasKey("TicketId");
 
                     b.HasIndex("MovieId");
+
+                    b.HasIndex("QrCodeToken")
+                        .IsUnique();
 
                     b.HasIndex("SeatId");
 

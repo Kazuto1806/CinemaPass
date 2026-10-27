@@ -1,15 +1,83 @@
+
+/* =========================================================
+   CINEMAPASS - BOOKING PAGE
+   Theme: Dark Navy / Purple / Gold
+========================================================= */
+
+:root {
+  --booking-bg: #080f20;
+  --booking-bg-light: #0b1731;
+  --booking-card: #111c33;
+  --booking-card-inner: #17243d;
+  --booking-border: rgba(131, 161, 255, 0.24);
+  --booking-text: #f1f5ff;
+  --booking-muted: #9baac5;
+  --booking-purple: #8b5cf6;
+  --booking-purple-light: #b989ff;
+  --booking-purple-hover: #a78bfa;
+  --booking-yellow: #facc15;
+  --booking-green: #5ce093;
+  --booking-radius: 20px;
+  --booking-shadow: 0 24px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* =========================================================
+   GENERAL
+========================================================= */
+
 .booking-page {
   min-height: 100vh;
   padding: 48px 0 80px;
+  box-sizing: border-box;
   background:
-    radial-gradient(circle at top, rgba(155, 95, 255, 0.22), transparent 35%),
-    linear-gradient(180deg, #0a1736 0%, #0a122b 60%, #070d1d 100%);
-  color: #fff;
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(124, 58, 237, 0.16),
+      transparent 42%
+    ),
+    linear-gradient(180deg, #0b1429 0%, #0a1225 55%, #070d1b 100%);
+  color: var(--booking-text);
+}
+
+.booking-page *,
+.payment-page *,
+.booking-success-page * {
+  box-sizing: border-box;
 }
 
 .booking-shell {
   width: min(1200px, 90%);
   margin: 0 auto;
+}
+
+.booking-page h1,
+.booking-page h2,
+.booking-page h3,
+.payment-page h1,
+.payment-page h2,
+.payment-page h3,
+.booking-success-page h1 {
+  color: #fff;
+}
+
+.booking-page p,
+.payment-page p {
+  overflow-wrap: anywhere;
+}
+
+.booking-page button,
+.payment-page button,
+.booking-success-page button {
+  font: inherit;
+}
+
+.booking-page button:focus-visible,
+.payment-page button:focus-visible,
+.booking-success-page button:focus-visible,
+.booking-page select:focus-visible,
+.payment-page input:focus-visible {
+  outline: 2px solid var(--booking-purple-light);
+  outline-offset: 3px;
 }
 
 .booking-back {
@@ -18,42 +86,48 @@
   gap: 8px;
   margin-bottom: 20px;
   padding: 0;
-  background: transparent;
   border: none;
+  background: transparent;
   color: #c9d0e1;
   font-size: 13px;
   cursor: pointer;
+  transition: color 0.2s ease;
 }
 
 .booking-back:hover {
   color: #fff;
 }
 
+/* =========================================================
+   MOVIE HEADER
+========================================================= */
+
 .booking-header-card {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 220px minmax(0, 1fr);
   gap: 24px;
+  overflow: hidden;
   border: 1px solid rgba(131, 161, 255, 0.32);
   border-radius: 24px;
-  overflow: hidden;
   background: linear-gradient(
     135deg,
     rgba(21, 40, 82, 0.96),
-    rgba(9, 21, 43, 0.94)
+    rgba(9, 21, 43, 0.96)
   );
   box-shadow: 0 24px 50px rgba(0, 0, 0, 0.25);
 }
 
 .booking-poster {
+  display: block;
   width: 100%;
   height: 100%;
   min-height: 240px;
   object-fit: cover;
-  display: block;
   background: #0d1d39;
 }
 
 .booking-movie-info {
+  min-width: 0;
   padding: 28px 28px 26px 0;
 }
 
@@ -73,12 +147,15 @@
   margin: 16px 0 8px;
   font-size: clamp(28px, 3vw, 42px);
   font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .booking-movie-info p {
   margin: 0;
   color: #b8c3dc;
   font-size: 14px;
+  line-height: 1.6;
 }
 
 .booking-meta {
@@ -93,29 +170,32 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border-radius: 10px;
-  color: #ebefff;
-  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #ebefff;
   font-size: 12px;
 }
 
+/* =========================================================
+   BOOKING LAYOUT / PANELS
+========================================================= */
 
 .booking-content {
   display: grid;
-  grid-template-columns: 0.9fr 1.4fr;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+  align-items: start;
   gap: 24px;
   margin-top: 26px;
-  align-items: start;
 }
 
-
 .booking-panel {
-  border-radius: 22px;
-  border: 1px solid rgba(131, 161, 255, 0.24);
-  background: rgba(14, 27, 53, 0.9);
+  min-width: 0;
   padding: 24px;
-  box-shadow: 0 24px 40px rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--booking-border);
+  border-radius: 22px;
+  background: rgba(14, 27, 53, 0.92);
+  box-shadow: var(--booking-shadow);
 }
 
 .booking-section-title {
@@ -128,11 +208,17 @@
 .booking-section-title h2 {
   margin: 0;
   font-size: 22px;
+  line-height: 1.35;
 }
 
 .booking-section-title svg {
-  color: #b989ff;
+  flex-shrink: 0;
+  color: var(--booking-purple-light);
 }
+
+/* =========================================================
+   DATE SELECTION
+========================================================= */
 
 .booking-date-list {
   display: flex;
@@ -147,16 +233,28 @@
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.02);
   color: #dfe7ff;
-  cursor: pointer;
-  transition: 0.2s ease;
   font-size: 13px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.date-button:hover {
+  border-color: var(--booking-purple-light);
+  transform: translateY(-1px);
 }
 
 .date-button.active {
-  background: linear-gradient(135deg, #6a34ef, #a455ff);
   border-color: transparent;
+  background: linear-gradient(135deg, #6a34ef, #a455ff);
   color: #fff;
 }
+
+/* =========================================================
+   CINEMA / SHOWTIMES
+========================================================= */
 
 .booking-showtime-group {
   display: grid;
@@ -184,10 +282,13 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .cinema-header small {
+  flex-shrink: 0;
   color: #97a8cb;
+  font-size: 11px;
 }
 
 .time-list {
@@ -204,11 +305,20 @@
   gap: 4px;
   min-width: 110px;
   padding: 12px 14px;
-  border-radius: 12px;
   border: 1px solid rgba(160, 178, 235, 0.26);
+  border-radius: 12px;
   background: rgba(12, 24, 43, 0.7);
   color: #ecf0ff;
   cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.time-button:hover {
+  border-color: var(--booking-purple-light);
+  transform: translateY(-1px);
 }
 
 .time-button span {
@@ -218,16 +328,26 @@
 
 .time-button small {
   color: #9ab0df;
+  font-size: 11px;
 }
 
 .time-button.active {
+  border-color: transparent;
   background: linear-gradient(
     135deg,
-    rgba(95, 81, 255, 0.8),
-    rgba(162, 82, 255, 0.8)
+    rgba(95, 81, 255, 0.9),
+    rgba(162, 82, 255, 0.9)
   );
-  border-color: transparent;
+  color: #fff;
 }
+
+.time-button.active small {
+  color: #f0e6ff;
+}
+
+/* =========================================================
+   EMPTY STATES
+========================================================= */
 
 .booking-empty-text,
 .booking-empty-state p {
@@ -235,9 +355,10 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  text-align: center;
   margin: 0;
   color: #a1b0d0;
+  text-align: center;
+  line-height: 1.6;
 }
 
 .booking-empty-state {
@@ -248,8 +369,23 @@
   color: #cbd8ff;
 }
 
+.booking-empty-state svg {
+  flex-shrink: 0;
+  color: var(--booking-purple-light);
+}
+
+/* =========================================================
+   TICKET TYPES
+========================================================= */
+
 .ticket-type-section {
   margin-top: 24px;
+}
+
+.ticket-type-section > h2,
+.ticket-type-section > h3 {
+  margin: 0 0 14px;
+  color: #fff;
 }
 
 .ticket-type-list {
@@ -257,10 +393,9 @@
   gap: 12px;
 }
 
-
 .ticket-type-option {
+  display: block;
   width: 100%;
-  box-sizing: border-box;
   padding: 16px;
   border: 1px solid #334563;
   border-radius: 14px;
@@ -268,18 +403,22 @@
   color: #f1f5ff;
   text-align: left;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .ticket-type-option:hover {
+  border-color: var(--booking-purple);
   background: #202e49;
-  border-color: #8b5cf6;
 }
 
 .ticket-type-option.active {
-  border: 2px solid #facc15;
+  border: 2px solid var(--booking-yellow);
   background: #202b40;
-  color: #ffffff;
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.07);
 }
 
 .ticket-type-option-content {
@@ -287,47 +426,62 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  color: #ffffff;
+  color: #fff;
+}
+
+.ticket-type-option-content > * {
+  min-width: 0;
+}
+
+.ticket-type-option strong {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.ticket-type-option .price,
+.ticket-type-option .ticket-price,
+.ticket-type-option [class*="price"] {
+  color: var(--booking-yellow);
+  font-weight: 800;
 }
 
 .ticket-type-category-label {
   margin-top: 4px;
   color: #aab7cf;
   font-size: 11px;
-  opacity: 1;
+  line-height: 1.5;
 }
 
 .ticket-type-description {
   margin-top: 4px;
   color: #91a1bd;
   font-size: 13px;
-  opacity: 1;
+  line-height: 1.6;
 }
 
+/* =========================================================
+   SEAT SELECTION
+========================================================= */
 
 .booking-summary {
+  min-width: 0;
   align-self: start;
 }
 
 .screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   height: 26px;
   margin: 10px auto 20px;
   border-radius: 999px 999px 18px 18px;
-  background: linear-gradient(
-    180deg,
-    #dfe7ff 0%,
-    #99a9d5 100%
-  );
+  background: linear-gradient(180deg, #dfe7ff 0%, #99a9d5 100%);
   color: #1d2f4f;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.16em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   box-shadow: 0 0 16px rgba(169, 215, 255, 0.35);
 }
-
 
 .seat-grid {
   display: grid;
@@ -335,7 +489,6 @@
   gap: 10px;
   width: 100%;
 }
-
 
 .seat-grid > .booking-empty-text {
   grid-column: 1 / -1;
@@ -346,7 +499,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 0;
   min-height: 42px;
+  padding: 4px 2px;
   border: 1px solid rgba(160, 184, 255, 0.26);
   border-radius: 10px;
   background: rgba(25, 42, 66, 0.7);
@@ -354,9 +509,11 @@
   font-size: 10px;
   font-weight: 700;
   cursor: pointer;
-  transition: 0.15s ease;
-  box-sizing: border-box;
-  min-width: 0;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .seat:hover:not(:disabled) {
@@ -364,28 +521,31 @@
   border-color: rgba(174, 136, 255, 0.8);
 }
 
+.seat:disabled {
+  cursor: not-allowed;
+}
+
 .seat.selected {
-  background: linear-gradient(
-    135deg,
-    #6d37ef,
-    #a454ff
-  );
   border-color: transparent;
+  background: linear-gradient(135deg, #6d37ef, #a454ff);
+  color: #fff;
   box-shadow: 0 8px 18px rgba(145, 92, 255, 0.35);
 }
 
 .seat.reserved {
+  border-color: rgba(171, 185, 219, 0.12);
   background: rgba(122, 138, 166, 0.3);
   color: #7182a6;
-  border-color: rgba(171, 185, 219, 0.12);
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
 .seat-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
   justify-content: center;
+  gap: 12px;
   margin-top: 14px;
   color: #b1bddf;
   font-size: 11px;
@@ -398,61 +558,157 @@
 }
 
 .legend {
+  display: inline-block;
   width: 12px;
   height: 12px;
-  display: inline-block;
+  flex-shrink: 0;
   border-radius: 4px;
 }
 
 .legend.available {
-  background: rgba(25, 42, 66, 0.7);
   border: 1px solid rgba(160, 184, 255, 0.26);
+  background: rgba(25, 42, 66, 0.7);
 }
 
 .legend.selected {
-  background: linear-gradient(
-    135deg,
-    #6d37ef,
-    #a454ff
-  );
+  background: linear-gradient(135deg, #6d37ef, #a454ff);
 }
 
 .legend.reserved {
   background: rgba(122, 138, 166, 0.3);
 }
 
-.booking-summary-box {
-  margin-top: 20px;
+/* =========================================================
+   PER-SEAT TICKET TYPE
+   Supports common class names for seat-ticket selectors.
+========================================================= */
+
+.seat-ticket-section,
+.seat-ticket-types,
+.seat-ticket-assignment,
+.selected-seat-ticket-list {
   display: grid;
   gap: 12px;
+  margin-top: 20px;
+}
+
+.seat-ticket-section h3,
+.seat-ticket-types h3,
+.seat-ticket-assignment h3,
+.selected-seat-ticket-list h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.seat-ticket-row,
+.seat-ticket-item,
+.seat-ticket-assignment-row,
+.selected-seat-ticket,
+.seat-ticket-detail {
+  display: grid;
+  grid-template-columns: minmax(45px, 0.6fr) minmax(0, 1.5fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(131, 161, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.seat-ticket-row > label,
+.seat-ticket-item > label,
+.seat-ticket-assignment-row > label,
+.selected-seat-ticket > label,
+.seat-ticket-detail > label {
+  color: #dfe7ff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.seat-ticket-row select,
+.seat-ticket-item select,
+.seat-ticket-assignment-row select,
+.selected-seat-ticket select,
+.seat-ticket-detail select,
+.seat-ticket-select,
+.booking-page select {
+  max-width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 9px 32px 9px 12px;
+  border: 1px solid rgba(160, 178, 235, 0.3);
+  border-radius: 9px;
+  background-color: #101e38;
+  color: #f1f5ff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.booking-page select option {
+  background: #101e38;
+  color: #f1f5ff;
+}
+
+.seat-ticket-row select:hover,
+.seat-ticket-item select:hover,
+.seat-ticket-assignment-row select:hover,
+.selected-seat-ticket select:hover,
+.seat-ticket-detail select:hover,
+.seat-ticket-select:hover {
+  border-color: var(--booking-purple-light);
+}
+
+.seat-ticket-price,
+.seat-ticket-row strong,
+.seat-ticket-item strong,
+.seat-ticket-detail strong {
+  color: var(--booking-yellow);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* =========================================================
+   BOOKING SUMMARY
+========================================================= */
+
+.booking-summary-box {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
   padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .booking-summary-box > div {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .booking-summary-box small {
   color: #8da1cb;
   font-size: 11px;
+  line-height: 1.5;
 }
 
 .booking-summary-box strong {
-  color: #a974f3;
+  color: #c6a0ff;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .booking-total-row {
   display: flex !important;
   flex-direction: row !important;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-top: 10px;
   padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -465,33 +721,42 @@
 .booking-total-row strong {
   color: #ffd76e;
   font-size: 20px;
+  text-align: right;
 }
 
 .booking-confirm-btn {
   width: 100%;
+  min-height: 48px;
   margin-top: 18px;
+  padding: 12px 16px;
   border: none;
   border-radius: 12px;
-  height: 48px;
-  background: linear-gradient(
-    135deg,
-    #6b35ee,
-    #b547ff
-  );
+  background: linear-gradient(135deg, #6b35ee, #b547ff);
   color: #fff;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
 }
 
-.booking-confirm-btn:hover {
+.booking-confirm-btn:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 10px 24px rgba(145, 70, 255, 0.3);
+  filter: brightness(1.08);
 }
 
-/* =========================
-   PAYMENT
-========================= */
+.booking-confirm-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* =========================================================
+   PAYMENT PAGE
+========================================================= */
 
 .payment-page {
   margin-top: 10px;
@@ -505,33 +770,37 @@
   margin: 14px 0 8px;
   font-size: clamp(30px, 4vw, 44px);
   font-weight: 800;
+  line-height: 1.2;
 }
 
 .payment-title p {
   margin: 0;
   color: #9eafd1;
   font-size: 14px;
+  line-height: 1.6;
 }
 
 .payment-layout {
   display: grid;
-  grid-template-columns: 1.45fr 0.85fr;
-  gap: 24px;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.85fr);
   align-items: start;
+  gap: 24px;
 }
 
 .payment-main {
   display: grid;
   gap: 20px;
+  min-width: 0;
 }
 
 .payment-card,
 .payment-info-card,
 .payment-order-card {
-  border: 1px solid rgba(131, 161, 255, 0.24);
+  min-width: 0;
+  border: 1px solid var(--booking-border);
   border-radius: 22px;
-  background: rgba(14, 27, 53, 0.92);
-  box-shadow: 0 24px 40px rgba(0, 0, 0, 0.18);
+  background: rgba(14, 27, 53, 0.94);
+  box-shadow: var(--booking-shadow);
 }
 
 .payment-card {
@@ -546,19 +815,22 @@
 }
 
 .payment-card-title > svg {
-  color: #b989ff;
+  flex-shrink: 0;
+  color: var(--booking-purple-light);
   font-size: 25px;
 }
 
 .payment-card-title h2 {
   margin: 0 0 4px;
   font-size: 20px;
+  line-height: 1.4;
 }
 
 .payment-card-title p {
   margin: 0;
   color: #91a3c9;
   font-size: 12px;
+  line-height: 1.5;
 }
 
 .payment-method-list {
@@ -567,19 +839,22 @@
 }
 
 .payment-method {
-  width: 100%;
   display: grid;
-  grid-template-columns: 48px 1fr 22px;
+  grid-template-columns: 48px minmax(0, 1fr) 22px;
   align-items: center;
   gap: 14px;
+  width: 100%;
   padding: 16px;
-  border-radius: 15px;
   border: 1px solid rgba(169, 187, 236, 0.18);
+  border-radius: 15px;
   background: rgba(255, 255, 255, 0.025);
   color: #fff;
   text-align: left;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .payment-method:hover {
@@ -597,11 +872,11 @@
 }
 
 .payment-method-icon {
-  width: 46px;
-  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 46px;
+  height: 46px;
   border-radius: 12px;
   background: rgba(145, 91, 255, 0.14);
   color: #c59bff;
@@ -611,21 +886,24 @@
 .payment-method strong {
   display: block;
   margin-bottom: 4px;
+  color: #fff;
   font-size: 14px;
+  line-height: 1.5;
 }
 
 .payment-method span {
   display: block;
   color: #8fa1c5;
   font-size: 12px;
+  line-height: 1.5;
 }
 
 .payment-radio {
+  position: relative;
   width: 18px;
   height: 18px;
   border: 2px solid #63759c;
   border-radius: 50%;
-  position: relative;
 }
 
 .payment-radio.checked {
@@ -633,50 +911,78 @@
 }
 
 .payment-radio.checked::after {
-  content: "";
   position: absolute;
   inset: 3px;
   border-radius: 50%;
   background: #a456ff;
+  content: "";
 }
 
+/* =========================================================
+   PAYMENT METHOD DETAILS
+========================================================= */
+
 .payment-info-card {
-  padding: 24px;
   min-height: 220px;
+  padding: 24px;
 }
 
 .qr-payment-box {
-  min-height: 170px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 30px;
+  min-height: 170px;
 }
 
 .fake-qr {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   width: 150px;
   height: 150px;
   padding: 10px;
-  background: #fff;
   border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #fff;
 }
 
 .qr-pattern {
-  width: 120px;
-  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 120px;
+  height: 120px;
+  border: 8px solid #fff;
+  background:
+    linear-gradient(
+      90deg,
+      #111 10%,
+      transparent 10% 20%,
+      #111 20% 30%,
+      transparent 30% 40%,
+      #111 40% 50%,
+      transparent 50% 60%,
+      #111 60% 70%,
+      transparent 70% 80%,
+      #111 80% 90%,
+      transparent 90%
+    ),
+    linear-gradient(
+      #111 10%,
+      transparent 10% 20%,
+      #111 20% 30%,
+      transparent 30% 40%,
+      #111 40% 50%,
+      transparent 50% 60%,
+      #111 60% 70%,
+      transparent 70% 80%,
+      #111 80% 90%,
+      transparent 90%
+    );
   color: #111;
   font-size: 24px;
   font-weight: 900;
-  background:
-    linear-gradient(90deg, #111 10%, transparent 10% 20%, #111 20% 30%, transparent 30% 40%, #111 40% 50%, transparent 50% 60%, #111 60% 70%, transparent 70% 80%, #111 80% 90%, transparent 90%),
-    linear-gradient(#111 10%, transparent 10% 20%, #111 20% 30%, transparent 30% 40%, #111 40% 50%, transparent 50% 60%, #111 60% 70%, transparent 70% 80%, #111 80% 90%, transparent 90%);
-  border: 8px solid #fff;
 }
 
 .qr-payment-box h3,
@@ -684,6 +990,7 @@
 .wallet-payment-box h3 {
   margin: 0 0 10px;
   font-size: 18px;
+  line-height: 1.4;
 }
 
 .qr-payment-box p,
@@ -706,13 +1013,13 @@
 }
 
 .fake-input {
-  height: 46px;
   display: flex;
   align-items: center;
-  padding: 0 14px;
+  min-height: 46px;
   margin-top: 12px;
-  border-radius: 10px;
+  padding: 0 14px;
   border: 1px solid rgba(170, 188, 232, 0.2);
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.035);
   color: #7285a9;
   font-size: 13px;
@@ -720,40 +1027,41 @@
 
 .fake-card-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 12px;
 }
 
 .wallet-payment-box {
-  min-height: 170px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  min-height: 170px;
   text-align: center;
 }
 
 .wallet-payment-box > svg {
   margin-bottom: 12px;
-  color: #b989ff;
+  color: var(--booking-purple-light);
   font-size: 34px;
 }
 
 .payment-submit-btn {
   width: 100%;
   min-height: 52px;
+  padding: 12px 18px;
   border: none;
   border-radius: 14px;
-  background: linear-gradient(
-    135deg,
-    #6b35ee,
-    #b547ff
-  );
+  background: linear-gradient(135deg, #6b35ee, #b547ff);
   color: #fff;
   font-size: 16px;
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 12px 25px rgba(122, 56, 237, 0.22);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .payment-submit-btn:hover:not(:disabled) {
@@ -766,14 +1074,14 @@
   cursor: wait;
 }
 
-/* =========================
-   PAYMENT ORDER
-========================= */
+/* =========================================================
+   PAYMENT ORDER SUMMARY
+========================================================= */
 
 .payment-order-card {
-  padding: 24px;
   position: sticky;
   top: 20px;
+  padding: 24px;
 }
 
 .payment-order-title {
@@ -784,12 +1092,14 @@
 }
 
 .payment-order-title svg {
-  color: #b989ff;
+  flex-shrink: 0;
+  color: var(--booking-purple-light);
 }
 
 .payment-order-title h2 {
   margin: 0;
   font-size: 20px;
+  line-height: 1.4;
 }
 
 .payment-movie {
@@ -801,6 +1111,7 @@
 
 .payment-movie img,
 .payment-poster-empty {
+  flex-shrink: 0;
   width: 72px;
   height: 96px;
   border-radius: 10px;
@@ -819,17 +1130,20 @@
   display: flex;
   flex-direction: column;
   gap: 7px;
+  min-width: 0;
 }
 
 .payment-movie strong {
   color: #fff;
   font-size: 15px;
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .payment-movie span {
   color: #9aaacc;
   font-size: 12px;
+  line-height: 1.5;
 }
 
 .payment-order-details {
@@ -842,6 +1156,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .payment-order-details span {
@@ -852,6 +1167,8 @@
 .payment-order-details strong {
   color: #edf2ff;
   font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .payment-price {
@@ -869,12 +1186,13 @@
 
 .payment-price > div:first-child strong {
   color: #dce5ff;
+  text-align: right;
 }
 
 .payment-final-total {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 15px;
   margin-top: 16px;
 }
@@ -888,32 +1206,33 @@
 .payment-final-total strong {
   color: #ffd76e;
   font-size: 22px;
+  text-align: right;
 }
 
-/* =========================
-   SUCCESS
-========================= */
+/* =========================================================
+   SUCCESS PAGE
+========================================================= */
 
 .booking-success-page {
-  width: min(650px, 90%);
-  min-height: 70vh;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: min(1000px, 92%);
+  min-height: 70vh;
+  margin: 0 auto;
   text-align: center;
 }
 
 .booking-success-icon {
-  width: 82px;
-  height: 82px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 82px;
+  height: 82px;
   border-radius: 50%;
   background: rgba(87, 220, 144, 0.12);
-  color: #5ce093;
+  color: var(--booking-green);
   font-size: 42px;
   box-shadow: 0 0 35px rgba(87, 220, 144, 0.15);
 }
@@ -921,28 +1240,31 @@
 .booking-success-page h1 {
   margin: 22px 0 8px;
   font-size: 34px;
+  line-height: 1.3;
 }
 
 .success-message {
   margin: 0 0 24px;
   color: #9eafd0;
+  line-height: 1.6;
 }
 
 .success-ticket {
-  width: 100%;
-  padding: 24px;
   display: grid;
   gap: 16px;
-  text-align: left;
-  border-radius: 20px;
+  width: 100%;
+  padding: 24px;
   border: 1px solid rgba(131, 161, 255, 0.25);
+  border-radius: 20px;
   background: rgba(14, 27, 53, 0.92);
+  text-align: left;
 }
 
 .success-ticket > div {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  min-width: 0;
 }
 
 .success-ticket span {
@@ -953,6 +1275,8 @@
 .success-ticket strong {
   color: #edf2ff;
   font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .success-total {
@@ -967,66 +1291,103 @@
 }
 
 .success-home-btn {
-  margin-top: 22px;
   min-width: 180px;
-  height: 46px;
+  min-height: 46px;
+  margin-top: 22px;
+  padding: 10px 18px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(
-    135deg,
-    #6b35ee,
-    #b547ff
-  );
+  background: linear-gradient(135deg, #6b35ee, #b547ff);
   color: #fff;
   font-weight: 700;
   cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-/* =========================
-   LOADING / EMPTY
-========================= */
+.success-home-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(145, 70, 255, 0.3);
+}
+
+/* =========================================================
+   LOADING / EMPTY PAGE
+========================================================= */
 
 .booking-loading,
 .booking-empty {
-  min-height: 50vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
+  min-height: 50vh;
+  padding: 24px;
   color: #fff;
+  text-align: center;
 }
 
 .booking-loading svg,
 .booking-empty svg {
-  color: #b989ff;
+  color: var(--booking-purple-light);
   font-size: 40px;
 }
 
+.booking-empty p {
+  max-width: 560px;
+  color: var(--booking-muted);
+  line-height: 1.7;
+}
+
 .booking-empty button {
-  margin-top: 10px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  min-height: 42px;
+  margin-top: 10px;
   padding: 11px 18px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(
-    135deg,
-    #6b35ee,
-    #b547ff
-  );
+  background: linear-gradient(135deg, #6b35ee, #b547ff);
   color: #fff;
   cursor: pointer;
 }
 
-/* =========================
-   RESPONSIVE
-========================= */
+/* =========================================================
+   COMMON HOVER / DISABLED STATES
+========================================================= */
+
+.booking-page button:disabled,
+.payment-page button:disabled {
+  cursor: not-allowed;
+}
+
+.booking-page .muted,
+.payment-page .muted {
+  color: var(--booking-muted);
+}
+
+.booking-page .price,
+.booking-page .total-price {
+  color: var(--booking-yellow);
+  font-weight: 700;
+}
+
+.booking-page hr,
+.payment-page hr {
+  border: 0;
+  border-top: 1px solid var(--booking-border);
+}
+
+/* =========================================================
+   RESPONSIVE - TABLET
+========================================================= */
 
 @media (max-width: 1000px) {
   .payment-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .payment-order-card {
@@ -1037,21 +1398,79 @@
 
 @media (max-width: 900px) {
   .booking-header-card {
-    grid-template-columns: 1fr;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .booking-poster {
+    min-height: 230px;
   }
 
   .booking-movie-info {
-    padding: 0 20px 22px;
+    padding: 22px 20px 22px 0;
   }
 
   .booking-content {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .booking-panel {
+    width: 100%;
+  }
+
+  .seat-grid {
+    gap: 8px;
   }
 }
 
+/* =========================================================
+   RESPONSIVE - MOBILE
+========================================================= */
+
 @media (max-width: 600px) {
   .booking-page {
-    padding-top: 24px;
+    padding: 24px 0 48px;
+  }
+
+  .booking-shell {
+    width: 92%;
+  }
+
+  .booking-header-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    border-radius: 18px;
+  }
+
+  .booking-poster {
+    width: 100%;
+    height: 250px;
+    min-height: 0;
+    object-fit: contain;
+    background: #0d1d39;
+  }
+
+  .booking-movie-info {
+    padding: 20px;
+  }
+
+  .booking-movie-info h1 {
+    margin-top: 12px;
+    font-size: 28px;
+  }
+
+  .booking-meta {
+    gap: 8px;
+  }
+
+  .booking-meta span {
+    padding: 7px 9px;
+    font-size: 11px;
+  }
+
+  .booking-content {
+    gap: 18px;
+    margin-top: 18px;
   }
 
   .booking-panel,
@@ -1059,18 +1478,120 @@
   .payment-info-card,
   .payment-order-card {
     padding: 18px 16px;
+    border-radius: 16px;
+  }
+
+  .booking-section-title {
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .booking-section-title h2 {
+    font-size: 19px;
+  }
+
+  .booking-date-list {
+    gap: 8px;
+  }
+
+  .date-button {
+    padding: 9px 11px;
+    font-size: 12px;
+  }
+
+  .cinema-block {
+    padding: 14px 12px;
+  }
+
+  .cinema-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .time-list {
+    gap: 8px;
+  }
+
+  .time-button {
+    flex: 1 1 85px;
+    min-width: 85px;
+    padding: 10px 8px;
+  }
+
+  .ticket-type-option {
+    padding: 13px;
+  }
+
+  .ticket-type-option-content {
+    gap: 10px;
+  }
+
+  .ticket-type-option strong {
+    font-size: 13px;
+  }
+
+  .ticket-type-description {
+    font-size: 12px;
   }
 
   .seat-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
   }
 
-  .time-button {
-    min-width: 92px;
+  .seat {
+    min-height: 40px;
+    border-radius: 8px;
+    font-size: 11px;
+  }
+
+  .seat-legend {
+    gap: 9px;
+    font-size: 10px;
+  }
+
+  .seat-ticket-row,
+  .seat-ticket-item,
+  .seat-ticket-assignment-row,
+  .selected-seat-ticket,
+  .seat-ticket-detail {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 11px;
+  }
+
+  .seat-ticket-row select,
+  .seat-ticket-item select,
+  .seat-ticket-assignment-row select,
+  .selected-seat-ticket select,
+  .seat-ticket-detail select,
+  .seat-ticket-select {
+    width: 100%;
+  }
+
+  .booking-summary-box {
+    padding: 13px;
+  }
+
+  .booking-total-row strong {
+    font-size: 18px;
+  }
+
+  .booking-confirm-btn {
+    min-height: 46px;
+    font-size: 14px;
+  }
+
+  .payment-title {
+    margin-bottom: 20px;
+  }
+
+  .payment-title h1 {
+    font-size: 30px;
   }
 
   .payment-method {
-    grid-template-columns: 42px 1fr 20px;
+    grid-template-columns: 42px minmax(0, 1fr) 20px;
     gap: 10px;
     padding: 13px;
   }
@@ -1078,10 +1599,20 @@
   .payment-method-icon {
     width: 40px;
     height: 40px;
+    font-size: 18px;
+  }
+
+  .payment-method strong {
+    font-size: 13px;
+  }
+
+  .payment-method span {
+    font-size: 11px;
   }
 
   .qr-payment-box {
     flex-direction: column;
+    gap: 18px;
     text-align: center;
   }
 
@@ -1096,120 +1627,488 @@
   }
 
   .fake-card-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .payment-final-total strong {
+    font-size: 20px;
+  }
+
+  .booking-success-page {
+    width: 92%;
+    padding: 30px 0;
+  }
+
+  .booking-success-page h1 {
+    font-size: 28px;
+  }
+
+  .success-ticket {
+    padding: 18px;
   }
 }
 
-/* =========================
-   CINEMAPASS - DARK CINEMA THEME
-========================= */
+/* =========================================================
+   RESPONSIVE - VERY SMALL SCREENS
+========================================================= */
 
-:root {
-  --booking-bg: #080f20;
-  --booking-card: #111c33;
-  --booking-card-inner: #17243d;
-  --booking-border: #2b3d5e;
-  --booking-text: #f1f5ff;
-  --booking-muted: #9baac5;
-  --booking-purple: #8b5cf6;
-  --booking-purple-hover: #a78bfa;
-  --booking-yellow: #facc15;
+@media (max-width: 360px) {
+  .booking-shell {
+    width: 94%;
+  }
+
+  .booking-panel,
+  .payment-card,
+  .payment-info-card,
+  .payment-order-card {
+    padding: 14px 12px;
+  }
+
+  .booking-movie-info h1 {
+    font-size: 24px;
+  }
+
+  .seat-grid {
+    gap: 5px;
+  }
+
+  .seat {
+    min-height: 36px;
+    font-size: 10px;
+  }
+
+  .payment-method {
+    grid-template-columns: 36px minmax(0, 1fr) 18px;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .payment-method-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+}
+.ticket-quantity-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 12px;
 }
 
-/* Nền toàn trang */
-.booking-page {
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(124, 58, 237, 0.13),
-      transparent 42%
-    ),
-    linear-gradient(180deg, #0b1429, #070d1b);
-  color: var(--booking-text);
+.ticket-quantity-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d6ad55;
+  border-radius: 9px;
+  background: #111d35;
+  color: #f4c96b;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
 }
 
-/* Hai khung chính */
-.booking-panel,
-.booking-left,
-.booking-right,
-.booking-content > div {
-  color: var(--booking-text);
+.ticket-quantity-btn:hover:not(:disabled) {
+  background: #283858;
+  transform: scale(1.05);
 }
 
-/* Các thẻ nội dung */
-.booking-card,
-.booking-summary,
-.booking-info,
-.booking-content .ticket-card {
-  background: var(--booking-card-inner);
-  border: 1px solid var(--booking-border);
-  color: var(--booking-text);
-  border-radius: 14px;
+.ticket-quantity-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
-/* Tên phim, thông tin nổi bật */
-.booking-page h1,
-.booking-page h2,
-.booking-page h3 {
-  color: #ffffff;
-}
-
-/* Nội dung phụ */
-.booking-page small,
-.booking-page .muted {
-  color: var(--booking-muted);
-}
-
-/* Giá tiền */
-.booking-page .price,
-.booking-page .total-price {
-  color: var(--booking-yellow);
+.ticket-quantity-value {
+  min-width: 22px;
+  text-align: center;
+  color: #fff;
+  font-size: 17px;
   font-weight: 700;
 }
 
-/* Nút chính */
-.booking-page button.primary,
-.booking-page .continue-button,
-.booking-page .payment-button {
-  background: linear-gradient(
-    135deg,
-    #7c3aed,
-    #a855f7
-  );
-  color: #ffffff;
+/* =========================================================
+   TICKET TYPE SELECT BUTTON
+   Bổ sung để tương thích với Booking.jsx
+========================================================= */
+
+.ticket-type-select-btn {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
   border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ticket-type-select-btn:hover {
+  background: transparent;
+}
+
+.ticket-type-select-btn:focus-visible {
+  outline: 2px solid var(--booking-purple-light);
+  outline-offset: 4px;
+}
+
+.ticket-type-option {
+  cursor: default;
+}
+
+.ticket-type-option.active .ticket-type-select-btn,
+.ticket-type-option.active .ticket-type-select-btn strong {
+  color: #fff;
+}
+
+.ticket-type-select-btn .ticket-price {
+  flex-shrink: 0;
+  color: var(--booking-yellow);
+  white-space: nowrap;
+}
+
+/* Nút tăng giảm số lượng vé */
+.ticket-quantity-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.ticket-quantity-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #d6ad55;
+  border-radius: 9px;
+  background: #111d35;
+  color: #f4c96b;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.ticket-quantity-btn:hover:not(:disabled) {
+  background: #283858;
+  transform: scale(1.05);
+}
+
+.ticket-quantity-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ticket-quantity-value {
+  min-width: 22px;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
+}
+.seat-hold-countdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 12px 16px;
+  border: 1px solid rgba(244, 201, 107, 0.4);
   border-radius: 10px;
-  transition: filter 0.2s ease;
+  background: rgba(244, 201, 107, 0.08);
+  color: #f4c96b;
+  font-size: 14px;
 }
 
-.booking-page button.primary:hover,
-.booking-page .continue-button:hover,
-.booking-page .payment-button:hover {
-  filter: brightness(1.12);
+.seat-hold-countdown strong {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Thẻ loại vé được chọn */
-.booking-page .ticket-card.active,
-.booking-page .ticket-card.selected {
-  background: #202b40;
-  border: 2px solid var(--booking-yellow);
-  color: #ffffff;
+.seat-hold-countdown.warning {
+  border-color: #ef6464;
+  background: rgba(239, 100, 100, 0.1);
+  color: #ff8585;
+}
+.acb-qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
 }
 
-/* Thẻ loại vé chưa chọn */
-.booking-page .ticket-card:not(.active):not(.selected) {
-  background: var(--booking-card-inner);
-  border: 1px solid var(--booking-border);
-  color: var(--booking-text);
+.acb-qr-image {
+  display: block;
+  width: 240px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 
-/* Chú thích và thông tin ghế */
-.booking-page .seat-legend,
-.booking-page .booking-description {
-  color: var(--booking-muted);
+.acb-qr-caption {
+  margin: 0;
+  color: #475569;
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.5;
 }
 
-/* Đường phân cách */
-.booking-page hr {
-  border-color: var(--booking-border);
+@media (max-width: 480px) {
+  .acb-qr-container {
+    padding: 12px;
+  }
+
+  .acb-qr-image {
+    width: 210px;
+  }
+}
+
+/* Bố cục vé thành công: thông tin bên trái, QR bên phải */
+.success-ticket-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  align-items: start;
+  gap: 24px;
+}
+
+.success-ticket-info {
+  min-width: 0;
+}
+
+.success-ticket-qr {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #f8fafc;
+  text-align: center;
+}
+
+.success-ticket-qr h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+
+.success-ticket-qr > p {
+  margin: 0 0 14px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.success-ticket-qr-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.success-ticket-qr-item {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.success-ticket-qr-item svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.success-ticket-qr-item strong {
+  font-size: 14px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.success-ticket-qr-item p {
+  margin: 0;
+  color: #b45309;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .success-ticket-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .success-ticket-qr {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* ===== GIAO DIỆN ĐẶT VÉ THÀNH CÔNG ===== */
+
+.booking-success-page {
+  width: min(1000px, 94%);
+  min-height: auto;
+  margin: 40px auto;
+  padding: 24px 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Khung vé ngang */
+.booking-success-page .success-ticket-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  align-items: start;
+  gap: 28px;
+  width: 100%;
+  margin: 24px 0;
+  padding: 28px;
+  box-sizing: border-box;
+  border: 1px solid rgba(131, 161, 255, 0.3);
+  border-radius: 18px;
+  background: #0e1b35;
+  text-align: left;
+}
+
+/* Thông tin nằm bên trái */
+.booking-success-page .success-ticket-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 22px;
+  min-width: 0;
+}
+
+.booking-success-page .success-ticket-info > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  min-width: 0;
+}
+
+.booking-success-page .success-ticket-info span {
+  color: #aab8d0;
+  font-size: 14px;
+}
+
+.booking-success-page .success-ticket-info strong {
+  color: #fff;
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.booking-success-page .success-ticket-info .success-total {
+  grid-column: 1 / -1;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.booking-success-page .success-ticket-info .success-total strong {
+  color: #7dd3fc;
+  font-size: 22px;
+}
+
+/* Mã QR nằm bên phải */
+.booking-success-page .success-ticket-qr {
+  width: 100%;
+  min-width: 0;
+  padding: 18px;
+  box-sizing: border-box;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #0f172a;
+  text-align: center;
+}
+
+.booking-success-page .success-ticket-qr h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+
+.booking-success-page .success-ticket-qr > p {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.booking-success-page .success-ticket-qr-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.booking-success-page .success-ticket-qr-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.booking-success-page .success-ticket-qr-item svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.booking-success-page .success-ticket-qr-item strong {
+  color: #0f172a;
+  font-size: 14px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.booking-success-page .success-home-btn {
+  align-self: center;
+}
+
+/* Điện thoại: xếp dọc để không bị chật */
+@media (max-width: 650px) {
+  .booking-success-page {
+    width: 94%;
+    margin: 20px auto;
+  }
+
+  .booking-success-page .success-ticket-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    padding: 18px;
+  }
+
+  .booking-success-page .success-ticket-info {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .booking-success-page .success-ticket-info .success-total {
+    grid-column: auto;
+  }
 }

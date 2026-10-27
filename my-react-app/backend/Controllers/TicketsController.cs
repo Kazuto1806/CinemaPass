@@ -1,5 +1,6 @@
 using System.Data;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 using CinemaBackend.Data;
 using CinemaBackend.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -7,14 +8,28 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CinemaBackend.Controllers
 {
+    // Một ghế có thể chọn một loại vé riêng.
+    public class SeatTicketRequest
+    {
+        public string SeatCode { get; set; } = string.Empty;
+        public int TicketTypeId { get; set; }
+    }
+
     public class BookingRequest
     {
         public int UserId { get; set; }
         public int MovieId { get; set; }
         public int ShowtimeId { get; set; }
+
         public List<string> SeatCodes { get; set; } = new();
+
+        // Danh sách loại vé theo từng ghế.
+        public List<SeatTicketRequest> SeatTickets { get; set; } = new();
+
+        // Giữ tương thích với cách đặt vé cũ: một loại vé cho tất cả ghế.
         public decimal TicketPrice { get; set; }
         public int? TicketTypeId { get; set; }
+
         public string HoldToken { get; set; } = string.Empty;
     }
 
@@ -38,7 +53,8 @@ namespace CinemaBackend.Controllers
 
         // =====================================================
         // POST: api/tickets/book
-        // Đặt vé: tất cả ghế phải được giữ bởi đúng HoldToken.
+        // Đặt nhiều ghế, hỗ trợ nhiều loại vé trong một lần.
+        // Tất cả ghế phải được giữ bởi đúng HoldToken.
         // =====================================================
 
         [HttpPost("book")]
@@ -104,10 +120,10 @@ namespace CinemaBackend.Controllers
                 });
             }
 
+            // Chuẩn hóa mã ghế.
             var normalizedSeatCodes = request.SeatCodes
                 .Where(code => !string.IsNullOrWhiteSpace(code))
-                .Select(code => code!.Trim().ToUpperInvariant())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Select(code => code.Trim().ToUpperInvariant())
                 .ToList();
 
             if (normalizedSeatCodes.Count == 0)
@@ -115,6 +131,17 @@ namespace CinemaBackend.Controllers
                 return BadRequest(new
                 {
                     message = "Không có ghế hợp lệ để đặt."
+                });
+            }
+
+            // Không cho phép gửi trùng ghế.
+            if (normalizedSeatCodes.Distinct(
+                    StringComparer.OrdinalIgnoreCase).Count()
+                != normalizedSeatCodes.Count)
+            {
+                return BadRequest(new
+                {
+                    message = "Danh sách ghế có ghế bị trùng."
                 });
             }
 
@@ -129,6 +156,7 @@ namespace CinemaBackend.Controllers
                 }
             }
 
+            // Kiểm tra tài khoản.
             var userExists = await _context.Users
                 .AnyAsync(u => u.UserId == request.UserId);
 
@@ -140,6 +168,7 @@ namespace CinemaBackend.Controllers
                 });
             }
 
+            // Kiểm tra phim.
             var movieExists = await _context.Movies
                 .AnyAsync(m => m.MovieId == request.MovieId);
 
@@ -151,6 +180,7 @@ namespace CinemaBackend.Controllers
                 });
             }
 
+            // Kiểm tra suất chiếu.
             var showtime = await _context.Showtimes
                 .Include(s => s.Room)
                 .FirstOrDefaultAsync(
@@ -172,54 +202,171 @@ namespace CinemaBackend.Controllers
                 });
             }
 
-            if (!request.TicketTypeId.HasValue)
+            // Tạo danh sách loại vé theo ghế.
+            // Nếu frontend gửi SeatTickets thì dùng loại vé riêng.
+            // Nếu không gửi thì dùng TicketTypeId cũ cho tất cả ghế.
+            var ticketTypeBySeat =
+                new Dictionary<string, int>(
+                    StringComparer.OrdinalIgnoreCase);
+
+            if (request.SeatTickets != null &&
+                request.SeatTickets.Count > 0)
             {
-                return BadRequest(new
+                foreach (var item in request.SeatTickets)
                 {
-                    message = "Vui lòng chọn chính sách vé của suất chiếu."
-                });
+                    if (item == null ||
+                        string.IsNullOrWhiteSpace(item.SeatCode))
+                    {
+                        return BadRequest(new
+                        {
+                            message = "Thông tin loại vé theo ghế không hợp lệ."
+                        });
+                    }
+
+                    var seatCode = item.SeatCode
+                        .Trim()
+                        .ToUpperInvariant();
+
+                    if (!normalizedSeatCodes.Contains(
+                            seatCode,
+                            StringComparer.OrdinalIgnoreCase))
+                    {
+                        return BadRequest(new
+                        {
+                            message =
+                                $"Ghế {seatCode} không nằm trong danh sách ghế đã chọn."
+                        });
+                    }
+
+                    if (item.TicketTypeId <= 0)
+                    {
+                        return BadRequest(new
+                        {
+                            message =
+                                $"Loại vé của ghế {seatCode} không hợp lệ."
+                        });
+                    }
+
+                    if (ticketTypeBySeat.ContainsKey(seatCode))
+                    {
+                        return BadRequest(new
+                        {
+                            message =
+                                $"Ghế {seatCode} có thông tin loại vé bị trùng."
+                        });
+                    }
+
+                    ticketTypeBySeat[seatCode] = item.TicketTypeId;
+                }
+
+                // Mỗi ghế được chọn phải có đúng một loại vé.
+                foreach (var seatCode in normalizedSeatCodes)
+                {
+                    if (!ticketTypeBySeat.ContainsKey(seatCode))
+                    {
+                        return BadRequest(new
+                        {
+                            message =
+                                $"Vui lòng chọn loại vé cho ghế {seatCode}."
+                        });
+                    }
+                }
+
+                if (ticketTypeBySeat.Count != normalizedSeatCodes.Count)
+                {
+                    return BadRequest(new
+                    {
+                        message =
+                            "Số lượng loại vé không khớp với số ghế đã chọn."
+                    });
+                }
+            }
+            else
+            {
+                // Tương thích với frontend cũ.
+                if (!request.TicketTypeId.HasValue ||
+                    request.TicketTypeId.Value <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        message = "Vui lòng chọn chính sách vé của suất chiếu."
+                    });
+                }
+
+                foreach (var seatCode in normalizedSeatCodes)
+                {
+                    ticketTypeBySeat[seatCode] =
+                        request.TicketTypeId.Value;
+                }
             }
 
-            var ticketType = await _context.TicketTypes
-                .FirstOrDefaultAsync(
-                    t => t.TicketTypeId == request.TicketTypeId.Value);
+            // Lấy toàn bộ loại vé được sử dụng.
+            var requestedTicketTypeIds = ticketTypeBySeat.Values
+                .Distinct()
+                .ToList();
 
-            if (ticketType == null)
-            {
-                return BadRequest(new
-                {
-                    message = "Loại vé không tồn tại."
-                });
-            }
-
-            if (!string.Equals(
-                ticketType.Status,
-                "Active",
-                StringComparison.OrdinalIgnoreCase))
-            {
-                return BadRequest(new
-                {
-                    message = "Loại vé hiện không hoạt động."
-                });
-            }
-
-            var linkedTicketPrice = await _context.ShowtimeTicketTypes
+            var ticketTypes = await _context.TicketTypes
                 .AsNoTracking()
-                .Where(a =>
-                    a.ShowtimeId == showtime.ShowtimeId &&
-                    a.TicketTypeId == ticketType.TicketTypeId)
-                .Select(a => (decimal?)a.Price)
-                .FirstOrDefaultAsync();
+                .Where(t => requestedTicketTypeIds.Contains(t.TicketTypeId))
+                .ToListAsync();
 
-            if (!linkedTicketPrice.HasValue)
+            if (ticketTypes.Count != requestedTicketTypeIds.Count)
             {
                 return BadRequest(new
                 {
-                    message = "Chính sách vé này không áp dụng cho suất chiếu đã chọn."
+                    message = "Một hoặc nhiều loại vé không tồn tại."
                 });
             }
 
-            // Dùng transaction để kiểm tra và tạo vé trong cùng một giao dịch.
+            foreach (var ticketType in ticketTypes)
+            {
+                if (!string.Equals(
+                    ticketType.Status,
+                    "Active",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest(new
+                    {
+                        message =
+                            $"Loại vé {ticketType.Name} hiện không hoạt động."
+                    });
+                }
+            }
+
+            var ticketTypeLookup = ticketTypes.ToDictionary(
+                t => t.TicketTypeId);
+
+            // Lấy giá áp dụng cho suất chiếu và từng loại vé.
+            var showtimeTicketPrices =
+                await _context.ShowtimeTicketTypes
+                    .AsNoTracking()
+                    .Where(x =>
+                        x.ShowtimeId == request.ShowtimeId &&
+                        requestedTicketTypeIds.Contains(x.TicketTypeId))
+                    .ToListAsync();
+
+            var priceByTicketType = showtimeTicketPrices
+                .GroupBy(x => x.TicketTypeId)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.First().Price);
+
+            foreach (var ticketTypeId in requestedTicketTypeIds)
+            {
+                if (!priceByTicketType.ContainsKey(ticketTypeId))
+                {
+                    var ticketTypeName =
+                        ticketTypeLookup[ticketTypeId].Name ?? "";
+
+                    return BadRequest(new
+                    {
+                        message =
+                            $"Loại vé {ticketTypeName} không áp dụng cho suất chiếu đã chọn."
+                    });
+                }
+            }
+
+            // Kiểm tra và tạo vé trong cùng một transaction.
             await using var transaction =
                 await _context.Database.BeginTransactionAsync(
                     IsolationLevel.Serializable);
@@ -243,10 +390,12 @@ namespace CinemaBackend.Controllers
 
                         return BadRequest(new
                         {
-                            message = $"Ghế {seatCode} không tồn tại trong phòng chiếu."
+                            message =
+                                $"Ghế {seatCode} không tồn tại trong phòng chiếu."
                         });
                     }
 
+                    // Ghế phải được giữ bởi đúng phiên đặt vé.
                     var activeHold = await _context.SeatHolds
                         .FirstOrDefaultAsync(h =>
                             h.ShowtimeId == request.ShowtimeId &&
@@ -265,6 +414,7 @@ namespace CinemaBackend.Controllers
                         });
                     }
 
+                    // Ghế chưa được đặt bởi vé khác.
                     var alreadyBooked = await _context.Tickets
                         .AnyAsync(t =>
                             t.ShowtimeId == request.ShowtimeId &&
@@ -285,18 +435,32 @@ namespace CinemaBackend.Controllers
                     selectedSeats.Add(seat);
                 }
 
-                var finalTicketPrice = linkedTicketPrice.Value;
                 var createdTickets = new List<Ticket>();
 
+                // Tạo vé với loại vé và giá tương ứng từng ghế.
                 foreach (var seat in selectedSeats)
                 {
+                    var seatCode = seat.SeatCode.Trim().ToUpperInvariant();
+
+                    var selectedTicketTypeId =
+                        ticketTypeBySeat[seatCode];
+
+                    var selectedTicketType =
+                        ticketTypeLookup[selectedTicketTypeId];
+
+                    var finalTicketPrice =
+                        priceByTicketType[selectedTicketTypeId];
+
                     var ticket = new Ticket
                     {
+                          QrCodeToken = Convert.ToHexString(
+                              RandomNumberGenerator.GetBytes(32)
+                                ).ToLowerInvariant(),
                         UserId = request.UserId,
                         MovieId = request.MovieId,
                         ShowtimeId = request.ShowtimeId,
                         SeatId = seat.SeatId,
-                        TicketTypeId = ticketType.TicketTypeId,
+                        TicketTypeId = selectedTicketType.TicketTypeId,
                         TicketPrice = finalTicketPrice,
                         Status = "Đã đặt",
                         PaymentStatus = "Chưa thanh toán",
@@ -309,9 +473,10 @@ namespace CinemaBackend.Controllers
                     createdTickets.Add(ticket);
                 }
 
-                // Chỉ xóa lượt giữ của phiên này cho các ghế vừa đặt thành công.
-                var selectedSeatIds =
-                    selectedSeats.Select(s => s.SeatId).ToList();
+                // Chỉ xóa lượt giữ của phiên hiện tại cho các ghế đã đặt.
+                var selectedSeatIds = selectedSeats
+                    .Select(s => s.SeatId)
+                    .ToList();
 
                 var holdsToRemove = await _context.SeatHolds
                     .Where(h =>
@@ -325,17 +490,31 @@ namespace CinemaBackend.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
+                // Trả về thông tin thực tế của từng vé vừa tạo.
                 var createdTicketResults = createdTickets
-                    .Select((ticket, index) => new
+                    .Select(ticket =>
                     {
-                        ticketId = ticket.TicketId,
-                        seatCode = selectedSeats[index].SeatCode,
-                        ticketTypeId = ticket.TicketTypeId,
-                        ticketTypeName = ticketType.Name ?? "",
-                        price = ticket.TicketPrice,
-                        paymentStatus = ticket.PaymentStatus
+                        var seat = selectedSeats.First(
+                            s => s.SeatId == ticket.SeatId);
+
+                        var ticketType =
+                            ticketTypeLookup[ticket.TicketTypeId!.Value];
+
+                        return new
+                        {
+                            ticketId = ticket.TicketId,
+                            qrCodeToken = ticket.QrCodeToken,
+                            seatCode = seat.SeatCode,
+                            ticketTypeId = ticket.TicketTypeId,
+                            ticketTypeName = ticketType.Name ?? "",
+                            price = ticket.TicketPrice,
+                            paymentStatus = ticket.PaymentStatus
+                        };
                     })
                     .ToList();
+
+                var totalPrice = createdTickets.Sum(
+                    t => t.TicketPrice);
 
                 return Ok(new
                 {
@@ -343,9 +522,8 @@ namespace CinemaBackend.Controllers
                     bookedSeats = normalizedSeatCodes,
                     tickets = createdTicketResults,
                     showtimeId = request.ShowtimeId,
-                    ticketTypeId = ticketType.TicketTypeId,
-                    ticketTypeName = ticketType.Name ?? "",
-                    ticketPrice = finalTicketPrice,
+                    totalTickets = createdTickets.Count,
+                    totalPrice = totalPrice,
                     paymentStatus = "Chưa thanh toán"
                 });
             }
@@ -387,6 +565,7 @@ namespace CinemaBackend.Controllers
                 .Select(t => new
                 {
                     ticketId = t.TicketId,
+                    qrCodeToken = t.QrCodeToken,
                     userId = t.UserId,
 
                     userName = t.User != null
@@ -884,12 +1063,7 @@ namespace CinemaBackend.Controllers
                 });
             }
 
-            existingTicket.UserId = ticket.UserId;
-            existingTicket.MovieId = ticket.MovieId;
-            existingTicket.ShowtimeId = ticket.ShowtimeId;
-            existingTicket.SeatId = ticket.SeatId;
-            existingTicket.TicketTypeId = ticket.TicketTypeId;
-
+            // Kiểm tra loại vé trước khi cập nhật.
             if (ticket.TicketTypeId.HasValue)
             {
                 var ticketType = await _context.TicketTypes
@@ -915,16 +1089,39 @@ namespace CinemaBackend.Controllers
                     });
                 }
 
-                existingTicket.TicketPrice = ticketType.Price;
+                var linkedPrice = await _context.ShowtimeTicketTypes
+                    .AsNoTracking()
+                    .Where(x =>
+                        x.ShowtimeId == ticket.ShowtimeId &&
+                        x.TicketTypeId == ticket.TicketTypeId.Value)
+                    .Select(x => (decimal?)x.Price)
+                    .FirstOrDefaultAsync();
+
+                if (!linkedPrice.HasValue)
+                {
+                    return BadRequest(new
+                    {
+                        message =
+                            "Loại vé này không áp dụng cho suất chiếu."
+                    });
+                }
+
+                existingTicket.TicketTypeId = ticket.TicketTypeId;
+                existingTicket.TicketPrice = linkedPrice.Value;
             }
             else
             {
+                existingTicket.TicketTypeId = null;
                 existingTicket.TicketPrice =
                     ticket.TicketPrice > 0
                         ? ticket.TicketPrice
                         : showtime.TicketPrice;
             }
 
+            existingTicket.UserId = ticket.UserId;
+            existingTicket.MovieId = ticket.MovieId;
+            existingTicket.ShowtimeId = ticket.ShowtimeId;
+            existingTicket.SeatId = ticket.SeatId;
             existingTicket.Status = ticket.Status;
 
             existingTicket.PaymentStatus =

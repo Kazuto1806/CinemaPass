@@ -5,6 +5,7 @@ namespace CinemaBackend.Models
     public class Ticket
     {
         public int TicketId { get; set; }
+        public string QrCodeToken { get; set; } = string.Empty;
 
         public int UserId { get; set; }
 

@@ -67,7 +67,14 @@ namespace CinemaBackend.Data
             modelBuilder.Entity<Ticket>()
                 .Property(t => t.TicketPrice)
                 .HasPrecision(18, 2);
+             modelBuilder.Entity<Ticket>()
+    .Property(t => t.QrCodeToken)
+    .HasMaxLength(64)
+    .IsRequired();
 
+modelBuilder.Entity<Ticket>()
+    .HasIndex(t => t.QrCodeToken)
+    .IsUnique();
             modelBuilder.Entity<TicketType>()
                 .Property(t => t.Price)
                 .HasPrecision(18, 2);

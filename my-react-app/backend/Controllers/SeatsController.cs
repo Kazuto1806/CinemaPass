@@ -34,7 +34,7 @@ namespace CinemaBackend.Controllers
         private readonly AppDbContext _context;
 
         private static readonly TimeSpan HoldDuration =
-            TimeSpan.FromMinutes(5);
+            TimeSpan.FromMinutes(10);
 
         public SeatsController(AppDbContext context)
         {
@@ -263,15 +263,27 @@ namespace CinemaBackend.Controllers
                 });
             }
 
-            var newHold = new SeatHold
-            {
-                ShowtimeId = request.ShowtimeId,
-                SeatId = seat.SeatId,
-                HoldToken = token,
-                UserId = request.UserId,
-                CreatedAtUtc = now,
-                ExpiresAtUtc = now.Add(HoldDuration)
-            };
+         // Các ghế thuộc cùng lượt đặt của cùng suất chiếu
+// sử dụng chung thời điểm hết hạn.
+var sessionExpiry = await _context.SeatHolds
+    .Where(hold =>
+        hold.ShowtimeId == request.ShowtimeId &&
+        hold.HoldToken == token &&
+        hold.ExpiresAtUtc > now)
+    .Select(hold => (DateTime?)hold.ExpiresAtUtc)
+    .MinAsync();
+
+var expiresAt = sessionExpiry ?? now.Add(HoldDuration);
+
+var newHold = new SeatHold
+{
+    ShowtimeId = request.ShowtimeId,
+    SeatId = seat.SeatId,
+    HoldToken = token,
+    UserId = request.UserId,
+    CreatedAtUtc = now,
+    ExpiresAtUtc = expiresAt
+};
 
             _context.SeatHolds.Add(newHold);
 

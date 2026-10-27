@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useNotification } from "../components/useNotification";
@@ -15,6 +16,8 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import "./Booking.css";
+import paymentQr from "../assets/QR.png";
+import { QRCodeSVG } from "qrcode.react";
 import { API_BASE, getMissingPosterFallback } from "../constants";
 
 const MOVIE_API_URL = `${API_BASE}/api/movies`;
@@ -65,9 +68,7 @@ const getPosterUrl = (posterUrl) => {
     ([path]) => path.split("/").pop()?.toLowerCase() === fileName
   );
 
-  if (asset) {
-    return asset[1];
-  }
+  if (asset) return asset[1];
 
   return normalized;
 };
@@ -77,9 +78,7 @@ const formatDate = (value) => {
 
   const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
+  if (Number.isNaN(date.getTime())) return value;
 
   return date.toLocaleDateString("vi-VN", {
     weekday: "short",
@@ -99,9 +98,7 @@ const formatTime = (value) => {
 
   const date = new Date(`2000-01-01T${value}`);
 
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
+  if (Number.isNaN(date.getTime())) return value;
 
   return date.toLocaleTimeString("vi-VN", {
     hour: "2-digit",
@@ -114,17 +111,16 @@ const currency = (value) =>
   new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-  }).format(value || 0);
+  }).format(Number(value) || 0);
 
 function Booking() {
   const navigate = useNavigate();
   const location = useLocation();
   const { notify } = useNotification();
 
-  // CHẶN ĐẶT VÉ KHI CHƯA ĐĂNG NHẬP
-  // Lưu lại trang hiện tại để đăng nhập xong quay lại đúng suất/phim đang chọn.
   const isAuthenticated = () => {
     const userId = Number(localStorage.getItem("userId"));
+
     return (
       localStorage.getItem("isLoggedIn") === "true" &&
       Number.isInteger(userId) &&
@@ -136,25 +132,22 @@ function Booking() {
     if (isAuthenticated()) return false;
 
     const returnTo = `${location.pathname}${location.search}`;
+
     navigate(`/login?returnUrl=${encodeURIComponent(returnTo)}`, {
       replace: true,
     });
+
     return true;
   };
 
   useEffect(() => {
-    const userId = Number(localStorage.getItem("userId"));
-    const authenticated =
-      localStorage.getItem("isLoggedIn") === "true" &&
-      Number.isInteger(userId) &&
-      userId > 0;
+    if (isAuthenticated()) return;
 
-    if (!authenticated) {
-      const returnTo = `${location.pathname}${location.search}`;
-      navigate(`/login?returnUrl=${encodeURIComponent(returnTo)}`, {
-        replace: true,
-      });
-    }
+    const returnTo = `${location.pathname}${location.search}`;
+
+    navigate(`/login?returnUrl=${encodeURIComponent(returnTo)}`, {
+      replace: true,
+    });
   }, [location.pathname, location.search, navigate]);
 
   const queryParams = new URLSearchParams(location.search);
@@ -167,27 +160,31 @@ function Booking() {
   const [seatList, setSeatList] = useState([]);
   const [ticketTypes, setTicketTypes] = useState([]);
 
-  // Mã phiên riêng cho tab trình duyệt này để backend biết
-  // ghế nào đang được chính khách này giữ.
   const [holdToken] = useState(() => {
     const storageKey = "cinemapass.seatHoldToken";
     let token = sessionStorage.getItem(storageKey);
 
     if (!token) {
-      token = typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+      token =
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random()
+              .toString(36)
+              .slice(2)}`;
+
       sessionStorage.setItem(storageKey, token);
     }
 
     return token;
   });
-  const [seatActionLoading, setSeatActionLoading] = useState(false);
 
+  const [seatActionLoading, setSeatActionLoading] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [selectedMovieId, setSelectedMovieId] = useState(
-    !selectedMovieNameFromUrl && Number.isFinite(selectedMovieIdFromUrl)
+    !selectedMovieNameFromUrl &&
+      Number.isInteger(selectedMovieIdFromUrl) &&
+      selectedMovieIdFromUrl > 0
       ? selectedMovieIdFromUrl
       : null
   );
@@ -196,22 +193,52 @@ function Booking() {
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedCinema, setSelectedCinema] = useState("");
   const [selectedSeats, setSelectedSeats] = useState([]);
+  const [holdExpiresAt, setHoldExpiresAt] = useState(null);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const [holdExpired, setHoldExpired] = useState(false);
+   // Đồng hồ đếm ngược thời gian giữ ghế: 5 phút.
+useEffect(() => {
+  if (!holdExpiresAt || selectedSeats.length === 0) {
+    setRemainingSeconds(0);
+    return;
+  }
 
-  const [selectedTicketTypeId, setSelectedTicketTypeId] =
-    useState(null);
+  const updateCountdown = () => {
+    const seconds = Math.max(
+      0,
+      Math.ceil((holdExpiresAt - Date.now()) / 1000)
+    );
 
-  // 1 = chọn suất + ghế + loại vé
-  // 2 = thanh toán
+    setRemainingSeconds(seconds);
+
+    if (seconds <= 0) {
+      setHoldExpired(true);
+    }
+  };
+
+  updateCountdown();
+
+  const timerId = window.setInterval(updateCountdown, 1000);
+
+  return () => window.clearInterval(timerId);
+}, [holdExpiresAt, selectedSeats.length]);
+
+  // Loại vé mặc định dùng khi thêm ghế mới.
+const [selectedTicketTypeId, setSelectedTicketTypeId] = useState(null);
+const [ticketTypeQuantities, setTicketTypeQuantities] = useState({}); 
+
+  // Lưu loại vé riêng theo mã ghế.
+  const [seatTicketTypeIds, setSeatTicketTypeIds] = useState({});
+
   const [bookingStep, setBookingStep] = useState(1);
-
   const [paymentMethod, setPaymentMethod] = useState("qr");
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingResult, setBookingResult] = useState(null);
 
+  // Tải danh sách phim, suất chiếu và loại vé.
   useEffect(() => {
-    // Khong goi cac API dat ve khi nguoi dung chua dang nhap.
     if (!isAuthenticated()) return;
 
     const loadData = async () => {
@@ -261,9 +288,7 @@ function Booking() {
           : [];
 
         setMovies(normalizedMovies);
-        setShowtimes(
-          Array.isArray(showtimeData) ? showtimeData : []
-        );
+        setShowtimes(Array.isArray(showtimeData) ? showtimeData : []);
         setTicketTypes(normalizedTicketTypes);
 
         if (normalizedTicketTypes.length) {
@@ -272,10 +297,7 @@ function Booking() {
           );
         }
       } catch (error) {
-        console.error(
-          "Lỗi tải dữ liệu đặt vé từ backend:",
-          error
-        );
+        console.error("Lỗi tải dữ liệu đặt vé từ backend:", error);
 
         setMovies([]);
         setShowtimes([]);
@@ -288,6 +310,7 @@ function Booking() {
     loadData();
   }, []);
 
+  // Xác định phim dựa trên URL.
   useEffect(() => {
     if (!movies.length) return;
 
@@ -299,7 +322,7 @@ function Booking() {
       );
 
       if (movieFromUrl) {
-        setSelectedMovieId(movieFromUrl.movieId);
+        setSelectedMovieId(Number(movieFromUrl.movieId));
         return;
       }
     }
@@ -331,7 +354,7 @@ function Booking() {
         (movie) => Number(movie.movieId) === Number(selectedMovieId)
       )
     ) {
-      setSelectedMovieId(movies[0].movieId);
+      setSelectedMovieId(Number(movies[0].movieId));
     }
   }, [
     movies,
@@ -345,7 +368,7 @@ function Booking() {
   const selectedMovie = useMemo(
     () =>
       movies.find(
-        (movie) => movie.movieId === selectedMovieId
+        (movie) => Number(movie.movieId) === Number(selectedMovieId)
       ) ||
       movies[0] ||
       null,
@@ -357,8 +380,7 @@ function Booking() {
 
     return showtimes.filter(
       (item) =>
-        Number(item.movieId) ===
-        Number(selectedMovie.movieId)
+        Number(item.movieId) === Number(selectedMovie.movieId)
     );
   }, [selectedMovie, showtimes]);
 
@@ -384,17 +406,17 @@ function Booking() {
       (item) =>
         Number(item.showtimeId) === selectedShowtimeIdFromUrl
     );
+
     const requestedDate = requestedShowtime
       ? String(requestedShowtime.showDate).slice(0, 10)
       : "";
-    const firstDate = dates[0];
 
     setSelectedDate((current) =>
       requestedDate && dates.includes(requestedDate)
         ? requestedDate
         : current && dates.includes(current)
           ? current
-          : firstDate
+          : dates[0]
     );
   }, [dates, movieShowtimes, selectedShowtimeIdFromUrl]);
 
@@ -402,11 +424,10 @@ function Booking() {
     if (!selectedDate) return [];
 
     const filtered = movieShowtimes.filter(
-      (item) =>
-        String(item.showDate).slice(0, 10) === selectedDate
+      (item) => String(item.showDate).slice(0, 10) === selectedDate
     );
 
-    const unique = filtered.reduce((acc, item) => {
+    const grouped = filtered.reduce((acc, item) => {
       const key = `${item.cinemaName || "Cinema"}-${
         item.roomName || "Phòng"
       }`;
@@ -429,7 +450,7 @@ function Booking() {
       return acc;
     }, {});
 
-    return Object.values(unique).map((group) => ({
+    return Object.values(grouped).map((group) => ({
       ...group,
       times: group.times.sort((a, b) =>
         a.time.localeCompare(b.time)
@@ -445,12 +466,15 @@ function Booking() {
     }
 
     const firstGroup = timeOptions[0];
+
     const requestedShowtime = movieShowtimes.find(
       (item) =>
         Number(item.showtimeId) === selectedShowtimeIdFromUrl &&
         String(item.showDate).slice(0, 10) === selectedDate
     );
+
     const requestedCinema = requestedShowtime?.cinemaName || "";
+
     const preferredCinema =
       requestedCinema &&
       timeOptions.some((group) => group.cinemaName === requestedCinema)
@@ -460,17 +484,19 @@ function Booking() {
     const currentCinemaIsAvailable = timeOptions.some(
       (group) => group.cinemaName === selectedCinema
     );
-    const nextCinema = preferredCinema ||
+
+    const nextCinema =
+      preferredCinema ||
       (currentCinemaIsAvailable ? selectedCinema : firstGroup.cinemaName);
+
     setSelectedCinema(nextCinema);
 
     const currentGroup =
-      timeOptions.find(
-        (group) => group.cinemaName === nextCinema
-      ) || firstGroup;
+      timeOptions.find((group) => group.cinemaName === nextCinema) ||
+      firstGroup;
 
-    const firstTime =
-      currentGroup?.times[0]?.time || "";
+    const firstTime = currentGroup?.times[0]?.time || "";
+
     const requestedTime = requestedShowtime
       ? formatTime(requestedShowtime.startTime)
       : "";
@@ -492,11 +518,7 @@ function Booking() {
   ]);
 
   const selectedShowtime = useMemo(() => {
-    if (
-      !selectedDate ||
-      !selectedCinema ||
-      !selectedTime
-    ) {
+    if (!selectedDate || !selectedCinema || !selectedTime) {
       return null;
     }
 
@@ -510,11 +532,13 @@ function Booking() {
 
     if (requestedShowtime) return requestedShowtime;
 
-    return movieShowtimes.find(
-      (item) =>
-        String(item.showDate).slice(0, 10) === selectedDate &&
-        (item.cinemaName || "") === selectedCinema &&
-        formatTime(item.startTime) === selectedTime
+    return (
+      movieShowtimes.find(
+        (item) =>
+          String(item.showDate).slice(0, 10) === selectedDate &&
+          (item.cinemaName || "") === selectedCinema &&
+          formatTime(item.startTime) === selectedTime
+      ) || null
     );
   }, [
     movieShowtimes,
@@ -524,9 +548,12 @@ function Booking() {
     selectedTime,
   ]);
 
-  const availableTicketTypes = useMemo(() => {
-    const assignments = selectedShowtime?.ticketTypePrices;
-
+  // Chỉ lấy loại vé được áp dụng cho suất chiếu đang chọn.
+ const availableTicketTypes = useMemo(() => {
+  const assignments = selectedShowtime?.ticketTypePrices;
+  console.log("Suất chiếu đang chọn:", selectedShowtime);
+  console.log("Danh sách loại vé:", ticketTypes);
+  console.log("Giá vé theo suất:", selectedShowtime?.ticketTypePrices);
     if (!Array.isArray(assignments)) {
       return ticketTypes;
     }
@@ -538,32 +565,55 @@ function Booking() {
             Number(item.ticketTypeId) === Number(assignment.ticketTypeId)
         );
 
-        return ticketType
-          ? {
-              ...ticketType,
-              category: assignment.category || ticketType.category,
-              price: Number(assignment.price),
-            }
-          : null;
+        if (!ticketType) return null;
+
+        return {
+          ...ticketType,
+          category: assignment.category || ticketType.category,
+          price: Number(assignment.price),
+        };
       })
       .filter(Boolean);
   }, [selectedShowtime, ticketTypes]);
 
+  // Đồng bộ loại vé hợp lệ với từng ghế.
   useEffect(() => {
-    const availableIds = availableTicketTypes.map(
-      (ticketType) => Number(ticketType.ticketTypeId)
+    const availableIds = availableTicketTypes.map((ticketType) =>
+      Number(ticketType.ticketTypeId)
     );
 
     if (!availableIds.length) {
       setSelectedTicketTypeId(null);
+      setSeatTicketTypeIds({});
       return;
     }
 
-    if (!availableIds.includes(Number(selectedTicketTypeId))) {
-      setSelectedTicketTypeId(availableIds[0]);
-    }
-  }, [availableTicketTypes, selectedTicketTypeId]);
+    const currentDefaultId = Number(selectedTicketTypeId);
 
+    const defaultId = availableIds.includes(currentDefaultId)
+      ? currentDefaultId
+      : availableIds[0];
+
+    if (currentDefaultId !== defaultId) {
+      setSelectedTicketTypeId(defaultId);
+    }
+
+    setSeatTicketTypeIds((current) => {
+      const next = {};
+
+      selectedSeats.forEach((seatCode) => {
+        const existingId = Number(current[seatCode]);
+
+        next[seatCode] = availableIds.includes(existingId)
+          ? existingId
+          : defaultId;
+      });
+
+      return next;
+    });
+  }, [availableTicketTypes, selectedTicketTypeId, selectedSeats]);
+
+  // Tải sơ đồ ghế và cập nhật tình trạng ghế định kỳ.
   useEffect(() => {
     const showtimeId = Number(selectedShowtime?.showtimeId);
     const roomId = Number(selectedShowtime?.roomId);
@@ -571,6 +621,7 @@ function Booking() {
     if (!showtimeId) {
       setSeatList([]);
       setSelectedSeats([]);
+      setSeatTicketTypeIds({});
       return undefined;
     }
 
@@ -579,24 +630,31 @@ function Booking() {
 
     setSeatList([]);
     setSelectedSeats([]);
+    setSeatTicketTypeIds({});
 
     const loadSeats = async () => {
       try {
         const response = await fetch(
-          `${SEAT_API_URL}?showtimeId=${showtimeId}&holdToken=${encodeURIComponent(holdToken)}`,
+          `${SEAT_API_URL}?showtimeId=${showtimeId}&holdToken=${encodeURIComponent(
+            holdToken
+          )}`,
           { signal: controller.signal }
         );
 
         if (!response.ok) {
-          throw new Error(`Không tải được sơ đồ ghế (${response.status}).`);
+          throw new Error(
+            `Không tải được sơ đồ ghế (${response.status}).`
+          );
         }
 
         const data = await response.json();
+
         const roomSeats = Array.isArray(data)
           ? data.filter((seat) => Number(seat.roomId) === roomId)
           : [];
 
         const uniqueSeats = new Map();
+
         roomSeats.forEach((seat) => {
           const seatCode = String(seat.seatCode || "")
             .trim()
@@ -618,8 +676,8 @@ function Booking() {
       }
     };
 
-    // Tải ngay và cập nhật định kỳ để khách khác thấy ghế đang được giữ.
     loadSeats();
+
     const pollId = window.setInterval(loadSeats, 2500);
 
     return () => {
@@ -627,25 +685,28 @@ function Booking() {
       window.clearInterval(pollId);
       controller.abort();
 
-      // Khi đổi suất chiếu hoặc rời trang, nhả các ghế của phiên này.
       fetch(`${SEAT_API_URL}/release-all`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ showtimeId, holdToken }),
         keepalive: true,
-      }).catch(() => {
-        // Ghế vẫn tự hết hạn sau 5 phút nếu trình duyệt mất kết nối.
-      });
+      }).catch(() => {});
     };
-  }, [selectedShowtime?.showtimeId, selectedShowtime?.roomId, holdToken]);
+  }, [
+    selectedShowtime?.showtimeId,
+    selectedShowtime?.roomId,
+    holdToken,
+  ]);
 
   useEffect(() => {
     setSelectedSeats((current) =>
-      current.filter((seatCode) =>
-        !seatList.some((item) =>
-          String(item.seatCode).toUpperCase() === seatCode &&
-          (item.isBooked || (item.isHeld && !item.isHeldByMe))
-        )
+      current.filter(
+        (seatCode) =>
+          !seatList.some(
+            (item) =>
+              String(item.seatCode).toUpperCase() === seatCode &&
+              (item.isBooked || (item.isHeld && !item.isHeldByMe))
+          )
       )
     );
   }, [seatList]);
@@ -662,109 +723,239 @@ function Booking() {
     () =>
       availableTicketTypes.find(
         (ticketType) =>
-          Number(ticketType.ticketTypeId) ===
-          Number(selectedTicketTypeId)
-      ) || null,
+          Number(ticketType.ticketTypeId) === Number(selectedTicketTypeId)
+      ) ||
+      availableTicketTypes[0] ||
+      null,
     [availableTicketTypes, selectedTicketTypeId]
   );
 
-  const ticketUnitPrice =
-    selectedTicketType?.price != null
+  const getTicketTypeForSeat = (seatCode) => {
+    const savedId = seatTicketTypeIds[seatCode];
+
+    const ticketTypeId =
+      savedId != null && savedId !== ""
+        ? Number(savedId)
+        : Number(selectedTicketTypeId);
+
+    return (
+      availableTicketTypes.find(
+        (ticketType) => Number(ticketType.ticketTypeId) === ticketTypeId
+      ) ||
+      selectedTicketType ||
+      null
+    );
+  };
+
+  const getPriceForSeat = (seatCode) => {
+    const ticketType = getTicketTypeForSeat(seatCode);
+
+    return ticketType?.price != null
+      ? Number(ticketType.price)
+      : Number(selectedShowtime?.ticketPrice || 0);
+  };
+
+  const seatTicketDetails = selectedSeats.map((seatCode) => {
+    const ticketType = getTicketTypeForSeat(seatCode);
+
+    return {
+      seatCode,
+      ticketTypeId: Number(
+        ticketType?.ticketTypeId || selectedTicketTypeId
+      ),
+      ticketTypeName: ticketType?.name || "Chưa chọn",
+      ticketPrice: getPriceForSeat(seatCode),
+    };
+  });
+
+  const ticketUnitPrice = selectedSeats.length
+    ? getPriceForSeat(selectedSeats[0])
+    : selectedTicketType?.price != null
       ? Number(selectedTicketType.price)
       : Number(selectedShowtime?.ticketPrice || 0);
 
-  const totalPrice =
-    ticketUnitPrice * selectedSeats.length;
+const totalPrice = seatTicketDetails.reduce(
+  (sum, item) => sum + (Number(item.ticketPrice) || 0),
+  0
+);
 
-  const toggleSeat = async (seat) => {
-    const seatCode = String(seat || "").trim().toUpperCase();
-    const showtimeId = Number(selectedShowtime?.showtimeId);
+console.log("GIÁ LOẠI VÉ ĐANG CHỌN:", selectedTicketType);
+console.log("GIÁ SUẤT CHIẾU:", selectedShowtime?.ticketPrice);
+console.log("CHI TIẾT TÍNH TIỀN:", seatTicketDetails);
+console.log("TỔNG TIỀN VÉ:", totalPrice);
 
-    if (!seatCode || !showtimeId || seatActionLoading) return;
+  // Đếm số ghế đang sử dụng một loại vé cụ thể.
+const getTicketTypeQuantity = (ticketTypeId) => {
+  return Number(ticketTypeQuantities[ticketTypeId] || 0);
+};
 
-    const currentlySelected = selectedSeats.includes(seatCode);
+const getTotalTicketQuantity = () => {
+  return Object.values(ticketTypeQuantities).reduce(
+    (total, quantity) => total + Number(quantity || 0),
+    0
+  );
+};
 
-    if (!currentlySelected && reservedSeats.includes(seatCode)) {
-      notify("Ghế này đã được đặt hoặc đang được khách khác giữ. Vui lòng chọn ghế khác.", "warning");
-      return;
+const changeTicketTypeQuantity = (ticketTypeId, change) => {
+  const id = Number(ticketTypeId);
+
+  setTicketTypeQuantities((current) => {
+    const next = { ...current };
+    const currentQuantity = Number(next[id] || 0);
+
+    next[id] = Math.max(0, currentQuantity + change);
+
+    if (next[id] === 0) {
+      delete next[id];
     }
 
-    if (!currentlySelected && selectedSeats.length >= 8) {
-      notify("Mỗi lần chỉ có thể chọn tối đa 8 ghế.", "warning");
-      return;
+    return next;
+  });
+
+  if (change > 0) {
+    setSelectedTicketTypeId(id);
+  }
+};
+const toggleSeat = async (seat) => {
+  const seatCode = String(seat || "").trim().toUpperCase();
+  const showtimeId = Number(selectedShowtime?.showtimeId);
+
+  if (!seatCode || !showtimeId || seatActionLoading) return;
+
+  const currentlySelected = selectedSeats.includes(seatCode);
+
+ if (!currentlySelected && getTotalTicketQuantity() <= 0) {
+    notify("Vui lòng chọn số lượng vé trước khi chọn ghế.", "warning");
+    return;
+  }
+
+  if (
+    !currentlySelected &&
+    selectedSeats.length >= getTotalTicketQuantity()
+  ) {
+    notify(
+      `Bạn đã chọn đủ ${getTotalTicketQuantity()} ghế theo số lượng vé.`,
+      "warning"
+    );
+    return;
+  }
+
+  if (!currentlySelected && reservedSeats.includes(seatCode)) {
+    notify(
+      "Ghế này đã được đặt hoặc đang được khách khác giữ. Vui lòng chọn ghế khác.",
+      "warning"
+    );
+    return;
+  }
+  setSeatActionLoading(true);
+
+  try {
+    const endpoint = currentlySelected ? "release" : "hold";
+
+    const body = currentlySelected
+      ? { showtimeId, seatCode, holdToken }
+      : {
+          showtimeId,
+          seatCode,
+          holdToken,
+          userId: Number(localStorage.getItem("userId")) || null,
+        };
+
+    const response = await fetch(`${SEAT_API_URL}/${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json().catch(() => ({}));
+console.log("HTTP status:", response.status);
+console.log("API response:", JSON.stringify(data, null, 2));
+    if (!response.ok) {
+      throw new Error(
+        data.message ||
+          `Không thể ${currentlySelected ? "nhả" : "giữ"} ghế ${seatCode}.`
+      );
     }
 
-    setSeatActionLoading(true);
+    if (currentlySelected) {
+      setSelectedSeats((current) =>
+        current.filter((item) => item !== seatCode)
+      );
 
-    try {
-      const endpoint = currentlySelected ? "release" : "hold";
-      const body = currentlySelected
-        ? { showtimeId, seatCode, holdToken }
-        : {
-            showtimeId,
-            seatCode,
-            holdToken,
-            userId: Number(localStorage.getItem("userId")) || null,
-          };
-
-      const response = await fetch(`${SEAT_API_URL}/${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+      setSeatTicketTypeIds((current) => {
+        const next = { ...current };
+        delete next[seatCode];
+        return next;
       });
+    } else {
+  setHoldExpiresAt((current) => {
+    if (current && current > Date.now()) {
+      return current;
+    }
 
-      const data = await response.json().catch(() => ({}));
+    setHoldExpired(false);
+    return Date.now() + 5 * 60 * 1000;
+  });
 
-      if (!response.ok) {
-        throw new Error(data.message || `Không thể ${currentlySelected ? "nhả" : "giữ"} ghế ${seatCode}.`);
-      }
+  setSelectedSeats((current) =>
+    current.includes(seatCode) ? current : [...current, seatCode]
+  );
 
-      if (currentlySelected) {
-        setSelectedSeats((current) => current.filter((item) => item !== seatCode));
-      } else {
-        setSelectedSeats((current) =>
-          current.includes(seatCode) ? current : [...current, seatCode]
+      setSeatTicketTypeIds((current) => ({
+        ...current,
+        [seatCode]: Number(
+          selectedTicketTypeId || availableTicketTypes[0]?.ticketTypeId
+        ),
+      }));
+    }
+
+    const refreshResponse = await fetch(
+      `${SEAT_API_URL}?showtimeId=${showtimeId}&holdToken=${encodeURIComponent(holdToken)}`
+    );
+
+    if (refreshResponse.ok) {
+      const refreshedData = await refreshResponse.json();
+
+      if (Array.isArray(refreshedData)) {
+        setSeatList(
+          refreshedData.map((item) => ({
+            ...item,
+            seatCode: String(item.seatCode || "").trim().toUpperCase(),
+          }))
         );
       }
+    }
+  } catch (error) {
+    console.error("Lỗi giữ/nhả ghế:", error);
 
-      // Cập nhật ngay trạng thái ghế trên trình duyệt hiện tại.
+    notify(
+      error.message || "Không thể cập nhật ghế. Vui lòng thử lại."
+    );
+
+    try {
       const refreshResponse = await fetch(
         `${SEAT_API_URL}?showtimeId=${showtimeId}&holdToken=${encodeURIComponent(holdToken)}`
       );
+
       if (refreshResponse.ok) {
         const refreshedData = await refreshResponse.json();
-        if (Array.isArray(refreshedData)) {
-          setSeatList(refreshedData.map((item) => ({
-            ...item,
-            seatCode: String(item.seatCode || "").trim().toUpperCase(),
-          })));
-        }
-      }
-    } catch (error) {
-      console.error("Lỗi giữ/nhả ghế:", error);
-      notify(error.message || "Không thể cập nhật ghế. Vui lòng thử lại.");
 
-      // Tải lại sơ đồ ngay nếu ghế vừa bị khách khác giữ.
-      try {
-        const refreshResponse = await fetch(
-          `${SEAT_API_URL}?showtimeId=${showtimeId}&holdToken=${encodeURIComponent(holdToken)}`
-        );
-        if (refreshResponse.ok) {
-          const refreshedData = await refreshResponse.json();
-          if (Array.isArray(refreshedData)) {
-            setSeatList(refreshedData.map((item) => ({
+        if (Array.isArray(refreshedData)) {
+          setSeatList(
+            refreshedData.map((item) => ({
               ...item,
               seatCode: String(item.seatCode || "").trim().toUpperCase(),
-            })));
-          }
+            }))
+          );
         }
-      } catch (refreshError) {
-        console.error("Không thể làm mới sơ đồ ghế:", refreshError);
       }
-    } finally {
-      setSeatActionLoading(false);
+    } catch (refreshError) {
+      console.error("Không thể làm mới sơ đồ ghế:", refreshError);
     }
-  };
+  } finally {
+    setSeatActionLoading(false);
+  }
+};
 
   const handleContinuePayment = () => {
     if (redirectToLogin()) return;
@@ -787,13 +978,20 @@ function Booking() {
       return;
     }
 
-    if (
-      !availableTicketTypes.some(
-        (ticketType) =>
-          Number(ticketType.ticketTypeId) === Number(selectedTicketTypeId)
-      )
-    ) {
-      notify("Vui lòng chọn loại vé.", "warning");
+    const validTicketTypeIds = availableTicketTypes.map((item) =>
+      Number(item.ticketTypeId)
+    );
+
+    const hasInvalidTicketType = selectedSeats.some((seatCode) => {
+      const ticketTypeId = Number(
+        seatTicketTypeIds[seatCode] || selectedTicketTypeId
+      );
+
+      return !validTicketTypeIds.includes(ticketTypeId);
+    });
+
+    if (hasInvalidTicketType) {
+      notify("Vui lòng chọn loại vé cho từng ghế.", "warning");
       return;
     }
 
@@ -814,6 +1012,7 @@ function Booking() {
     });
   };
 
+  // Gửi từng ghế cùng loại vé và giá tương ứng đến backend.
   const handleBooking = async () => {
     if (redirectToLogin()) return;
 
@@ -827,13 +1026,20 @@ function Booking() {
       return;
     }
 
-    if (!selectedTicketTypeId) {
-      notify("Vui lòng chọn loại vé.", "warning");
+    if (
+      !selectedSeats.every(
+        (seatCode) => getTicketTypeForSeat(seatCode)?.ticketTypeId
+      )
+    ) {
+      notify("Vui lòng chọn loại vé cho từng ghế.", "warning");
       return;
     }
 
     if (!paymentConfirmed) {
-      notify("Vui lòng xác nhận bạn đã thanh toán trước khi tiếp tục.", "warning");
+      notify(
+        "Vui lòng xác nhận bạn đã thanh toán trước khi tiếp tục.",
+        "warning"
+      );
       return;
     }
 
@@ -847,50 +1053,60 @@ function Booking() {
     try {
       setPaymentLoading(true);
 
-      const response = await fetch(
-        `${API_BASE}/api/tickets/book`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId,
-            movieId: Number(selectedMovie.movieId),
-            showtimeId: Number(
-              selectedShowtime.showtimeId
-            ),
-            seatCodes: selectedSeats,
-            holdToken,
-            ticketPrice: Number(ticketUnitPrice),
-            ticketTypeId: Number(
-              selectedTicketTypeId
-            ),
-          }),
-        }
-      );
+      const response = await fetch(`${API_BASE}/api/tickets/book`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          movieId: Number(selectedMovie.movieId),
+          showtimeId: Number(selectedShowtime.showtimeId),
+          seatCodes: selectedSeats,
 
-      const data = await response
-        .json()
-        .catch(() => ({}));
+          seatTickets: seatTicketDetails.map((item) => ({
+            seatCode: item.seatCode,
+            ticketTypeId: item.ticketTypeId,
+            ticketPrice: item.ticketPrice,
+          })),
 
-      if (!response.ok) {
-        throw new Error(
-          data.message || "Thanh toán thất bại."
-        );
+          holdToken,
+
+          ticketPrice: Number(ticketUnitPrice),
+          ticketTypeId: Number(selectedTicketTypeId),
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      console.log("Dữ liệu API đặt vé trả về:", data);
+
+      if (!response.ok) { 
+        throw new Error(data.message || "Thanh toán thất bại.");
       }
 
       setBookingResult({
-        ...data,
-        bookedSeats:
-          data.bookedSeats?.length
-            ? data.bookedSeats
-            : selectedSeats,
-      });
+  ...data,
+  totalPrice: totalPrice,
+  bookedSeats: data.bookedSeats?.length
+    ? data.bookedSeats
+    : [...selectedSeats],
+ savedTicketDetails: (
+  data.savedTicketDetails ||
+  data.tickets ||
+  data.ticketDetails ||
+  []
+).map((ticket) => ({
+  ...ticket,
+})),
+  movieTitle: selectedMovie.title,
+  cinemaName: selectedShowtime?.cinemaName || "Chưa cập nhật",
+  showDate: selectedShowtime?.showDate,
+  startTime: selectedShowtime?.startTime,
+  ticketTypeName: selectedTicketType?.name || "Vé xem phim",
+});
 
-      setBookingSuccess(true);
+setBookingSuccess(true);
 
-      // Vé đã được lưu; nhả các lượt giữ tạm để tránh dữ liệu giữ ghế cũ.
       await fetch(`${SEAT_API_URL}/release-all`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -902,10 +1118,7 @@ function Booking() {
     } catch (error) {
       console.error("Lỗi thanh toán:", error);
 
-      notify(
-        error.message ||
-          "Có lỗi xảy ra khi thanh toán."
-      );
+      notify(error.message || "Có lỗi xảy ra khi thanh toán.");
     } finally {
       setPaymentLoading(false);
     }
@@ -926,14 +1139,9 @@ function Booking() {
     return (
       <main className="booking-page">
         <div className="booking-empty">
-          <h2>
-            Không tìm thấy phim để đặt vé.
-          </h2>
+          <h2>Không tìm thấy phim để đặt vé.</h2>
 
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-          >
+          <button type="button" onClick={() => navigate("/")}>
             <FaChevronLeft />
             Quay lại trang chủ
           </button>
@@ -942,6 +1150,7 @@ function Booking() {
     );
   }
 
+  
   if (bookingSuccess) {
     return (
       <main className="booking-page">
@@ -956,56 +1165,135 @@ function Booking() {
             Vé của bạn đã được xác nhận.
           </p>
 
-          <div className="success-ticket">
-            <div>
-              <span>Phim</span>
-              <strong>{selectedMovie.title}</strong>
+          <div className="success-ticket success-ticket-layout">
+            {/* BÊN TRÁI: THÔNG TIN VÉ */}
+            <div className="success-ticket-info">
+              <div>
+                <span>Phim</span>
+                <strong>
+                  {bookingResult?.movieTitle || selectedMovie.title}
+                </strong>
+              </div>
+
+              <div>
+                <span>Loại vé</span>
+                <strong>
+                  {[
+                    ...new Set(
+                      seatTicketDetails.map(
+                        (item) => item.ticketTypeName
+                      )
+                    ),
+                  ]
+                    .filter(Boolean)
+                    .join(", ") ||
+                    bookingResult?.ticketTypeName ||
+                    selectedTicketType?.name ||
+                    "Chưa cập nhật"}
+                </strong>
+              </div>
+
+              <div>
+                <span>Rạp</span>
+                <strong>
+                  {bookingResult?.cinemaName ||
+                    selectedShowtime?.cinemaName ||
+                    "Chưa cập nhật"}
+                </strong>
+              </div>
+
+              <div>
+                <span>Suất chiếu</span>
+                <strong>
+                  {bookingResult?.showDate
+                    ? `${formatDate(bookingResult.showDate)} • ${formatTime(
+                        bookingResult.startTime
+                      )}`
+                    : selectedShowtime
+                      ? `${formatDate(selectedShowtime.showDate)} • ${formatTime(
+                          selectedShowtime.startTime
+                        )}`
+                      : "Chưa cập nhật"}
+                </strong>
+              </div>
+
+              <div>
+                <span>Ghế</span>
+                <strong>
+                  {bookingResult?.bookedSeats?.join(", ") ||
+                    selectedSeats.join(", ")}
+                </strong>
+              </div>
+
+              <div className="success-total">
+                <span>Tổng thanh toán</span>
+                <strong>
+                  {currency(
+                    bookingResult?.totalPrice ?? totalPrice
+                  )}
+                </strong>
+              </div>
             </div>
 
-            <div>
-              <span>Loại vé</span>
-              <strong>
-                {selectedTicketType?.name ||
-                  "Chưa cập nhật"}
-              </strong>
-            </div>
+            {/* BÊN PHẢI: MÃ QR */}
+            <div className="success-ticket-qr">
+              <h3>Mã QR vé xem phim</h3>
+              <p>Đưa mã QR tương ứng cho nhân viên rạp.</p>
 
-            <div>
-              <span>Rạp</span>
-              <strong>
-                {selectedShowtime?.cinemaName ||
-                  "Chưa cập nhật"}
-              </strong>
-            </div>
+              {Array.isArray(bookingResult?.savedTicketDetails) &&
+              bookingResult.savedTicketDetails.length > 0 ? (
+                <div className="success-ticket-qr-list">
+                  {bookingResult.savedTicketDetails.map(
+                    (ticket, index) => {
+                      const token =
+                        ticket.qrCodeToken ||
+                        ticket.QrCodeToken ||
+                        ticket.ticket?.qrCodeToken ||
+                        ticket.ticket?.QrCodeToken;
 
-            <div>
-              <span>Suất chiếu</span>
-              <strong>
-                {selectedShowtime
-                  ? `${formatDate(
-                      selectedShowtime.showDate
-                    )} • ${formatTime(
-                      selectedShowtime.startTime
-                    )}`
-                  : "Chưa cập nhật"}
-              </strong>
-            </div>
+                      const seatCode =
+                        ticket.seatCode ||
+                        ticket.SeatCode ||
+                        bookingResult?.bookedSeats?.[index] ||
+                        selectedSeats[index];
 
-            <div>
-              <span>Ghế</span>
-              <strong>
-                {bookingResult?.bookedSeats?.join(
-                  ", "
-                ) ||
-                  selectedSeats.join(", ")}
-              </strong>
-            </div>
+                      return (
+                        <div
+                          className="success-ticket-qr-item"
+                          key={
+                            ticket.ticketId ||
+                            ticket.TicketId ||
+                            token ||
+                            index
+                          }
+                        >
+                          <strong>
+                            Vé {index + 1}
+                            {seatCode ? ` — Ghế ${seatCode}` : ""}
+                          </strong>
 
-            <div className="success-total">
-              <span>Tổng thanh toán</span>
-              <strong>
-                {currency(totalPrice)}
-              </strong>
+                          {token ? (
+                            <QRCodeSVG
+                              value={`https://www.cinemapass.id.vn/verify-ticket/${encodeURIComponent(
+                                token
+                              )}`}
+                              size={150}
+                              level="M"
+                              includeMargin
+                            />
+                          ) : (
+                            <p>
+                              Vé này chưa có mã QR từ máy chủ.
+                            </p>
+                          )}
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
+              ) : (
+                <p>Chưa nhận được danh sách vé đã lưu.</p>
+              )}
             </div>
           </div>
 
@@ -1020,11 +1308,9 @@ function Booking() {
       </main>
     );
   }
-
   return (
     <main className="booking-page">
       <div className="booking-shell">
-
         <button
           type="button"
           className="booking-back"
@@ -1037,9 +1323,7 @@ function Booking() {
           }}
         >
           <FaChevronLeft />
-          {bookingStep === 2
-            ? "Quay lại chọn ghế"
-            : "Quay lại"}
+          {bookingStep === 2 ? "Quay lại chọn ghế" : "Quay lại"}
         </button>
 
         {bookingStep === 1 ? (
@@ -1050,30 +1334,22 @@ function Booking() {
                 alt={selectedMovie.title}
                 className="booking-poster"
                 onError={(event) => {
-                  event.currentTarget.style.display =
-                    "none";
+                  event.currentTarget.style.display = "none";
                 }}
               />
 
               <div className="booking-movie-info">
-                <span className="booking-label">
-                  Đặt vé
-                </span>
+                <span className="booking-label">Đặt vé</span>
 
                 <h1>{selectedMovie.title}</h1>
 
-                <p>
-                  {selectedMovie.genre ||
-                    "Chưa cập nhật thể loại"}
-                </p>
+                <p>{selectedMovie.genre || "Chưa cập nhật thể loại"}</p>
 
                 <div className="booking-meta">
                   <span>
                     <FaCalendarAlt />
                     {selectedMovie.releaseDate
-                      ? formatDate(
-                          selectedMovie.releaseDate
-                        )
+                      ? formatDate(selectedMovie.releaseDate)
                       : "Chưa cập nhật"}
                   </span>
 
@@ -1088,7 +1364,6 @@ function Booking() {
             </section>
 
             <div className="booking-content">
-
               <section className="booking-panel">
                 <div className="booking-section-title">
                   <FaTicketAlt />
@@ -1102,21 +1377,16 @@ function Booking() {
                         key={date}
                         type="button"
                         className={`date-button ${
-                          selectedDate === date
-                            ? "active"
-                            : ""
+                          selectedDate === date ? "active" : ""
                         }`}
-                        onClick={() =>
-                          setSelectedDate(date)
-                        }
+                        onClick={() => setSelectedDate(date)}
                       >
                         {formatDate(date)}
                       </button>
                     ))
                   ) : (
                     <p className="booking-empty-text">
-                      Hiện chưa có suất chiếu cho
-                      phim này.
+                      Hiện chưa có suất chiếu cho phim này.
                     </p>
                   )}
                 </div>
@@ -1134,63 +1404,43 @@ function Booking() {
                             {group.cinemaName}
                           </span>
 
-                          <small>
-                            {group.roomName}
-                          </small>
+                          <small>{group.roomName}</small>
                         </div>
 
                         <div className="time-list">
-                          {group.times.map(
-                            (slot) => (
-                              <button
-                                key={`${group.cinemaName}-${slot.time}-${slot.showtimeId}`}
-                                type="button"
-                                className={`time-button ${
-                                  selectedCinema ===
-                                    group.cinemaName &&
-                                  selectedTime ===
-                                    slot.time
-                                    ? "active"
-                                    : ""
-                                }`}
-                                onClick={() => {
-                                  setSelectedCinema(
-                                    group.cinemaName
-                                  );
-                                  setSelectedTime(
-                                    slot.time
-                                  );
-                                  setBookingStep(1);
-                                }}
-                              >
-                                <span>
-                                  {slot.time}
-                                </span>
-
-                                <small>
-                                  {currency(
-                                    slot.price
-                                  )}
-                                </small>
-                              </button>
-                            )
-                          )}
+                          {group.times.map((slot) => (
+                            <button
+                              key={`${group.cinemaName}-${slot.time}-${slot.showtimeId}`}
+                              type="button"
+                              className={`time-button ${
+                                selectedCinema === group.cinemaName &&
+                                selectedTime === slot.time
+                                  ? "active"
+                                  : ""
+                              }`}
+                              onClick={() => {
+                                setSelectedCinema(group.cinemaName);
+                                setSelectedTime(slot.time);
+                                setBookingStep(1);
+                              }}
+                            >
+                              <span>{slot.time}</span>
+                              <small>{currency(slot.price)}</small>
+                            </button>
+                          ))}
                         </div>
                       </div>
                     ))
                   ) : (
                     <div className="booking-empty-state">
                       <FaClock />
-
                       <p>
-                        Chưa có suất chiếu phù
-                        hợp với ngày bạn chọn.
+                        Chưa có suất chiếu phù hợp với ngày bạn chọn.
                       </p>
                     </div>
                   )}
                 </div>
 
-                {/* LOẠI VÉ */}
                 <div className="ticket-type-section">
                   <div className="booking-section-title">
                     <FaTicketAlt />
@@ -1199,69 +1449,138 @@ function Booking() {
 
                   {availableTicketTypes.length ? (
                     <div className="ticket-type-list">
-                      {availableTicketTypes.map(
-                        (ticketType) => {
-                          const ticketTypeId =
-                            Number(
-                              ticketType.ticketTypeId
-                            );
+                      {availableTicketTypes.map((ticketType) => {
+                        const ticketTypeId = Number(
+                          ticketType.ticketTypeId
+                        );
 
-                          const isActive =
-                            Number(
-                              selectedTicketTypeId
-                            ) === ticketTypeId;
+                        const isActive =
+                          Number(selectedTicketTypeId) === ticketTypeId;
 
-                          return (
+                        const quantity =
+                          getTicketTypeQuantity(ticketTypeId);
+
+                        return (
+                          <div
+                            key={ticketTypeId}
+                            className={`ticket-type-option ${
+                              isActive ? "active" : ""
+                            }`}
+                          >
                             <button
-                              key={ticketTypeId}
                               type="button"
-                              className={`ticket-type-option ${isActive ? "active" : ""}`}
-                              onClick={() =>
-                                setSelectedTicketTypeId(
-                                  ticketTypeId
-                                )
-                              }
+                              className="ticket-type-select-btn"
+                              onClick={() => {
+                                setSelectedTicketTypeId(ticketTypeId);
+                              }}
                             >
                               <div className="ticket-type-option-content">
                                 <div>
-                                  <strong>
-                                    {
-                                      ticketType.name
-                                    }
-                                  </strong>
+                                  <strong>{ticketType.name}</strong>
 
                                   <div className="ticket-type-category-label">
                                     {ticketType.category === "Program"
                                       ? "Thời điểm / chương trình"
-                                      : "khách hàng"}
+                                      : "Khách hàng"}
                                   </div>
 
                                   {ticketType.description && (
                                     <div className="ticket-type-description">
-                                      {
-                                        ticketType.description
-                                      }
+                                      {ticketType.description}
                                     </div>
                                   )}
                                 </div>
 
-                                <strong>
-                                  {currency(
-                                    ticketType.price
-                                  )}
+                                <strong className="ticket-price">
+                                  {currency(ticketType.price)}
                                 </strong>
                               </div>
                             </button>
-                          );
-                        }
-                      )}
+
+                           <div className="ticket-quantity-control">
+  <button
+    type="button"
+    className="ticket-quantity-btn"
+    aria-label={`Giảm số lượng vé ${ticketType.name}`}
+    disabled={quantity === 0}
+    onClick={() =>
+      changeTicketTypeQuantity(ticketTypeId, -1)
+    }
+  >
+    −
+  </button>
+
+  <span className="ticket-quantity-value">
+    {quantity}
+  </span>
+
+  <button
+    type="button"
+    className="ticket-quantity-btn"
+    aria-label={`Tăng số lượng vé ${ticketType.name}`}
+    onClick={() =>
+      changeTicketTypeQuantity(ticketTypeId, 1)
+    }
+  >
+    +
+  </button>
+</div>
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <p className="booking-empty-text">
-                      Suất chiếu này chưa được gán
-                      chính sách vé.
+                      Suất chiếu này chưa được gán chính sách vé.
                     </p>
                   )}
+
+                  {selectedSeats.length > 0 &&
+                    availableTicketTypes.length > 0 && (
+                      <div className="seat-ticket-assignment">
+                        <h3>Chọn loại vé cho từng ghế</h3>
+
+                        <p>
+                          Mỗi ghế có thể sử dụng một loại vé khác nhau.
+                        </p>
+
+                        {selectedSeats.map((seatCode) => (
+                          <label
+                            className="seat-ticket-row"
+                            key={seatCode}
+                          >
+                            <span>
+                              Ghế <strong>{seatCode}</strong>
+                            </span>
+
+                            <select
+                              value={Number(
+                                seatTicketTypeIds[seatCode] ??
+                                  selectedTicketTypeId
+                              )}
+                              onChange={(event) => {
+                                const nextId = Number(event.target.value);
+
+                                setSeatTicketTypeIds((current) => ({
+                                  ...current,
+                                  [seatCode]: nextId,
+                                }));
+                              }}
+                            >
+                              {availableTicketTypes.map((ticketType) => (
+                                <option
+                                  key={ticketType.ticketTypeId}
+                                  value={Number(ticketType.ticketTypeId)}
+                                >
+                                  {ticketType.name} —{" "}
+                                  {currency(ticketType.price)}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        ))}
+                      </div>
+                    )}
                 </div>
               </section>
 
@@ -1271,75 +1590,66 @@ function Booking() {
                   <h2>Chọn ghế</h2>
                 </div>
 
-                <div className="screen">
-                  MÀN HÌNH
-                </div>
+                <div className="screen">MÀN HÌNH</div>
+                {selectedSeats.length > 0 && (
+  <div className="seat-hold-countdown">
+    {holdExpired ? (
+      <span>Thời gian giữ ghế đã hết. Vui lòng chọn lại ghế.</span>
+    ) : (
+      <span>
+        Ghế được giữ trong:{" "}
+        <strong>
+          {String(Math.floor(remainingSeconds / 60)).padStart(2, "0")}:
+          {String(remainingSeconds % 60).padStart(2, "0")}
+        </strong>
+      </span>
+    )}
+  </div>
+)}
 
                 <div className="seat-grid">
                   {seatList.length ? (
                     seatList.map((seat) => {
-                      const seatCode =
-                        seat.seatCode;
-
+                      const seatCode = seat.seatCode;
                       const isBooked = Boolean(seat.isBooked);
-                      const isHeldByOther = Boolean(seat.isHeld && !seat.isHeldByMe);
+                      const isHeldByOther = Boolean(
+                        seat.isHeld && !seat.isHeldByMe
+                      );
                       const isReserved = isBooked || isHeldByOther;
-
-                      const isSelected =
-                        selectedSeats.includes(
-                          seatCode
-                        );
+                      const isSelected = selectedSeats.includes(seatCode);
 
                       return (
                         <button
                           key={seatCode}
                           type="button"
                           className={`seat ${
-                            isReserved
-                              ? "reserved"
-                              : ""
-                          } ${
-                            isSelected
-                              ? "selected"
-                              : ""
-                          }`}
-                          onClick={() =>
-                            toggleSeat(
-                              seatCode
-                            )
-                          }
+                            isReserved ? "reserved" : ""
+                          } ${isSelected ? "selected" : ""}`}
+                          onClick={() => toggleSeat(seatCode)}
                           disabled={isReserved || seatActionLoading}
                           title={
                             isBooked
                               ? `Ghế ${seatCode} đã được đặt`
                               : isHeldByOther
-                              ? `Ghế ${seatCode} đang được khách khác giữ`
-                              : `Chọn ghế ${seatCode}`
+                                ? `Ghế ${seatCode} đang được khách khác giữ`
+                                : `Chọn ghế ${seatCode}`
                           }
                           aria-label={
                             isBooked
                               ? `Ghế ${seatCode} đã được đặt`
                               : isHeldByOther
-                              ? `Ghế ${seatCode} đang được giữ`
-                              : `Ghế ${seatCode}`
+                                ? `Ghế ${seatCode} đang được giữ`
+                                : `Ghế ${seatCode}`
                           }
                         >
-                          {seatCode.replace(
-                            /[0-9]/g,
-                            ""
-                          )}
-
-                          {seatCode.replace(
-                            /[^0-9]/g,
-                            ""
-                          )}
+                          {seatCode.replace(/[0-9]/g, "")}
+                          {seatCode.replace(/[^0-9]/g, "")}
                         </button>
                       );
                     })
                   ) : (
                     <p className="booking-empty-text">
-                      Sơ đồ ghế đang được cập nhập.
-                      Vui lòng thử lại sau.
+                      Sơ đồ ghế đang được cập nhật. Vui lòng thử lại sau.
                     </p>
                   )}
                 </div>
@@ -1364,47 +1674,44 @@ function Booking() {
                 <div className="booking-summary-box">
                   <div>
                     <small>Phim</small>
-
-                    <strong>
-                      {selectedMovie.title}
-                    </strong>
+                    <strong>{selectedMovie.title}</strong>
                   </div>
 
                   <div>
                     <small>Rạp</small>
-
                     <strong>
-                      {selectedShowtime?.cinemaName ||
-                        "Chưa chọn"}
+                      {selectedShowtime?.cinemaName || "Chưa chọn"}
                     </strong>
                   </div>
 
                   <div>
                     <small>Suất chiếu</small>
-
                     <strong>
                       {selectedShowtime
                         ? `${formatDate(
                             selectedShowtime.showDate
-                          )} • ${formatTime(
-                            selectedShowtime.startTime
-                          )}`
+                          )} • ${formatTime(selectedShowtime.startTime)}`
                         : "Chưa chọn"}
                     </strong>
                   </div>
 
                   <div>
                     <small>Loại vé</small>
-
                     <strong>
-                      {selectedTicketType?.name ||
-                        "Chưa chọn"}
+                      {selectedSeats.length
+                        ? [
+                            ...new Set(
+                              seatTicketDetails.map(
+                                (item) => item.ticketTypeName
+                              )
+                            ),
+                          ].join(", ")
+                        : selectedTicketType?.name || "Chưa chọn"}
                     </strong>
                   </div>
 
                   <div>
                     <small>Ghế</small>
-
                     <strong>
                       {selectedSeats.length
                         ? selectedSeats.join(", ")
@@ -1414,19 +1721,16 @@ function Booking() {
 
                   <div className="booking-total-row">
                     <span>Tổng tiền</span>
-
                     <strong>
-                      {currency(totalPrice)}
-                    </strong>
+  {currency(bookingResult?.totalPrice ?? totalPrice)}
+</strong>
                   </div>
                 </div>
 
                 <button
                   type="button"
                   className="booking-confirm-btn"
-                  onClick={
-                    handleContinuePayment
-                  }
+                  onClick={handleContinuePayment}
                 >
                   Tiếp tục thanh toán
                 </button>
@@ -1435,54 +1739,33 @@ function Booking() {
           </>
         ) : (
           <section className="payment-page">
-
             <div className="payment-title">
-              <span className="booking-label">
-                Bước 2 / 2
-              </span>
-
+              <span className="booking-label">Bước 2 / 2</span>
               <h1>Thanh toán</h1>
-
-              <p>
-                Kiểm tra thông tin và chọn phương
-                thức thanh toán.
-              </p>
+              <p>Kiểm tra thông tin và chọn phương thức thanh toán.</p>
             </div>
 
             <div className="payment-layout">
-
               <div className="payment-main">
-
                 <div className="payment-card">
                   <div className="payment-card-title">
                     <FaCreditCard />
 
                     <div>
-                      <h2>
-                        Phương thức thanh toán
-                      </h2>
-
-                      <p>
-                        Chọn một phương thức để
-                        tiếp tục
-                      </p>
+                      <h2>Phương thức thanh toán</h2>
+                      <p>Chọn một phương thức để tiếp tục</p>
                     </div>
                   </div>
 
                   <div className="payment-method-list">
-
                     <button
                       type="button"
                       className={`payment-method ${
-                        paymentMethod === "qr"
-                          ? "active"
-                          : ""
+                        paymentMethod === "qr" ? "active" : ""
                       }`}
                       onClick={() => {
                         setPaymentMethod("qr");
-                        setPaymentConfirmed(
-                          false
-                        );
+                        setPaymentConfirmed(false);
                       }}
                     >
                       <div className="payment-method-icon">
@@ -1490,21 +1773,13 @@ function Booking() {
                       </div>
 
                       <div>
-                        <strong>
-                          QR Banking
-                        </strong>
-
-                        <span>
-                          Thanh toán bằng mã QR
-                          ngân hàng
-                        </span>
+                        <strong>QR Banking</strong>
+                        <span>Thanh toán bằng mã QR ngân hàng</span>
                       </div>
 
                       <i
                         className={`payment-radio ${
-                          paymentMethod === "qr"
-                            ? "checked"
-                            : ""
+                          paymentMethod === "qr" ? "checked" : ""
                         }`}
                       />
                     </button>
@@ -1512,15 +1787,11 @@ function Booking() {
                     <button
                       type="button"
                       className={`payment-method ${
-                        paymentMethod === "card"
-                          ? "active"
-                          : ""
+                        paymentMethod === "card" ? "active" : ""
                       }`}
                       onClick={() => {
                         setPaymentMethod("card");
-                        setPaymentConfirmed(
-                          false
-                        );
+                        setPaymentConfirmed(false);
                       }}
                     >
                       <div className="payment-method-icon">
@@ -1528,21 +1799,13 @@ function Booking() {
                       </div>
 
                       <div>
-                        <strong>
-                          Thẻ ngân hàng
-                        </strong>
-
-                        <span>
-                          Visa, Mastercard, ATM
-                          nội địa
-                        </span>
+                        <strong>Thẻ ngân hàng</strong>
+                        <span>Visa, Mastercard, ATM nội địa</span>
                       </div>
 
                       <i
                         className={`payment-radio ${
-                          paymentMethod === "card"
-                            ? "checked"
-                            : ""
+                          paymentMethod === "card" ? "checked" : ""
                         }`}
                       />
                     </button>
@@ -1550,17 +1813,11 @@ function Booking() {
                     <button
                       type="button"
                       className={`payment-method ${
-                        paymentMethod === "wallet"
-                          ? "active"
-                          : ""
+                        paymentMethod === "wallet" ? "active" : ""
                       }`}
                       onClick={() => {
-                        setPaymentMethod(
-                          "wallet"
-                        );
-                        setPaymentConfirmed(
-                          false
-                        );
+                        setPaymentMethod("wallet");
+                        setPaymentConfirmed(false);
                       }}
                     >
                       <div className="payment-method-icon">
@@ -1568,113 +1825,73 @@ function Booking() {
                       </div>
 
                       <div>
-                        <strong>
-                          Ví điện tử
-                        </strong>
-
-                        <span>
-                          Thanh toán qua ví điện
-                          tử
-                        </span>
+                        <strong>Ví điện tử</strong>
+                        <span>Thanh toán qua ví điện tử</span>
                       </div>
 
                       <i
                         className={`payment-radio ${
-                          paymentMethod ===
-                          "wallet"
-                            ? "checked"
-                            : ""
+                          paymentMethod === "wallet" ? "checked" : ""
                         }`}
                       />
                     </button>
-
                   </div>
                 </div>
 
                 <div className="payment-info-card">
-
                   {paymentMethod === "qr" && (
                     <div className="qr-payment-box">
-                      <div className="fake-qr">
-                        <div className="qr-pattern">
-                          QR
-                        </div>
-                      </div>
+                      <div className="acb-qr-container">
+  <img
+    src={paymentQr}
+    alt="Mã QR thanh toán ngân hàng ACB"
+    className="acb-qr-image"
+  />
+  <p className="acb-qr-caption">
+    Quét mã QR bằng ứng dụng ngân hàng để thanh toán
+  </p>
+</div>
 
                       <div>
-                        <h3>
-                          Quét mã QR để thanh toán
-                        </h3>
-
+                        <h3>Quét mã QR để thanh toán</h3>
                         <p>
-                          Mở ứng dụng ngân hàng và
-                          quét mã QR để hoàn tất
+                          Mở ứng dụng ngân hàng và quét mã QR để hoàn tất
                           thanh toán.
                         </p>
-
-                        <strong>
-                          Số tiền:{" "}
-                          {currency(totalPrice)}
-                        </strong>
+                        <strong>Số tiền: {currency(totalPrice)}</strong>
                       </div>
                     </div>
                   )}
 
                   {paymentMethod === "card" && (
                     <div className="card-payment-box">
-                      <h3>
-                        Thanh toán bằng thẻ
-                      </h3>
+                      <h3>Thanh toán bằng thẻ</h3>
 
-                      <div className="fake-input">
-                        Số thẻ
-                      </div>
+                      <div className="fake-input">Số thẻ</div>
 
                       <div className="fake-card-row">
-                        <div className="fake-input">
-                          MM/YY
-                        </div>
-
-                        <div className="fake-input">
-                          CVV
-                        </div>
+                        <div className="fake-input">MM/YY</div>
+                        <div className="fake-input">CVV</div>
                       </div>
 
-                      <p>
-                        Đây là giao diện mô phỏng
-                        thanh toán thẻ.
-                      </p>
+                      <p>Đây là giao diện mô phỏng thanh toán thẻ.</p>
                     </div>
                   )}
 
                   {paymentMethod === "wallet" && (
                     <div className="wallet-payment-box">
                       <FaWallet />
-
-                      <h3>
-                        Thanh toán qua ví điện tử
-                      </h3>
-
-                      <p>
-                        Chọn ví điện tử của bạn ở
-                        bước thanh toán.
-                      </p>
-
-                      <strong>
-                        Số tiền:{" "}
-                        {currency(totalPrice)}
-                      </strong>
+                      <h3>Thanh toán qua ví điện tử</h3>
+                      <p>Chọn ví điện tử của bạn ở bước thanh toán.</p>
+                      <strong>Số tiền: {currency(totalPrice)}</strong>
                     </div>
                   )}
-
                 </div>
 
                 <button
                   type="button"
                   className="payment-confirmed-btn"
-                  onClick={() =>
-                    setPaymentConfirmed(true)
-                  }
+                  onClick={() => setPaymentConfirmed(true)}
                   disabled={paymentConfirmed}
                 >
                   {paymentConfirmed
@@ -1686,36 +1903,26 @@ function Booking() {
                   type="button"
                   className="payment-submit-btn"
                   onClick={handleBooking}
-                  disabled={
-                    paymentLoading ||
-                    !paymentConfirmed
-                  }
+                  disabled={paymentLoading || !paymentConfirmed}
                 >
                   {paymentLoading
                     ? "Đang xử lý thanh toán..."
                     : !paymentConfirmed
-                    ? "Xác nhận thanh toán trước"
-                    : `Hoàn tất đặt vé • ${currency(
-                        totalPrice
-                      )}`}
+                      ? "Xác nhận thanh toán trước"
+                      : `Hoàn tất đặt vé • ${currency(totalPrice)}`}
                 </button>
-
               </div>
 
               <aside className="payment-order-card">
-
                 <div className="payment-order-title">
                   <FaTicketAlt />
-
                   <h2>Thông tin vé</h2>
                 </div>
 
                 <div className="payment-movie">
                   {selectedMovie.posterUrl ? (
                     <img
-                      src={
-                        selectedMovie.posterUrl
-                      }
+                      src={selectedMovie.posterUrl}
                       alt={selectedMovie.title}
                     />
                   ) : (
@@ -1725,111 +1932,91 @@ function Booking() {
                   )}
 
                   <div>
-                    <strong>
-                      {selectedMovie.title}
-                    </strong>
-
-                    <span>
-                      {selectedMovie.genre ||
-                        "Phim điện ảnh"}
-                    </span>
+                    <strong>{selectedMovie.title}</strong>
+                    <span>{selectedMovie.genre || "Phim điện ảnh"}</span>
                   </div>
                 </div>
 
                 <div className="payment-order-details">
-
                   <div>
                     <span>Rạp</span>
-
                     <strong>
-                      {selectedShowtime?.cinemaName ||
-                        "Chưa chọn"}
+                      {selectedShowtime?.cinemaName || "Chưa chọn"}
                     </strong>
                   </div>
 
                   <div>
                     <span>Phòng</span>
-
                     <strong>
-                      {selectedShowtime?.roomName ||
-                        "Chưa cập nhật"}
+                      {selectedShowtime?.roomName || "Chưa cập nhật"}
                     </strong>
                   </div>
 
                   <div>
                     <span>Ngày</span>
-
                     <strong>
                       {selectedShowtime
-                        ? formatDate(
-                            selectedShowtime.showDate
-                          )
+                        ? formatDate(selectedShowtime.showDate)
                         : "Chưa chọn"}
                     </strong>
                   </div>
 
                   <div>
                     <span>Suất</span>
-
                     <strong>
                       {selectedShowtime
-                        ? formatTime(
-                            selectedShowtime.startTime
-                          )
+                        ? formatTime(selectedShowtime.startTime)
                         : "Chưa chọn"}
                     </strong>
                   </div>
 
                   <div>
                     <span>Loại vé</span>
-
                     <strong>
-                      {selectedTicketType?.name ||
-                        "Chưa chọn"}
+                      {selectedSeats.length
+                        ? [
+                            ...new Set(
+                              seatTicketDetails.map(
+                                (item) => item.ticketTypeName
+                              )
+                            ),
+                          ].join(", ")
+                        : selectedTicketType?.name || "Chưa chọn"}
                     </strong>
                   </div>
 
                   <div>
                     <span>Ghế</span>
-
-                    <strong>
-                      {selectedSeats.join(", ")}
-                    </strong>
+                    <strong>{selectedSeats.join(", ")}</strong>
                   </div>
-
                 </div>
 
                 <div className="payment-price">
+                  <div className="payment-seat-ticket-breakdown">
+                    {seatTicketDetails.map((item) => (
+                      <div key={item.seatCode}>
+                        <span>
+                          Ghế {item.seatCode} · {item.ticketTypeName}
+                        </span>
+                        <strong>{currency(item.ticketPrice)}</strong>
+                      </div>
+                    ))}
 
-                  <div>
-                    <span>
-                      {selectedSeats.length} vé ×{" "}
-                      {currency(ticketUnitPrice)}
-                    </span>
-
-                    <strong>
-                      {currency(totalPrice)}
-                    </strong>
+                    <div>
+                      <span>Tạm tính ({selectedSeats.length} vé)</span>
+                      <strong>{currency(totalPrice)}</strong>
+                    </div>
                   </div>
 
                   <div className="payment-final-total">
-                    <span>
-                      Tổng thanh toán
-                    </span>
-
-                    <strong>
-                      {currency(totalPrice)}
-                    </strong>
+                    <span>Tổng thanh toán</span>
+                    <strong>{currency(totalPrice)}</strong>
                   </div>
-
                 </div>
-
               </aside>
-
             </div>
           </section>
         )}
-
       </div>
     </main>
   );
