@@ -393,7 +393,7 @@ function MovieAdmin() {
       showNotification(
         "error",
         "Thao tác thất bại",
-        error.message || "Không thể lưu phim"
+        "Không thể chỉnh sửa phim khi đang có vé đặt"
       );
     } finally {
       setSaving(false);
@@ -436,7 +436,7 @@ function MovieAdmin() {
       showNotification(
         "error",
         "Xóa phim thất bại",
-         "Không thể xóa phim"
+        "Không thể xóa phim khi đang có vé đặt"
       );
     }
   };

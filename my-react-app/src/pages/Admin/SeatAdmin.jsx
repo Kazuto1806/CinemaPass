@@ -532,7 +532,6 @@ function SeatAdmin() {
 
       if (!response.ok) {
         throw new Error(
-          data.message ||
           `Không thể xóa sơ đồ ghế. HTTP ${response.status}`
         );
       }
