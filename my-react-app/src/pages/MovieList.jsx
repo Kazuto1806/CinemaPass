@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import MovieCard from "../components/MovieCard";
 import { API_BASE, getMissingPosterFallback } from "../constants";
 import "./MovieList.css";
@@ -62,6 +63,7 @@ const getPosterUrl = (posterUrl) => {
 
 function MovieList() {
   const { type } = useParams();
+  const navigate = useNavigate();
 
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,17 +89,30 @@ function MovieList() {
 
         const data = await response.json();
 
+        if (!Array.isArray(data)) {
+          throw new Error("Dữ liệu danh sách phim không hợp lệ.");
+        }
+
         const filteredMovies = data
           .filter((movie) => {
-            const status = String(movie.status ?? "").trim();
+            const status = String(movie.status ?? movie.Status ?? "")
+              .trim()
+              .toLowerCase();
 
             return isNowShowing
-              ? status === "NowShowing"
-              : status === "ComingSoon";
+              ? status === "nowshowing"
+              : status === "comingsoon";
           })
           .map((movie) => ({
             ...movie,
-            posterUrl: getPosterUrl(movie.posterUrl),
+            title: movie.title ?? movie.Title,
+            genre: movie.genre ?? movie.Genre,
+            duration: movie.duration ?? movie.Duration,
+            releaseDate: movie.releaseDate ?? movie.ReleaseDate,
+            director: movie.director ?? movie.Director,
+            ageRating: movie.ageRating ?? movie.AgeRating,
+            trailerUrl: movie.trailerUrl ?? movie.TrailerUrl,
+            posterUrl: getPosterUrl(movie.posterUrl ?? movie.PosterUrl),
           }));
 
         if (!cancelled) {
@@ -157,7 +172,10 @@ function MovieList() {
       ) : (
         <div className="catalog-grid">
           {movies.map((movie) => (
-            <div className="catalog-card" key={movie.movieId}>
+            <div
+              className="catalog-card"
+              key={movie.movieId ?? movie.MovieId ?? movie.title}
+            >
               <MovieCard movie={movie} />
             </div>
           ))}
