@@ -164,9 +164,16 @@ function MovieList() {
         </div>
       )}
 
-      <div className="catalog-back">
-        <Link to="/">← Quay lại trang chủ</Link>
-      </div>
+      <button
+        type="button"
+        className="movie-detail-back"
+        onClick={() =>
+        navigate(-1)
+        }
+      >
+      <FaArrowLeft />
+      Quay lại
+      </button>
     </main>
   );
 }

@@ -242,3 +242,29 @@
     max-width: 260px;
   }
 }
+/* =========================
+   BACK
+========================= */
+
+.movie-detail-back {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-bottom: 25px;
+
+  border: none;
+
+  background: transparent;
+
+  color: #9da9c2;
+
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+.movie-detail-back:hover {
+  color: white;
+}
