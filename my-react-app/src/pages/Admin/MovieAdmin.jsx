@@ -436,7 +436,7 @@ function MovieAdmin() {
       showNotification(
         "error",
         "Xóa phim thất bại",
-        error.message || "Không thể xóa phim"
+         "Không thể xóa phim"
       );
     }
   };
