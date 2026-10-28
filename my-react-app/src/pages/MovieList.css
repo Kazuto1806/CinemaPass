@@ -13,8 +13,9 @@
 }
 
 .movie-catalog-header {
+  position: relative;
   max-width: 1250px;
-  margin: 0 auto 20px;
+  margin: 0 auto 35px;
   text-align: center;
 }
 
@@ -220,6 +221,11 @@
     font-size: 25px;
   }
 
+  .movie-catalog-back {
+    position: static;
+    margin-bottom: 18px;
+  }
+
   .catalog-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 28px 15px;
@@ -270,9 +276,10 @@
 }
 
 .movie-catalog-back {
-  width: min(1250px, 100%);
-  margin: 0 auto 25px;
-  display: flex;
-  justify-content: flex-start;
+  position: absolute;
+  top: 4px;
+  left: 0;
+  margin: 0;
   padding: 0;
+  justify-content: flex-start;
 }

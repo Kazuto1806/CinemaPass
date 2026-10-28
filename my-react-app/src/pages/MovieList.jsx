@@ -153,20 +153,20 @@ function MovieList() {
   return (
     <main className="movie-catalog">
       <header className="movie-catalog-header">
+        <button
+          type="button"
+          className="movie-detail-back movie-catalog-back"
+          onClick={() => navigate(-1)}
+        >
+          <FaArrowLeft />
+          Quay lại
+        </button>
+
         <h1>
           {isNowShowing ? "PHIM ĐANG CHIẾU" : "PHIM SẮP CHIẾU"}
         </h1>
         <p>Khám phá danh sách phim tại CinemaPass</p>
       </header>
-
-      <button
-        type="button"
-        className="movie-detail-back movie-catalog-back"
-        onClick={() => navigate(-1)}
-      >
-        <FaArrowLeft />
-        Quay lại
-      </button>
 
       {loading ? (
         <p className="catalog-message">Đang tải phim...</p>
