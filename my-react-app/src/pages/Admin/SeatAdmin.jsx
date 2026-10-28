@@ -472,12 +472,14 @@ function SeatAdmin() {
         );
 
       const data =
-        await response.json();
+        await parseResponse(response);
 
       if (!response.ok) {
         throw new Error(
           data.message ||
-          "Không thể xóa ghế."
+          (response.status === 400
+            ? "Không thể xóa ghế đang có vé đã đặt."
+            : "Không thể xóa ghế.")
         );
       }
 
@@ -532,7 +534,8 @@ function SeatAdmin() {
 
       if (!response.ok) {
         throw new Error(
-          `Không thể xóa sơ đồ ghế. HTTP ${response.status}`
+          data.message ||
+          "Không thể xóa sơ đồ ghế."
         );
       }
 

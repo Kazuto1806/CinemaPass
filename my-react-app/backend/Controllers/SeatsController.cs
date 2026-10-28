@@ -576,7 +576,7 @@ var newHold = new SeatHold
             {
                 return BadRequest(new
                 {
-                    message = "Không thể xóa ghế đã từng được sử dụng trong vé."
+                    message = "Không thể xóa ghế đang có vé đã đặt."
                 });
             }
 
@@ -640,7 +640,7 @@ var newHold = new SeatHold
             {
                 return BadRequest(new
                 {
-                    message = "Không thể xóa sơ đồ ghế vì một hoặc nhiều ghế đã được sử dụng trong vé."
+                    message = "Không thể xóa ghế đang có vé đã đặt."
                 });
             }
 
