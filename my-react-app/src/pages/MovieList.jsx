@@ -152,6 +152,15 @@ function MovieList() {
 
   return (
     <main className="movie-catalog">
+      <button
+        type="button"
+        className="movie-detail-back movie-catalog-back"
+        onClick={() => navigate(-1)}
+      >
+        <FaArrowLeft />
+        Quay lại
+      </button>
+
       <header className="movie-catalog-header">
         <h1>
           {isNowShowing ? "PHIM ĐANG CHIẾU" : "PHIM SẮP CHIẾU"}
@@ -180,20 +189,8 @@ function MovieList() {
             </div>
           ))}
         </div>
-      )}
-
-      <button
-        type="button"
-        className="movie-detail-back"
-        onClick={() =>
-        navigate(-1)
-        }
-      >
-      <FaArrowLeft />
-      Quay lại
-      </button>
-    </main>
-  );
+      )      }
+    </main>  );
 }
 
 export default MovieList;

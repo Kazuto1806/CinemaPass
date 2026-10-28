@@ -268,3 +268,9 @@
 .movie-detail-back:hover {
   color: white;
 }
+
+.movie-catalog-back {
+  width: min(1250px, 100%);
+  margin: 0 auto 25px;
+  display: flex;
+}
