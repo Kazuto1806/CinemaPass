@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./MovieCard.css";
 import TrailerModal from "./TrailerModal";
 import { useNotification } from "./useNotification";
@@ -46,6 +47,7 @@ const getPosterUrl = (posterUrl) => {
 function MovieCard({ movie }) {
   const [showTrailer, setShowTrailer] = useState(false);
   const { notify } = useNotification();
+  const navigate = useNavigate();
 
   const trailerUrl = movie?.trailerUrl ?? movie?.TrailerUrl ?? "";
 
@@ -80,10 +82,30 @@ function MovieCard({ movie }) {
     setShowTrailer(false);
   };
 
+  const openMovieDetail = () => {
+    const movieId = movie?.movieId ?? movie?.MovieId;
+    const routeValue = movieId || movie?.title;
+
+    if (!routeValue) return;
+
+    navigate(`/movie/${encodeURIComponent(routeValue)}`);
+  };
+
   return (
     <>
       <div className="movie-card-wrapper">
-        <div className="movie-card">
+        <div
+          className="movie-card"
+          role="link"
+          tabIndex={0}
+          onClick={openMovieDetail}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              openMovieDetail();
+            }
+          }}
+        >
           {/* POSTER */}
           {movie.posterUrl ? (
             <img
@@ -167,8 +189,7 @@ function MovieCard({ movie }) {
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
-              window.location.href =
-                `/movie/${encodeURIComponent(movie.title)}`;
+              openMovieDetail();
             }}
           >
             Xem chi tiết

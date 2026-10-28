@@ -105,6 +105,7 @@ function MovieList() {
           })
           .map((movie) => ({
             ...movie,
+            movieId: movie.movieId ?? movie.MovieId,
             title: movie.title ?? movie.Title,
             genre: movie.genre ?? movie.Genre,
             duration: movie.duration ?? movie.Duration,
