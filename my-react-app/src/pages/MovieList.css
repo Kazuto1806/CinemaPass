@@ -14,7 +14,7 @@
 
 .movie-catalog-header {
   max-width: 1250px;
-  margin: 0 auto 35px;
+  margin: 0 auto 20px;
   text-align: center;
 }
 
@@ -273,4 +273,6 @@
   width: min(1250px, 100%);
   margin: 0 auto 25px;
   display: flex;
+  justify-content: flex-start;
+  padding: 0;
 }

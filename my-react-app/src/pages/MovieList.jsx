@@ -152,6 +152,13 @@ function MovieList() {
 
   return (
     <main className="movie-catalog">
+      <header className="movie-catalog-header">
+        <h1>
+          {isNowShowing ? "PHIM ĐANG CHIẾU" : "PHIM SẮP CHIẾU"}
+        </h1>
+        <p>Khám phá danh sách phim tại CinemaPass</p>
+      </header>
+
       <button
         type="button"
         className="movie-detail-back movie-catalog-back"
@@ -160,13 +167,6 @@ function MovieList() {
         <FaArrowLeft />
         Quay lại
       </button>
-
-      <header className="movie-catalog-header">
-        <h1>
-          {isNowShowing ? "PHIM ĐANG CHIẾU" : "PHIM SẮP CHIẾU"}
-        </h1>
-        <p>Khám phá danh sách phim tại CinemaPass</p>
-      </header>
 
       {loading ? (
         <p className="catalog-message">Đang tải phim...</p>
