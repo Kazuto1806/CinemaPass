@@ -28,6 +28,23 @@ builder.Services.AddHttpClient<TmdbService>();
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
+// =====================================================
+// DATABASE CONTEXT
+// =====================================================
+
+var connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "Chưa cấu hình ConnectionStrings:DefaultConnection."
+    );
+}
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connectionString)
+);
 
 // =====================================================
 // SWAGGER + BEARER JWT
