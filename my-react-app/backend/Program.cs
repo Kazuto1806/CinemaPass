@@ -1,26 +1,107 @@
 
+using System;
+using System.IO;
+using System.Net;
+using System.Security.Claims;
+using System.Text;
+
 using CinemaBackend.Data;
 using CinemaBackend.Services;
+
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
-using System.Net;
-using System.Text;
-using CinemaBackend.Services;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// =====================================================
+// SERVICES
+// =====================================================
+
 builder.Services.AddHttpClient<TmdbService>();
+
 builder.Services.AddControllers();
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-    )
-);
+// =====================================================
+// SWAGGER + BEARER JWT
+// Tương thích Swashbuckle.AspNetCore 10.x
+// =====================================================
 
-// Đăng ký dịch vụ Cloudinary
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Nhập JWT token nhận được từ API đăng nhập."
+    });
+
+    options.AddSecurityRequirement(document =>
+        new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+        });
+});
+
+// =====================================================
+// JWT AUTHENTICATION
+// =====================================================
+
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException(
+        "Chưa cấu hình Jwt:Key."
+    );
+
+var jwtIssuer = builder.Configuration["Jwt:Issuer"]
+    ?? throw new InvalidOperationException(
+        "Chưa cấu hình Jwt:Issuer."
+    );
+
+var jwtAudience = builder.Configuration["Jwt:Audience"]
+    ?? throw new InvalidOperationException(
+        "Chưa cấu hình Jwt:Audience."
+    );
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
+
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtKey)
+            ),
+
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
+
+            RoleClaimType = ClaimTypes.Role
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// =====================================================
+// CLOUDINARY
+// =====================================================
+
 var cloudName = builder.Configuration["Cloudinary:CloudName"]
     ?? Environment.GetEnvironmentVariable("Cloudinary__CloudName");
 
@@ -30,9 +111,9 @@ var apiKey = builder.Configuration["Cloudinary:ApiKey"]
 var apiSecret = builder.Configuration["Cloudinary:ApiSecret"]
     ?? Environment.GetEnvironmentVariable("Cloudinary__ApiSecret");
 
-if (!string.IsNullOrEmpty(cloudName) &&
-    !string.IsNullOrEmpty(apiKey) &&
-    !string.IsNullOrEmpty(apiSecret))
+if (!string.IsNullOrWhiteSpace(cloudName) &&
+    !string.IsNullOrWhiteSpace(apiKey) &&
+    !string.IsNullOrWhiteSpace(apiSecret))
 {
     var cloudinaryAccount = new Account(
         cloudName,
@@ -41,8 +122,13 @@ if (!string.IsNullOrEmpty(cloudName) &&
     );
 
     var cloudinary = new Cloudinary(cloudinaryAccount);
+
     builder.Services.AddSingleton(cloudinary);
 }
+
+// =====================================================
+// CORS
+// =====================================================
 
 builder.Services.AddCors(options =>
 {
@@ -55,9 +141,17 @@ builder.Services.AddCors(options =>
     });
 });
 
+// =====================================================
+// BUILD APPLICATION
+// =====================================================
+
 var app = builder.Build();
 
-// Bảo vệ Swagger bằng Basic Authentication
+// =====================================================
+// BASIC AUTHENTICATION FOR SWAGGER
+// Giữ nguyên cơ chế bảo vệ Swagger hiện tại
+// =====================================================
+
 app.UseWhen(
     context => context.Request.Path.StartsWithSegments("/swagger"),
     swaggerApp =>
@@ -73,7 +167,8 @@ app.UseWhen(
             if (string.IsNullOrWhiteSpace(expectedUser) ||
                 string.IsNullOrWhiteSpace(expectedPassword))
             {
-                context.Response.StatusCode = 503;
+                context.Response.StatusCode =
+                    StatusCodes.Status503ServiceUnavailable;
 
                 await context.Response.WriteAsync(
                     "Swagger authentication is not configured."
@@ -120,7 +215,7 @@ app.UseWhen(
                 }
                 catch (FormatException)
                 {
-                    // Header không hợp lệ.
+                    // Header Basic Authentication không hợp lệ.
                 }
             }
 
@@ -133,6 +228,10 @@ app.UseWhen(
     }
 );
 
+// =====================================================
+// SWAGGER
+// =====================================================
+
 app.UseSwagger();
 
 app.UseSwaggerUI(options =>
@@ -142,6 +241,10 @@ app.UseSwaggerUI(options =>
         "Cinema Pass API V1"
     );
 });
+
+// =====================================================
+// STATIC FILES + UPLOADS
+// =====================================================
 
 var uploadsRoot = Path.Combine(
     app.Environment.ContentRootPath,
@@ -160,12 +263,22 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads"
 });
 
+// =====================================================
+// MIDDLEWARE
+// =====================================================
+
+app.UseRouting();
+
 app.UseCors("AllowReact");
+
+app.UseAuthentication();
+
+app.UseAuthorization();
 
 // =====================================================
 // DATABASE
-// Development: tạo schema cho database thử nghiệm mới.
-// Môi trường khác: tiếp tục sử dụng EF Core migrations.
+// Development: tạo schema nếu database chưa có.
+// Môi trường khác: sử dụng EF Core migrations.
 // =====================================================
 
 using (var scope = app.Services.CreateScope())
@@ -184,7 +297,9 @@ using (var scope = app.Services.CreateScope())
             db.Database.Migrate();
         }
     }
-    catch (Exception ex) when (ex is InvalidOperationException || ex is Microsoft.Data.SqlClient.SqlException)
+    catch (Exception ex) when (
+        ex is InvalidOperationException ||
+        ex is Microsoft.Data.SqlClient.SqlException)
     {
         var connection = db.Database.GetDbConnection();
 
@@ -194,6 +309,7 @@ using (var scope = app.Services.CreateScope())
         }
 
         using var command = connection.CreateCommand();
+
         command.CommandText = @"
             SELECT CASE
                 WHEN EXISTS (
@@ -206,14 +322,12 @@ using (var scope = app.Services.CreateScope())
 
         var result = Convert.ToInt32(command.ExecuteScalar());
 
-        if (result == 1)
-        {
-            // Database already exists with tables; do not crash startup.
-        }
-        else
+        if (result != 1)
         {
             throw;
         }
+
+        // Database đã có bảng Cinemas nên tiếp tục khởi động.
     }
 
     db.Database.ExecuteSqlRaw(@"
@@ -231,7 +345,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 // =====================================================
-// UPLOAD ẢNH LÊN CLOUDINARY
+// UPLOAD IMAGE TO CLOUDINARY
 // =====================================================
 
 app.MapPost(
