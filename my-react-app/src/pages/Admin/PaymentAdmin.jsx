@@ -26,7 +26,19 @@ function formatMoney(value) {
 function formatDate(value) {
   if (!value) return "-";
 
-  return new Date(value).toLocaleString("vi-VN");
+  const text = String(value).trim();
+  const hasTimeZone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(text);
+  const date = new Date(
+    !hasTimeZone && /^\d{4}-\d{2}-\d{2}T/.test(text)
+      ? `${text}+07:00`
+      : text
+  );
+
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return date.toLocaleString("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+  });
 }
 
 function getPaymentClass(status) {

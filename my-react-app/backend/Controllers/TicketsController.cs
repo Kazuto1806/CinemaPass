@@ -51,6 +51,28 @@ namespace CinemaBackend.Controllers
             _context = context;
         }
 
+        private static DateTime GetVietnamNow()
+        {
+            TimeZoneInfo vietnamTimeZone;
+
+            try
+            {
+                vietnamTimeZone =
+                    TimeZoneInfo.FindSystemTimeZoneById(
+                        "Asia/Ho_Chi_Minh");
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                vietnamTimeZone =
+                    TimeZoneInfo.FindSystemTimeZoneById(
+                        "SE Asia Standard Time");
+            }
+
+            return TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                vietnamTimeZone);
+        }
+
         // =====================================================
         // POST: api/tickets/book
         // Đặt nhiều ghế, hỗ trợ nhiều loại vé trong một lần.
@@ -466,7 +488,7 @@ namespace CinemaBackend.Controllers
                         PaymentStatus = "Chưa thanh toán",
                         PaymentMethod = null,
                         PaymentTransactionId = null,
-                        CreatedAt = DateTime.Now
+                        CreatedAt = GetVietnamNow()
                     };
 
                     _context.Tickets.Add(ticket);
