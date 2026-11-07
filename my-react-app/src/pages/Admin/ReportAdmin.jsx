@@ -5,10 +5,10 @@ import {
   FaMoneyBillWave,
   FaUsers,
   FaCalendarAlt,
-  FaFileCsv,
   FaFilm,
   FaBuilding,
   FaSearch,
+  FaFileExcel,
 } from "react-icons/fa";
 
 import { useNotification } from "../../components/useNotification";
@@ -95,6 +95,7 @@ function ReportAdmin() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedReport, setSelectedReport] = useState("revenue");
 
   const loadOptions = async () => {
     const [movieResponse, cinemaResponse] =
@@ -199,51 +200,104 @@ function ReportAdmin() {
     }));
   };
 
-  const exportCsv = () => {
-    const rows = report.tickets || [];
+  const exportExcel = () => {
+    const escapeHtml = (value) =>
+      String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 
-    if (rows.length === 0) {
-      notify("Không có dữ liệu vé để xuất.", "warning");
+    const configurations = {
+      revenue: {
+        fileName: "DoanhThuTheoNgay",
+        title: "BÁO CÁO DOANH THU THEO NGÀY",
+        columns: ["Ngày", "Số vé", "Doanh thu"],
+        rows: revenueByDay.map((item) => [
+          dateText(item.date),
+          Number(item.tickets || 0),
+          Number(item.revenue || 0),
+        ]),
+      },
+      tickets: {
+        fileName: "ChiTietVe",
+        title: "BÁO CÁO CHI TIẾT VÉ",
+        columns: ["Mã vé", "Ngày đặt", "Khách hàng", "Phim", "Rạp", "Ghế", "Giá vé", "Trạng thái"],
+        rows: tickets.map((ticket) => [
+          ticket.ticketId,
+          dateTimeText(ticket.createdAt),
+          ticket.customerName,
+          ticket.movieTitle,
+          ticket.cinemaName,
+          ticket.seatCode,
+          Number(ticket.ticketPrice || 0),
+          ticket.status,
+        ]),
+      },
+      movies: {
+        fileName: "PhimBanChay",
+        title: "BÁO CÁO PHIM BÁN CHẠY",
+        columns: ["Phim", "Số vé", "Doanh thu"],
+        rows: topMovies.map((movie) => [
+          movie.title,
+          Number(movie.tickets || 0),
+          Number(movie.revenue || 0),
+        ]),
+      },
+      cinemas: {
+        fileName: "HieuQuaTheoRap",
+        title: "BÁO CÁO HIỆU QUẢ THEO RẠP",
+        columns: ["Rạp", "Số vé", "Doanh thu"],
+        rows: cinemaReports.map((cinema) => [
+          cinema.name,
+          Number(cinema.tickets || 0),
+          Number(cinema.revenue || 0),
+        ]),
+      },
+    };
+
+    const configuration = configurations[selectedReport];
+    if (!configuration.rows.length) {
+      notify("Không có dữ liệu để xuất báo cáo này.", "warning");
       return;
     }
 
-    const columns = [
-      ["ticketId", "Mã vé"],
-      ["createdAt", "Ngày đặt"],
-      ["customerName", "Khách hàng"],
-      ["movieTitle", "Phim"],
-      ["cinemaName", "Rạp"],
-      ["roomName", "Phòng"],
-      ["seatCode", "Ghế"],
-      ["ticketPrice", "Giá vé"],
-      ["status", "Trạng thái"],
-    ];
+    const tableHead = configuration.columns
+      .map((column) => `<th>${escapeHtml(column)}</th>`)
+      .join("");
+    const tableBody = configuration.rows
+      .map(
+        (row) =>
+          `<tr>${row
+            .map((value) => `<td>${escapeHtml(value)}</td>`)
+            .join("")}</tr>`
+      )
+      .join("");
 
-    const escapeCsv = (value) =>
-      `"${String(value ?? "").replace(/"/g, '""')}"`;
+    const html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office"
+            xmlns:x="urn:schemas-microsoft-com:office:excel"
+            xmlns="http://www.w3.org/TR/REC-html40">
+      <head><meta charset="UTF-8"></head>
+      <body>
+        <h2>${escapeHtml(configuration.title)}</h2>
+        <p>Từ ngày: ${escapeHtml(filters.startDate)} - Đến ngày: ${escapeHtml(filters.endDate)}</p>
+        <table border="1">
+          <thead><tr>${tableHead}</tr></thead>
+          <tbody>${tableBody}</tbody>
+        </table>
+      </body>
+      </html>`;
 
-    const csv = [
-      columns.map((column) => escapeCsv(column[1])).join(","),
-      ...rows.map((row) =>
-        columns
-          .map(([key]) => escapeCsv(row[key]))
-          .join(",")
-      ),
-    ].join("\r\n");
-
-    // BOM giúp Excel đọc tiếng Việt Unicode.
-    const blob = new Blob(["\uFEFF" + csv], {
-      type: "text/csv;charset=utf-8;",
+    const blob = new Blob(["\uFEFF", html], {
+      type: "application/vnd.ms-excel;charset=utf-8",
     });
-
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-
     link.href = url;
-    link.download = `CinemaPass_BaoCao_${getDateInput()}.csv`;
+    link.download = `CinemaPass_${configuration.fileName}_${getDateInput()}.xls`;
     link.click();
-
     URL.revokeObjectURL(url);
+    notify("Đã xuất báo cáo Excel.", "success");
   };
 
   const revenueByDay = report.revenueByDay || [];
@@ -269,10 +323,11 @@ function ReportAdmin() {
         <button
           type="button"
           className="report-export-btn"
-          onClick={exportCsv}
+          onClick={exportExcel}
+          disabled={loading}
         >
-          <FaFileCsv />
-          Xuất CSV
+          <FaFileExcel />
+          Xuất Excel
         </button>
       </div>
 
@@ -363,6 +418,41 @@ function ReportAdmin() {
         </div>
       </form>
 
+      <section className="report-selector" aria-label="Chọn loại báo cáo">
+        <button
+          type="button"
+          className={selectedReport === "revenue" ? "active" : ""}
+          onClick={() => setSelectedReport("revenue")}
+        >
+          <FaChartLine />
+          <span>Doanh thu theo ngày</span>
+        </button>
+        <button
+          type="button"
+          className={selectedReport === "tickets" ? "active" : ""}
+          onClick={() => setSelectedReport("tickets")}
+        >
+          <FaTicketAlt />
+          <span>Chi tiết vé</span>
+        </button>
+        <button
+          type="button"
+          className={selectedReport === "movies" ? "active" : ""}
+          onClick={() => setSelectedReport("movies")}
+        >
+          <FaFilm />
+          <span>Phim bán chạy</span>
+        </button>
+        <button
+          type="button"
+          className={selectedReport === "cinemas" ? "active" : ""}
+          onClick={() => setSelectedReport("cinemas")}
+        >
+          <FaBuilding />
+          <span>Hiệu quả theo rạp</span>
+        </button>
+      </section>
+
       {error && (
         <div className="report-error">
           {error}
@@ -447,6 +537,7 @@ function ReportAdmin() {
 
       {/* BIỂU ĐỒ DOANH THU */}
 
+      {selectedReport === "revenue" && (
       <section className="report-panel">
         <div className="report-panel-header">
           <div className="report-panel-icon purple">
@@ -507,10 +598,11 @@ function ReportAdmin() {
           </div>
         )}
       </section>
+      )}
 
       {/* TOP PHIM + DOANH THU RẠP */}
 
-      <div className="report-two-columns">
+      {selectedReport === "movies" && (
         <section className="report-panel">
           <div className="report-panel-header">
             <div className="report-panel-icon blue">
@@ -555,7 +647,9 @@ function ReportAdmin() {
             </table>
           </div>
         </section>
+      )}
 
+      {selectedReport === "cinemas" && (
         <section className="report-panel">
           <div className="report-panel-header">
             <div className="report-panel-icon orange">
@@ -600,10 +694,11 @@ function ReportAdmin() {
             </table>
           </div>
         </section>
-      </div>
+      )}
 
       {/* CHI TIẾT VÉ */}
 
+      {selectedReport === "tickets" && (
       <section className="report-panel">
         <div className="report-panel-header">
           <div className="report-panel-icon green">
@@ -662,6 +757,7 @@ function ReportAdmin() {
           </table>
         </div>
       </section>
+      )}
     </div>
   );
 }
