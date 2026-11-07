@@ -47,7 +47,12 @@ function CinemaNews() {
           {news.map((article, index) => (
             <article className={index === 0 ? "news-card news-card-featured" : "news-card"} key={article.title}>
               <div className="news-card-image">
-                <img src={article.image} alt="" />
+                <img
+                  src={article.image}
+                  alt=""
+                  fetchPriority={index === 0 ? "high" : "auto"}
+                  decoding="async"
+                />
                 <span>{article.category}</span>
               </div>
               <div className="news-card-body">

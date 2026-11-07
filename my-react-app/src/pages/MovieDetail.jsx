@@ -385,6 +385,8 @@ function MovieDetail() {
               <img
                 src={movie.posterUrl}
                 alt={movie.title}
+                fetchPriority="high"
+                decoding="async"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`

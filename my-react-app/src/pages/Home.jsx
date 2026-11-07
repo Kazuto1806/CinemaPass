@@ -346,6 +346,8 @@ const Home = () => {
             className="partner-banner-image"
             src={banners[currentBanner].image}
             alt={banners[currentBanner].alt}
+            fetchPriority="high"
+            decoding="async"
           />
 
           {/* MŨI TÊN TRÁI */}
@@ -402,13 +404,13 @@ const Home = () => {
           </div>
         ) : (
           <div className="movie-list">
-            {displayedNowShowingMovies.map((movie) => (
+            {displayedNowShowingMovies.map((movie, index) => (
               <Link
                 key={movie.movieId}
                 to={`/movie/${encodeURIComponent(movie.title)}`}
                 className="movie-card-link"
               >
-                <MovieCard movie={movie} />
+                <MovieCard movie={movie} fetchPriority={index === 0 ? "high" : "auto"} />
               </Link>
             ))}
           </div>
@@ -442,14 +444,14 @@ const Home = () => {
           </div>
         ) : (
           <div className="movie-list">
-            {displayedComingSoonMovies.map((movie) => (
+            {displayedComingSoonMovies.map((movie, index) => (
               <Link
                 key={movie.movieId}
                 to={`/movie/${encodeURIComponent(movie.title)}`
                 }
                 className="movie-card-link"
               >
-                <MovieCard movie={movie} />
+                <MovieCard movie={movie} fetchPriority={index === 0 ? "high" : "auto"} />
               </Link>
             ))}
           </div>

@@ -44,7 +44,7 @@ const getPosterUrl = (posterUrl) => {
   return normalized;
 };
 
-function MovieCard({ movie }) {
+function MovieCard({ movie, fetchPriority = "auto" }) {
   const [showTrailer, setShowTrailer] = useState(false);
   const { notify } = useNotification();
   const navigate = useNavigate();
@@ -112,6 +112,8 @@ function MovieCard({ movie }) {
               src={getPosterUrl(movie.posterUrl)}
               alt={movie.title}
               className="movie-poster"
+              fetchPriority={fetchPriority}
+              decoding="async"
               onError={(event) => {
                 event.currentTarget.onerror = null;
                 event.currentTarget.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
