@@ -1,39 +1,40 @@
 
+import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { NotificationProvider } from "./components/NotificationProvider";
 
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Food from "./pages/Food";
-import Account from "./pages/Account";
-import Membership from "./pages/Membership";
-import MovieSearch from "./pages/MovieSearch";
-import MovieList from "./pages/MovieList";
-import MovieDetail from "./pages/MovieDetail";
-import Booking from "./pages/Booking";
-import TicketHistory from "./pages/TicketHistory";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import FAQ from "./pages/FAQ";
-import CinemaNews from "./pages/CinemaNews";
+const Home = lazy(() => import("./pages/Home"));
+const Login = lazy(() => import("./pages/Login"));
+const Food = lazy(() => import("./pages/Food"));
+const Account = lazy(() => import("./pages/Account"));
+const Membership = lazy(() => import("./pages/Membership"));
+const MovieSearch = lazy(() => import("./pages/MovieSearch"));
+const MovieList = lazy(() => import("./pages/MovieList"));
+const MovieDetail = lazy(() => import("./pages/MovieDetail"));
+const Booking = lazy(() => import("./pages/Booking"));
+const TicketHistory = lazy(() => import("./pages/TicketHistory"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const CinemaNews = lazy(() => import("./pages/CinemaNews"));
 
-import AdminLayout from "./pages/Admin/AdminLayout";
-import Dashboard from "./pages/Admin/Dashboard";
-import MovieAdmin from "./pages/Admin/MovieAdmin";
-import UserAdmin from "./pages/Admin/UserAdmin";
-import TicketAdmin from "./pages/Admin/TicketAdmin";
-import FoodAdmin from "./pages/Admin/FoodAdmin";
-import ReportAdmin from "./pages/Admin/ReportAdmin";
-import CinemaAdmin from "./pages/Admin/CinemaAdmin";
-import ShowtimeAdmin from "./pages/Admin/ShowtimeAdmin";
-import RoomAdmin from "./pages/Admin/RoomAdmin";
-import SeatAdmin from "./pages/Admin/SeatAdmin";
-import TicketTypeAdmin from "./pages/Admin/TicketTypeAdmin";
-import FoodOrderAdmin from "./pages/Admin/FoodOrderAdmin";
-import PaymentAdmin from "./pages/Admin/PaymentAdmin";
-import BannerAdmin from "./pages/Admin/BannerAdmin";
+const AdminLayout = lazy(() => import("./pages/Admin/AdminLayout"));
+const Dashboard = lazy(() => import("./pages/Admin/Dashboard"));
+const MovieAdmin = lazy(() => import("./pages/Admin/MovieAdmin"));
+const UserAdmin = lazy(() => import("./pages/Admin/UserAdmin"));
+const TicketAdmin = lazy(() => import("./pages/Admin/TicketAdmin"));
+const FoodAdmin = lazy(() => import("./pages/Admin/FoodAdmin"));
+const ReportAdmin = lazy(() => import("./pages/Admin/ReportAdmin"));
+const CinemaAdmin = lazy(() => import("./pages/Admin/CinemaAdmin"));
+const ShowtimeAdmin = lazy(() => import("./pages/Admin/ShowtimeAdmin"));
+const RoomAdmin = lazy(() => import("./pages/Admin/RoomAdmin"));
+const SeatAdmin = lazy(() => import("./pages/Admin/SeatAdmin"));
+const TicketTypeAdmin = lazy(() => import("./pages/Admin/TicketTypeAdmin"));
+const FoodOrderAdmin = lazy(() => import("./pages/Admin/FoodOrderAdmin"));
+const PaymentAdmin = lazy(() => import("./pages/Admin/PaymentAdmin"));
+const BannerAdmin = lazy(() => import("./pages/Admin/BannerAdmin"));
 
 import "./App.css";
 
@@ -42,7 +43,8 @@ function App() {
     <NotificationProvider>
       <Header />
 
-      <Routes>
+      <Suspense fallback={<div className="app-route-loading" aria-label="Đang tải trang">Đang tải...</div>}>
+        <Routes>
         {/* =========================
             USER
         ========================= */}
@@ -240,7 +242,8 @@ function App() {
             </div>
           }
         />
-      </Routes>
+        </Routes>
+      </Suspense>
 
       <Footer />
     </NotificationProvider>
