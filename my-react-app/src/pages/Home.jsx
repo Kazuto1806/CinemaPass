@@ -337,6 +337,7 @@ const Home = () => {
     MOVIES_PER_PAGE
   );
   const showQuickBooking = location.hash === "#quick-booking";
+  const movieSkeletons = Array.from({ length: MOVIES_PER_PAGE });
 
   return (
     <main className="home">
@@ -434,7 +435,11 @@ const Home = () => {
         <h2>PHIM ĐANG CHIẾU</h2>
 
         {loading ? (
-          <p className="movie-loading">Đang tải phim...</p>
+          <div className="movie-list movie-skeleton-list" aria-label="Đang tải phim">
+            {movieSkeletons.map((_, index) => (
+              <div className="movie-skeleton-card" key={`now-${index}`} />
+            ))}
+          </div>
         ) : nowShowingMovies.length === 0 ? (
           <div className="movie-empty">
             <div className="movie-empty-content">
@@ -474,7 +479,11 @@ const Home = () => {
         <h2>PHIM SẮP CHIẾU</h2>
 
         {loading ? (
-          <p className="movie-loading">Đang tải phim...</p>
+          <div className="movie-list movie-skeleton-list" aria-label="Đang tải phim">
+            {movieSkeletons.map((_, index) => (
+              <div className="movie-skeleton-card" key={`soon-${index}`} />
+            ))}
+          </div>
         ) : comingSoonMovies.length === 0 ? (
           <div className="movie-empty">
             <div className="movie-empty-content">

@@ -21,6 +21,8 @@ export const Footer = () => {
         <div className="footer-bct">
           <img
             alt="Đã thông báo Bộ Công Thương"
+            width="180"
+            height="68"
           />
         </div>
 
