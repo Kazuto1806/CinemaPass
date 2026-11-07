@@ -4,6 +4,7 @@
 
 .admin-layout {
   display: flex;
+  align-items: flex-start;
   width: 100%;
   min-height: calc(100vh - 92px);
   background: #0d162b;
@@ -14,9 +15,13 @@
 ========================= */
 
 .admin-sidebar {
+  position: sticky;
+  top: 92px;
   width: 250px;
   min-width: 250px;
-  min-height: calc(100vh - 92px);
+  height: calc(100vh - 92px);
+  max-height: calc(100vh - 92px);
+  overflow: hidden;
 
   background: #0d162b;
   border-right: 1px solid #263452;
@@ -29,6 +34,7 @@
 .admin-content {
   flex: 1;
   min-width: 0;
+  min-height: calc(100vh - 92px);
 
   padding: 30px;
   background: #0d162b;
