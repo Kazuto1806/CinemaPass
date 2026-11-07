@@ -19,6 +19,7 @@ namespace CinemaBackend.Controllers
         // GET: api/cinemas
         // Lấy toàn bộ danh sách rạp
         [HttpGet]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
         public async Task<IActionResult> GetCinemas()
         {
             var cinemas = await _context.Cinemas

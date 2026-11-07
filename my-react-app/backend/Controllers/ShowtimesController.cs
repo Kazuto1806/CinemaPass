@@ -25,6 +25,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpGet]
+        [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any)]
         public async Task<IActionResult> GetShowtimes()
         {
             var showtimes = await _context.Showtimes

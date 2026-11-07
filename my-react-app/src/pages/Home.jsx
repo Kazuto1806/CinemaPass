@@ -5,6 +5,7 @@ import MovieCard from "../components/MovieCard";
 import QuickBooking from "../components/QuickBooking";
 import "./Home.css";
 import { API_BASE, getMissingPosterFallback } from "../constants";
+import defaultBannerImage from "../assets/hero.png";
 
 const API_URL = `${API_BASE}/api/movies`;
 const CINEMA_API_URL = `${API_BASE}/api/cinemas`;
@@ -19,18 +20,13 @@ const MOVIES_PER_PAGE = 4;
 const defaultBanners = [
   {
     id: 1,
-    image: "/banners/partner-1.jpg",
-    alt: "Partner banner 1",
+    image: defaultBannerImage,
+    alt: "CinemaPass rạp chiếu phim",
   },
   {
     id: 2,
-    image: "/banners/partner-2.jpg",
-    alt: "Partner banner 2",
-  },
-  {
-    id: 3,
-    image: "/banners/partner-3.jpg",
-    alt: "Partner banner 3",
+    image: defaultBannerImage,
+    alt: "CinemaPass banner",
   },
 ];
 
@@ -104,6 +100,7 @@ const Home = () => {
   const [bookingDataError, setBookingDataError] = useState("");
   const [movieDataError, setMovieDataError] = useState("");
   const [bookingOptionsLoading, setBookingOptionsLoading] = useState(true);
+  const [bookingOptionsLoaded, setBookingOptionsLoaded] = useState(false);
   const [banners, setBanners] = useState(defaultBanners);
   const [loading, setLoading] = useState(true);
 
@@ -112,25 +109,32 @@ const Home = () => {
 
   useEffect(() => {
     let cancelled = false;
+    const loadBanner = () => {
+      fetch(`${API_BASE}/api/banners`)
+        .then((response) => {
+          if (!response.ok) throw new Error("Không thể tải banner");
+          return response.json();
+        })
+        .then((data) => {
+          if (cancelled || !Array.isArray(data) || data.length === 0) return;
+          setBanners(data.map((banner) => ({
+            id: banner.bannerId,
+            image: banner.imageUrl,
+            alt: banner.altText || "Banner Cinema Pass",
+          })));
+          setCurrentBanner(0);
+        })
+        .catch((error) => console.error("Lỗi lấy danh sách banner:", error));
+    };
 
-    fetch(`${API_BASE}/api/banners`)
-      .then((response) => {
-        if (!response.ok) throw new Error("Không thể tải banner");
-        return response.json();
-      })
-      .then((data) => {
-        if (cancelled || !Array.isArray(data) || data.length === 0) return;
-        setBanners(data.map((banner) => ({
-          id: banner.bannerId,
-          image: banner.imageUrl,
-          alt: banner.altText || "Banner Cinema Pass",
-        })));
-        setCurrentBanner(0);
-      })
-      .catch((error) => console.error("Lỗi lấy danh sách banner:", error));
+    const scheduleId = window.requestIdleCallback
+      ? window.requestIdleCallback(loadBanner, { timeout: 1500 })
+      : window.setTimeout(loadBanner, 300);
 
     return () => {
       cancelled = true;
+      if (window.cancelIdleCallback) window.cancelIdleCallback(scheduleId);
+      else window.clearTimeout(scheduleId);
     };
   }, []);
 
@@ -188,15 +192,24 @@ const Home = () => {
       }
     };
 
-    loadMovies();
+    const scheduleId = window.requestIdleCallback
+      ? window.requestIdleCallback(() => loadMovies(), { timeout: 1200 })
+      : window.setTimeout(loadMovies, 200);
 
     return () => {
       cancelled = true;
+      if (window.cancelIdleCallback) window.cancelIdleCallback(scheduleId);
+      else window.clearTimeout(scheduleId);
     };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
+    if (location.hash !== "#quick-booking" || bookingOptionsLoaded) {
+      return () => {
+        cancelled = true;
+      };
+    }
 
     const loadBookingOptions = async () => {
       try {
@@ -278,6 +291,7 @@ const Home = () => {
       } finally {
         if (!cancelled) {
           setBookingOptionsLoading(false);
+          setBookingOptionsLoaded(true);
         }
       }
     };
@@ -287,7 +301,7 @@ const Home = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [location.hash, location.pathname, bookingOptionsLoaded]);
 
   useEffect(() => {
     if (location.hash !== "#quick-booking") return;

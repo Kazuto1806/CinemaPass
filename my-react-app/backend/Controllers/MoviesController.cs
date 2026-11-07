@@ -54,6 +54,7 @@ public MoviesController(
         // =========================
 
         [HttpGet]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
         public async Task<IActionResult> GetMovies()
         {
             var movies = await _context.Movies

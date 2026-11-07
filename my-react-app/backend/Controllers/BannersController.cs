@@ -42,6 +42,7 @@ namespace CinemaBackend.Controllers
         }
 
         [HttpGet]
+        [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any)]
         public async Task<IActionResult> GetBanners()
         {
             var banners = await _context.Banners
