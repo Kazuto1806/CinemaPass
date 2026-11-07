@@ -9,6 +9,8 @@ import {
   FaBuilding,
   FaSearch,
   FaFileExcel,
+  FaTimes,
+  FaEye,
 } from "react-icons/fa";
 
 import { useNotification } from "../../components/useNotification";
@@ -96,6 +98,7 @@ function ReportAdmin() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedReport, setSelectedReport] = useState("revenue");
+  const [detailReport, setDetailReport] = useState(null);
 
   const loadOptions = async () => {
     const [movieResponse, cinemaResponse] =
@@ -190,6 +193,17 @@ function ReportAdmin() {
     // Chỉ tải dữ liệu ban đầu khi mở trang.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!detailReport) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setDetailReport(null);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [detailReport]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -309,6 +323,45 @@ function ReportAdmin() {
     ...revenueByDay.map((item) => Number(item.revenue || 0)),
     1
   );
+  const maxMovieTickets = Math.max(
+    ...topMovies.map((movie) => Number(movie.tickets || 0)),
+    1
+  );
+  const maxCinemaRevenue = Math.max(
+    ...cinemaReports.map((cinema) => Number(cinema.revenue || 0)),
+    1
+  );
+
+  const pieColors = [
+    "#9b7cff",
+    "#60a5fa",
+    "#4ade80",
+    "#fb923c",
+    "#f472b6",
+    "#22d3ee",
+    "#facc15",
+  ];
+
+  const createPieGradient = (items, getValue) => {
+    const total = items.reduce(
+      (sum, item) => sum + Number(getValue(item) || 0),
+      0
+    );
+
+    if (!total) return "conic-gradient(#334363 0 100%)";
+
+    let start = 0;
+    const stops = items.map((item, index) => {
+      const size =
+        (Number(getValue(item) || 0) / total) * 100;
+      const end = start + size;
+      const stop = `${pieColors[index % pieColors.length]} ${start}% ${end}%`;
+      start = end;
+      return stop;
+    });
+
+    return `conic-gradient(${stops.join(", ")})`;
+  };
 
   return (
     <div className="report-admin">
@@ -468,7 +521,7 @@ function ReportAdmin() {
       {/* THẺ THỐNG KÊ */}
 
       <div className="report-stat-grid">
-        <div className="report-stat-card">
+        <button type="button" className="report-stat-card" onClick={() => setSelectedReport("tickets")}>
           <div className="report-stat-icon purple">
             <FaTicketAlt />
           </div>
@@ -483,9 +536,9 @@ function ReportAdmin() {
             </strong>
             <small>Trong kỳ báo cáo</small>
           </div>
-        </div>
+        </button>
 
-        <div className="report-stat-card">
+        <button type="button" className="report-stat-card" onClick={() => setSelectedReport("revenue")}>
           <div className="report-stat-icon green">
             <FaMoneyBillWave />
           </div>
@@ -498,9 +551,21 @@ function ReportAdmin() {
             </strong>
             <small>Không tính vé đã hủy</small>
           </div>
-        </div>
+        </button>
 
-        <div className="report-stat-card">
+        <button
+          type="button"
+          className="report-stat-card"
+          onClick={() =>
+            setDetailReport({
+              title: "Chi tiết khách hàng",
+              rows: [
+                ["Khách hàng có vé hợp lệ", Number(report.summary.totalCustomers || 0)],
+                ["Tổng vé hợp lệ", Number(report.summary.totalTickets || 0)],
+              ],
+            })
+          }
+        >
           <div className="report-stat-icon blue">
             <FaUsers />
           </div>
@@ -515,9 +580,9 @@ function ReportAdmin() {
             </strong>
             <small>Khách có vé hợp lệ</small>
           </div>
-        </div>
+        </button>
 
-        <div className="report-stat-card">
+        <button type="button" className="report-stat-card" onClick={() => setSelectedReport("revenue")}>
           <div className="report-stat-icon orange">
             <FaCalendarAlt />
           </div>
@@ -532,7 +597,7 @@ function ReportAdmin() {
             </strong>
             <small>Theo ngày chiếu đã chọn</small>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* BIỂU ĐỒ DOANH THU */}
@@ -567,10 +632,21 @@ function ReportAdmin() {
               );
 
               return (
-                <div
+                <button
+                  type="button"
                   className="report-chart-column"
                   key={item.date}
                   title={`${dateText(item.date)}: ${money(item.revenue)}`}
+                  onClick={() =>
+                    setDetailReport({
+                      title: `Chi tiết doanh thu ngày ${dateText(item.date)}`,
+                      rows: [
+                        ["Ngày", dateText(item.date)],
+                        ["Số vé hợp lệ", Number(item.tickets || 0)],
+                        ["Doanh thu", money(item.revenue)],
+                      ],
+                    })
+                  }
                 >
                   <span className="report-chart-value">
                     {Number(item.revenue || 0) >= 1000000
@@ -592,7 +668,7 @@ function ReportAdmin() {
                   <span className="report-chart-label">
                     {dateText(item.date)}
                   </span>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -614,6 +690,75 @@ function ReportAdmin() {
               <p>Top phim theo số vé hợp lệ</p>
             </div>
           </div>
+
+          {!loading && topMovies.length > 0 && (
+            <div className="report-chart-grid">
+              <div className="report-horizontal-chart">
+                {topMovies.slice(0, 7).map((movie, index) => (
+                  <button
+                    type="button"
+                    className="report-horizontal-row"
+                    key={movie.movieId}
+                    onClick={() =>
+                      setDetailReport({
+                        title: `Chi tiết phim: ${movie.title}`,
+                        rows: [
+                          ["Phim", movie.title],
+                          ["Số vé hợp lệ", Number(movie.tickets || 0)],
+                          ["Doanh thu", money(movie.revenue)],
+                        ],
+                      })
+                    }
+                  >
+                    <span className="report-horizontal-label" title={movie.title}>
+                      {movie.title}
+                    </span>
+                    <span className="report-horizontal-track">
+                      <span
+                        className="report-horizontal-bar"
+                        style={{
+                          width: `${Math.max(
+                            (Number(movie.tickets || 0) / maxMovieTickets) * 100,
+                            3
+                          )}%`,
+                          background: pieColors[index % pieColors.length],
+                        }}
+                      />
+                    </span>
+                    <strong>{movie.tickets}</strong>
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                className="report-pie-card"
+                onClick={() =>
+                  setDetailReport({
+                    title: "Tỷ lệ vé theo phim",
+                    rows: topMovies.slice(0, 7).map((movie) => [
+                      movie.title,
+                      `${movie.tickets} vé`,
+                    ]),
+                  })
+                }
+              >
+                <span
+                  className="report-pie"
+                  style={{
+                    background: createPieGradient(
+                      topMovies.slice(0, 7),
+                      (movie) => movie.tickets
+                    ),
+                  }}
+                >
+                  <span>{topMovies.reduce((sum, movie) => sum + Number(movie.tickets || 0), 0)}</span>
+                  <small>vé</small>
+                </span>
+                <span className="report-pie-caption">Tỷ lệ vé theo phim</span>
+              </button>
+            </div>
+          )}
 
           <div className="report-table-wrapper">
             <table className="report-table">
@@ -661,6 +806,75 @@ function ReportAdmin() {
               <p>So sánh số vé và doanh thu</p>
             </div>
           </div>
+
+          {!loading && cinemaReports.length > 0 && (
+            <div className="report-chart-grid">
+              <div className="report-horizontal-chart">
+                {cinemaReports.slice(0, 7).map((cinema, index) => (
+                  <button
+                    type="button"
+                    className="report-horizontal-row"
+                    key={cinema.cinemaId}
+                    onClick={() =>
+                      setDetailReport({
+                        title: `Chi tiết rạp: ${cinema.name}`,
+                        rows: [
+                          ["Rạp", cinema.name],
+                          ["Số vé hợp lệ", Number(cinema.tickets || 0)],
+                          ["Doanh thu", money(cinema.revenue)],
+                        ],
+                      })
+                    }
+                  >
+                    <span className="report-horizontal-label" title={cinema.name}>
+                      {cinema.name}
+                    </span>
+                    <span className="report-horizontal-track">
+                      <span
+                        className="report-horizontal-bar"
+                        style={{
+                          width: `${Math.max(
+                            (Number(cinema.revenue || 0) / maxCinemaRevenue) * 100,
+                            3
+                          )}%`,
+                          background: pieColors[index % pieColors.length],
+                        }}
+                      />
+                    </span>
+                    <strong>{money(cinema.revenue)}</strong>
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                className="report-pie-card"
+                onClick={() =>
+                  setDetailReport({
+                    title: "Tỷ lệ doanh thu theo rạp",
+                    rows: cinemaReports.slice(0, 7).map((cinema) => [
+                      cinema.name,
+                      money(cinema.revenue),
+                    ]),
+                  })
+                }
+              >
+                <span
+                  className="report-pie"
+                  style={{
+                    background: createPieGradient(
+                      cinemaReports.slice(0, 7),
+                      (cinema) => cinema.revenue
+                    ),
+                  }}
+                >
+                  <span>{cinemaReports.length}</span>
+                  <small>rạp</small>
+                </span>
+                <span className="report-pie-caption">Tỷ lệ doanh thu theo rạp</span>
+              </button>
+            </div>
+          )}
 
           <div className="report-table-wrapper">
             <table className="report-table">
@@ -737,7 +951,26 @@ function ReportAdmin() {
                 </tr>
               ) : (
                 tickets.map((ticket) => (
-                  <tr key={ticket.ticketId}>
+                  <tr
+                    key={ticket.ticketId}
+                    className="report-detail-row"
+                    onClick={() =>
+                      setDetailReport({
+                        title: `Chi tiết vé #${ticket.ticketId}`,
+                        rows: [
+                          ["Mã vé", `#${ticket.ticketId}`],
+                          ["Ngày đặt", dateTimeText(ticket.createdAt)],
+                          ["Khách hàng", ticket.customerName],
+                          ["Phim", ticket.movieTitle],
+                          ["Rạp", ticket.cinemaName],
+                          ["Phòng", ticket.roomName],
+                          ["Ghế", ticket.seatCode],
+                          ["Giá vé", money(ticket.ticketPrice)],
+                          ["Trạng thái", ticket.status],
+                        ],
+                      })
+                    }
+                  >
                     <td>#{ticket.ticketId}</td>
                     <td>{dateTimeText(ticket.createdAt)}</td>
                     <td>{ticket.customerName}</td>
@@ -757,6 +990,54 @@ function ReportAdmin() {
           </table>
         </div>
       </section>
+      )}
+
+      {detailReport && (
+        <div
+          className="report-detail-overlay"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setDetailReport(null);
+          }}
+        >
+          <section
+            className="report-detail-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="report-detail-title"
+          >
+            <div className="report-detail-modal-header">
+              <div>
+                <span>CHI TIẾT BÁO CÁO</span>
+                <h2 id="report-detail-title">{detailReport.title}</h2>
+              </div>
+              <button
+                type="button"
+                aria-label="Đóng"
+                onClick={() => setDetailReport(null)}
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="report-detail-modal-body">
+              {detailReport.rows.map(([label, value], index) => (
+                <div className="report-detail-item" key={`${label}-${index}`}>
+                  <span>{label}</span>
+                  <strong>{value}</strong>
+                </div>
+              ))}
+            </div>
+            <div className="report-detail-modal-footer">
+              <button type="button" onClick={() => setDetailReport(null)}>
+                Đóng
+              </button>
+              <button type="button" className="primary" onClick={exportExcel}>
+                <FaFileExcel />
+                Xuất Excel
+              </button>
+            </div>
+          </section>
+        </div>
       )}
     </div>
   );
