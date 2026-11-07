@@ -4,7 +4,11 @@ import { useNavigate } from "react-router-dom";
 import "./MovieCard.css";
 import TrailerModal from "./TrailerModal";
 import { useNotification } from "./useNotification";
-import { API_BASE, getMissingPosterFallback } from "../constants";
+import {
+  API_BASE,
+  getMissingPosterFallback,
+  getOptimizedCloudinaryUrl,
+} from "../constants";
 
 const getPosterUrl = (posterUrl) => {
   if (!posterUrl) return "";
@@ -50,6 +54,23 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
   const navigate = useNavigate();
 
   const trailerUrl = movie?.trailerUrl ?? movie?.TrailerUrl ?? "";
+  const posterUrl = getPosterUrl(movie.posterUrl);
+  const optimizedPosterUrl = getOptimizedCloudinaryUrl(posterUrl, {
+    width: 520,
+    height: 780,
+    crop: "fill",
+  });
+  const posterSrcSet = posterUrl.includes("res.cloudinary.com")
+    ? [260, 390, 520]
+        .map((width) =>
+          `${getOptimizedCloudinaryUrl(posterUrl, {
+            width,
+            height: Math.round(width * 1.5),
+            crop: "fill",
+          })} ${width}w`
+        )
+        .join(", ")
+    : undefined;
 
   const handleTrailerClick = (event) => {
     event.preventDefault();
@@ -109,11 +130,16 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
           {/* POSTER */}
           {movie.posterUrl ? (
             <img
-              src={getPosterUrl(movie.posterUrl)}
+              src={optimizedPosterUrl}
+              srcSet={posterSrcSet}
+              sizes="(max-width: 650px) 45vw, (max-width: 1000px) 30vw, 262px"
               alt={movie.title}
+              width="260"
+              height="390"
               className="movie-poster"
               fetchPriority={fetchPriority}
               decoding="async"
+              loading={fetchPriority === "high" ? "eager" : "lazy"}
               onError={(event) => {
                 event.currentTarget.onerror = null;
                 event.currentTarget.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`

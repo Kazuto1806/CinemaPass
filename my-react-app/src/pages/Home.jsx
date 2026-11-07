@@ -4,7 +4,11 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import MovieCard from "../components/MovieCard";
 import QuickBooking from "../components/QuickBooking";
 import "./Home.css";
-import { API_BASE, getMissingPosterFallback } from "../constants";
+import {
+  API_BASE,
+  getMissingPosterFallback,
+  getOptimizedCloudinaryUrl,
+} from "../constants";
 import defaultBannerImage from "../assets/hero.png";
 
 const API_URL = `${API_BASE}/api/movies`;
@@ -358,8 +362,31 @@ const Home = () => {
           <img
             key={banners[currentBanner].id}
             className="partner-banner-image"
-            src={banners[currentBanner].image}
+            src={getOptimizedCloudinaryUrl(banners[currentBanner].image, {
+              width: 1280,
+              height: 520,
+              crop: "fill",
+            })}
+            srcSet={
+              String(banners[currentBanner].image).includes("res.cloudinary.com")
+                ? [640, 960, 1280, 1600]
+                    .map((width) =>
+                      `${getOptimizedCloudinaryUrl(
+                        banners[currentBanner].image,
+                        {
+                          width,
+                          height: Math.round(width * 0.40625),
+                          crop: "fill",
+                        }
+                      )} ${width}w`
+                    )
+                    .join(", ")
+                : undefined
+            }
+            sizes="(max-width: 650px) 100vw, (max-width: 1320px) 95vw, 1320px"
             alt={banners[currentBanner].alt}
+            width="1280"
+            height="520"
             fetchPriority="high"
             decoding="async"
           />

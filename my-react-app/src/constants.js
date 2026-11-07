@@ -26,3 +26,27 @@ export const getMissingPosterFallback = (posterUrl) => {
         ? posterUnavailable
         : null;
 };
+
+export const getOptimizedCloudinaryUrl = (
+    imageUrl,
+    { width = 800, height, crop = "limit" } = {}
+) => {
+    const value = String(imageUrl ?? "").trim();
+    const marker = "/image/upload/";
+
+    if (!value.includes("res.cloudinary.com") || !value.includes(marker)) {
+        return value;
+    }
+
+    const [baseUrl, publicId] = value.split(marker, 2);
+    const dimensions = [
+        `w_${width}`,
+        height ? `h_${height}` : null,
+        `c_${crop}`,
+        "f_auto",
+        "q_auto:eco",
+        "dpr_auto",
+    ].filter(Boolean).join(",");
+
+    return `${baseUrl}${marker}${dimensions}/${publicId}`;
+};
