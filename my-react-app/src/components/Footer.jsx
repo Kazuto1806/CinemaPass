@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import "./Footer.css"
 
 export const Footer = () => {
@@ -9,9 +10,9 @@ export const Footer = () => {
             </div>
             {/* Link */}
             <div className="footer-links">
-                <a href="#">Chính sách bảo mật</a>
-                <a href="#">Tin điện ảnh</a>
-                <a href="#">Hỏi và đáp</a>
+                <Link to="/privacy-policy">Chính sách bảo mật</Link>
+                <Link to="/cinema-news">Tin điện ảnh</Link>
+                <Link to="/faq">Hỏi và đáp</Link>
             </div>
         </div>
          <div className="footer-content">

@@ -15,6 +15,9 @@ import MovieList from "./pages/MovieList";
 import MovieDetail from "./pages/MovieDetail";
 import Booking from "./pages/Booking";
 import TicketHistory from "./pages/TicketHistory";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import FAQ from "./pages/FAQ";
+import CinemaNews from "./pages/CinemaNews";
 
 import AdminLayout from "./pages/Admin/AdminLayout";
 import Dashboard from "./pages/Admin/Dashboard";
@@ -102,6 +105,14 @@ function App() {
           path="/booking"
           element={<Booking />}
         />
+
+        {/* =========================
+            THÔNG TIN
+        ========================= */}
+
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/cinema-news" element={<CinemaNews />} />
 
         {/* =========================
             ADMIN
