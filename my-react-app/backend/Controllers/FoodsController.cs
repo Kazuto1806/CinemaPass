@@ -51,29 +51,31 @@ namespace CinemaBackend.Controllers
         // POST: api/foods
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateFood(Food food)
+        public async Task<IActionResult> CreateFood(FoodWriteRequest food)
         {
-            food.FoodId = 0;
-            food.CreatedAt = DateTime.Now;
-
-            if (string.IsNullOrWhiteSpace(food.Category))
+            var newFood = new Food
             {
-                food.Category = "Bắp nước";
-            }
+                Name = food.Name,
+                Description = food.Description,
+                Price = food.Price,
+                ImageUrl = food.ImageUrl,
+                Category = string.IsNullOrWhiteSpace(food.Category)
+                    ? "Bắp nước"
+                    : food.Category,
+                Status = string.IsNullOrWhiteSpace(food.Status)
+                    ? "Đang bán"
+                    : food.Status,
+                CreatedAt = DateTime.Now
+            };
 
-            if (string.IsNullOrWhiteSpace(food.Status))
-            {
-                food.Status = "Đang bán";
-            }
-
-            _context.Foods.Add(food);
+            _context.Foods.Add(newFood);
 
             await _context.SaveChangesAsync();
 
             return Ok(new
             {
                 message = "Thêm món thành công",
-                foodId = food.FoodId
+                foodId = newFood.FoodId
             });
         }
 
@@ -82,7 +84,7 @@ namespace CinemaBackend.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateFood(
             int id,
-            Food updatedFood)
+            FoodWriteRequest updatedFood)
         {
             var food = await _context.Foods
                 .FirstOrDefaultAsync(f => f.FoodId == id);
@@ -134,6 +136,16 @@ namespace CinemaBackend.Controllers
             {
                 message = "Xóa món thành công"
             });
+        }
+
+        public sealed class FoodWriteRequest
+        {
+            public string Name { get; set; } = string.Empty;
+            public string? Description { get; set; }
+            public decimal Price { get; set; }
+            public string? ImageUrl { get; set; }
+            public string Category { get; set; } = "Bắp nước";
+            public string Status { get; set; } = "Đang bán";
         }
     }
 }

@@ -73,7 +73,7 @@ namespace CinemaBackend.Controllers
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateTicketType(
-            [FromBody] TicketType ticketType)
+            [FromBody] TicketTypeWriteRequest ticketType)
         {
             if (ticketType == null)
             {
@@ -120,33 +120,36 @@ namespace CinemaBackend.Controllers
                 });
             }
 
-            ticketType.TicketTypeId = 0;
-            ticketType.Name = ticketType.Name.Trim();
-            ticketType.Description =
-                ticketType.Description?.Trim() ?? string.Empty;
-            ticketType.Category = NormalizeCategory(ticketType.Category);
-            ticketType.Status =
-                string.IsNullOrWhiteSpace(ticketType.Status)
-                    ? "Active"
-                    : ticketType.Status.Trim();
-            ticketType.CreatedAt = DateTime.Now;
+            var newTicketType = new TicketType
+            {
+                Name = ticketType.Name.Trim(),
+                Description = ticketType.Description?.Trim()
+                    ?? string.Empty,
+                Category = NormalizeCategory(ticketType.Category),
+                Status =
+                    string.IsNullOrWhiteSpace(ticketType.Status)
+                        ? "Active"
+                        : ticketType.Status.Trim(),
+                Price = ticketType.Price,
+                CreatedAt = DateTime.Now
+            };
 
-            _context.TicketTypes.Add(ticketType);
+            _context.TicketTypes.Add(newTicketType);
 
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(
                 nameof(GetTicketType),
-                new { id = ticketType.TicketTypeId },
+                new { id = newTicketType.TicketTypeId },
                 new
                 {
-                    ticketTypeId = ticketType.TicketTypeId,
-                    name = ticketType.Name,
-                    description = ticketType.Description,
-                    category = ticketType.Category,
-                    price = ticketType.Price,
-                    status = ticketType.Status,
-                    createdAt = ticketType.CreatedAt
+                    ticketTypeId = newTicketType.TicketTypeId,
+                    name = newTicketType.Name,
+                    description = newTicketType.Description,
+                    category = newTicketType.Category,
+                    price = newTicketType.Price,
+                    status = newTicketType.Status,
+                    createdAt = newTicketType.CreatedAt
                 });
         }
 
@@ -155,7 +158,7 @@ namespace CinemaBackend.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateTicketType(
             int id,
-            [FromBody] TicketType ticketType)
+            [FromBody] TicketTypeWriteRequest ticketType)
         {
             if (ticketType == null)
             {
@@ -292,6 +295,15 @@ namespace CinemaBackend.Controllers
             {
                 message = "Xóa loại vé thành công."
             });
+        }
+
+        public sealed class TicketTypeWriteRequest
+        {
+            public string Name { get; set; } = string.Empty;
+            public string? Description { get; set; } = string.Empty;
+            public string Category { get; set; } = "Customer";
+            public decimal Price { get; set; }
+            public string Status { get; set; } = "Active";
         }
     }
 }

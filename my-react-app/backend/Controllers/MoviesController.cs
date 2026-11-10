@@ -93,7 +93,7 @@ public MoviesController(
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateMovie(
-            [FromForm] Movie movie,
+            [FromForm] MovieWriteRequest movie,
             IFormFile? PosterFile)
         {
             // Kiểm tra tên
@@ -143,14 +143,28 @@ public MoviesController(
             // LƯU SQL
             // =========================
 
-            _context.Movies.Add(movie);
+            var newMovie = new Movie
+            {
+                Title = movie.Title,
+                Description = movie.Description,
+                Genre = movie.Genre,
+                Duration = movie.Duration,
+                ReleaseDate = movie.ReleaseDate,
+                Director = movie.Director,
+                AgeRating = movie.AgeRating,
+                PosterUrl = movie.PosterUrl,
+                TrailerUrl = movie.TrailerUrl,
+                Status = movie.Status
+            };
+
+            _context.Movies.Add(newMovie);
 
             await _context.SaveChangesAsync();
 
             return Ok(new
             {
                 message = "Thêm phim thành công",
-                movie = movie
+                movie = newMovie
             });
         }
 
@@ -162,7 +176,7 @@ public MoviesController(
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateMovie(
             int id,
-            [FromForm] Movie movie,
+            [FromForm] MovieWriteRequest movie,
             IFormFile? PosterFile)
         {
             var existingMovie = await _context.Movies
@@ -408,6 +422,20 @@ private async Task<string> SavePoster(IFormFile file)
             {
                 System.IO.File.Delete(filePath);
             }
+        }
+
+        public sealed class MovieWriteRequest
+        {
+            public string Title { get; set; } = string.Empty;
+            public string? Description { get; set; }
+            public string? Genre { get; set; }
+            public int Duration { get; set; }
+            public DateTime? ReleaseDate { get; set; }
+            public string? Director { get; set; }
+            public string? AgeRating { get; set; }
+            public string? PosterUrl { get; set; }
+            public string? TrailerUrl { get; set; }
+            public string Status { get; set; } = "ComingSoon";
         }
     }
 }

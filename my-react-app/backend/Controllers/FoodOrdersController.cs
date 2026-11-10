@@ -172,18 +172,9 @@ namespace CinemaBackend.Controllers
                 });
             }
 
-            if (request.UserId <= 0)
-            {
-                return BadRequest(new
-                {
-                    message = "UserId không hợp lệ."
-                });
-            }
-
             if (!int.TryParse(
                     User.FindFirstValue(ClaimTypes.NameIdentifier),
-                    out var authenticatedUserId) ||
-                authenticatedUserId != request.UserId)
+                    out var authenticatedUserId))
             {
                 return Forbid();
             }
@@ -197,7 +188,7 @@ namespace CinemaBackend.Controllers
             }
 
             var userExists = await _context.Users
-                .AnyAsync(u => u.UserId == request.UserId);
+                .AnyAsync(u => u.UserId == authenticatedUserId);
 
             if (!userExists)
             {
@@ -247,7 +238,7 @@ namespace CinemaBackend.Controllers
 
             var order = new FoodOrder
             {
-                UserId = request.UserId,
+                UserId = authenticatedUserId,
                 Status = "Chờ xử lý",
                 CreatedAt = DateTime.Now
             };
@@ -374,8 +365,6 @@ namespace CinemaBackend.Controllers
 
     public class CreateFoodOrderRequest
     {
-        public int UserId { get; set; }
-
         public List<CreateFoodOrderItemRequest> Items { get; set; }
             = new();
     }

@@ -55,24 +55,28 @@ namespace CinemaBackend.Controllers
         // Thêm rạp mới
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateCinema(Cinema cinema)
+        public async Task<IActionResult> CreateCinema(
+            CinemaWriteRequest cinema)
         {
-            cinema.CinemaId = 0;
-            cinema.CreatedAt = DateTime.Now;
-
-            if (string.IsNullOrWhiteSpace(cinema.Status))
+            var newCinema = new Cinema
             {
-                cinema.Status = "Đang hoạt động";
-            }
+                Name = cinema.Name,
+                Address = cinema.Address,
+                Phone = cinema.Phone,
+                Status = string.IsNullOrWhiteSpace(cinema.Status)
+                    ? "Đang hoạt động"
+                    : cinema.Status,
+                CreatedAt = DateTime.Now
+            };
 
-            _context.Cinemas.Add(cinema);
+            _context.Cinemas.Add(newCinema);
 
             await _context.SaveChangesAsync();
 
             return Ok(new
             {
                 message = "Thêm rạp thành công",
-                cinemaId = cinema.CinemaId
+                cinemaId = newCinema.CinemaId
             });
         }
 
@@ -82,7 +86,7 @@ namespace CinemaBackend.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateCinema(
             int id,
-            Cinema updatedCinema)
+            CinemaWriteRequest updatedCinema)
         {
             var cinema = await _context.Cinemas
                 .FirstOrDefaultAsync(c => c.CinemaId == id);
@@ -133,6 +137,14 @@ namespace CinemaBackend.Controllers
             {
                 message = "Xóa rạp thành công"
             });
+        }
+
+        public sealed class CinemaWriteRequest
+        {
+            public string Name { get; set; } = string.Empty;
+            public string Address { get; set; } = string.Empty;
+            public string? Phone { get; set; }
+            public string Status { get; set; } = "Đang hoạt động";
         }
     }
 }

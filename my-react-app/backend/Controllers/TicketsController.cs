@@ -19,7 +19,6 @@ namespace CinemaBackend.Controllers
 
     public class BookingRequest
     {
-        public int UserId { get; set; }
         public int MovieId { get; set; }
         public int ShowtimeId { get; set; }
 
@@ -38,6 +37,16 @@ namespace CinemaBackend.Controllers
     public class PaymentRequest
     {
         public string PaymentStatus { get; set; } = string.Empty;
+        public string? PaymentMethod { get; set; }
+        public string? PaymentTransactionId { get; set; }
+    }
+
+    public class TicketUpdateRequest
+    {
+        public int? TicketTypeId { get; set; }
+        public decimal TicketPrice { get; set; }
+        public string Status { get; set; } = "Đã đặt";
+        public string PaymentStatus { get; set; } = "Chưa thanh toán";
         public string? PaymentMethod { get; set; }
         public string? PaymentTransactionId { get; set; }
     }
@@ -94,18 +103,9 @@ namespace CinemaBackend.Controllers
                 });
             }
 
-            if (request.UserId <= 0)
-            {
-                return BadRequest(new
-                {
-                    message = "User chưa đăng nhập hoặc không hợp lệ."
-                });
-            }
-
             if (!int.TryParse(
                     User.FindFirstValue(ClaimTypes.NameIdentifier),
-                    out var authenticatedUserId) ||
-                authenticatedUserId != request.UserId)
+                    out var authenticatedUserId))
             {
                 return Forbid();
             }
@@ -191,7 +191,7 @@ namespace CinemaBackend.Controllers
 
             // Kiểm tra tài khoản.
             var userExists = await _context.Users
-                .AnyAsync(u => u.UserId == request.UserId);
+                .AnyAsync(u => u.UserId == authenticatedUserId);
 
             if (!userExists)
             {
@@ -489,7 +489,7 @@ namespace CinemaBackend.Controllers
                           QrCodeToken = Convert.ToHexString(
                               RandomNumberGenerator.GetBytes(32)
                                 ).ToLowerInvariant(),
-                        UserId = request.UserId,
+                        UserId = authenticatedUserId,
                         MovieId = request.MovieId,
                         ShowtimeId = request.ShowtimeId,
                         SeatId = seat.SeatId,
@@ -1001,7 +1001,7 @@ namespace CinemaBackend.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public IActionResult CreateTicket([FromBody] Ticket ticket)
+        public IActionResult CreateTicket()
         {
             return BadRequest(new
             {
@@ -1019,7 +1019,7 @@ namespace CinemaBackend.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateTicket(
             int id,
-            [FromBody] Ticket ticket)
+            [FromBody] TicketUpdateRequest ticket)
         {
             if (ticket == null)
             {
@@ -1037,17 +1037,6 @@ namespace CinemaBackend.Controllers
                 return NotFound(new
                 {
                     message = "Không tìm thấy vé"
-                });
-            }
-
-            if (ticket.ShowtimeId != existingTicket.ShowtimeId ||
-                ticket.SeatId != existingTicket.SeatId)
-            {
-                return BadRequest(new
-                {
-                    message =
-                        "Không thể đổi ghế hoặc suất chiếu bằng API cập nhật vé. " +
-                        "Vui lòng thực hiện quy trình đặt vé có giữ ghế."
                 });
             }
 
@@ -1070,7 +1059,7 @@ namespace CinemaBackend.Controllers
 
             var showtime = await _context.Showtimes
                 .FirstOrDefaultAsync(
-                    s => s.ShowtimeId == ticket.ShowtimeId);
+                    s => s.ShowtimeId == existingTicket.ShowtimeId);
 
             if (showtime == null)
             {
@@ -1081,7 +1070,8 @@ namespace CinemaBackend.Controllers
             }
 
             var seat = await _context.Seats
-                .FirstOrDefaultAsync(s => s.SeatId == ticket.SeatId);
+                .FirstOrDefaultAsync(
+                    s => s.SeatId == existingTicket.SeatId);
 
             if (seat == null)
             {
@@ -1102,8 +1092,8 @@ namespace CinemaBackend.Controllers
             var duplicateSeat = await _context.Tickets
                 .AnyAsync(t =>
                     t.TicketId != id &&
-                    t.ShowtimeId == ticket.ShowtimeId &&
-                    t.SeatId == ticket.SeatId &&
+                    t.ShowtimeId == existingTicket.ShowtimeId &&
+                    t.SeatId == existingTicket.SeatId &&
                     t.Status != "Đã hủy");
 
             if (duplicateSeat)
@@ -1143,7 +1133,7 @@ namespace CinemaBackend.Controllers
                 var linkedPrice = await _context.ShowtimeTicketTypes
                     .AsNoTracking()
                     .Where(x =>
-                        x.ShowtimeId == ticket.ShowtimeId &&
+                        x.ShowtimeId == existingTicket.ShowtimeId &&
                         x.TicketTypeId == ticket.TicketTypeId.Value)
                     .Select(x => (decimal?)x.Price)
                     .FirstOrDefaultAsync();
@@ -1169,10 +1159,6 @@ namespace CinemaBackend.Controllers
                         : showtime.TicketPrice;
             }
 
-            existingTicket.UserId = ticket.UserId;
-            existingTicket.MovieId = ticket.MovieId;
-            existingTicket.ShowtimeId = ticket.ShowtimeId;
-            existingTicket.SeatId = ticket.SeatId;
             existingTicket.Status = ticket.Status;
 
             existingTicket.PaymentStatus =

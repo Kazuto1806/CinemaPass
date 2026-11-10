@@ -13,7 +13,6 @@ namespace CinemaBackend.Controllers
         public int ShowtimeId { get; set; }
         public string SeatCode { get; set; } = string.Empty;
         public string HoldToken { get; set; } = string.Empty;
-        public int? UserId { get; set; }
     }
 
     public class ReleaseSeatRequest
@@ -156,12 +155,6 @@ namespace CinemaBackend.Controllers
             if (!int.TryParse(
                     User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
                     out var authenticatedUserId))
-            {
-                return Forbid();
-            }
-
-            if (request.UserId.HasValue &&
-                request.UserId.Value != authenticatedUserId)
             {
                 return Forbid();
             }

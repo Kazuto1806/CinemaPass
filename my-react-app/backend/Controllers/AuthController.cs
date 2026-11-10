@@ -36,9 +36,9 @@ namespace CinemaBackend.Controllers
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<IActionResult> Register(
-            [FromBody] User user)
+            [FromBody] RegisterRequest request)
         {
-            if (user == null)
+            if (request == null)
             {
                 return BadRequest(new
                 {
@@ -46,13 +46,13 @@ namespace CinemaBackend.Controllers
                 });
             }
 
-            var email = user.Email?.Trim();
-            var password = user.PasswordHash;
+            var email = request.Email?.Trim();
+            var password = request.PasswordHash;
 
-            if (string.IsNullOrWhiteSpace(user.FullName) ||
+            if (string.IsNullOrWhiteSpace(request.FullName) ||
                 string.IsNullOrWhiteSpace(email) ||
                 string.IsNullOrWhiteSpace(password) ||
-                string.IsNullOrWhiteSpace(user.Phone))
+                string.IsNullOrWhiteSpace(request.Phone))
             {
                 return BadRequest(new
                 {
@@ -80,14 +80,14 @@ namespace CinemaBackend.Controllers
                 });
             }
 
-            user.Email = email;
-            user.FullName = user.FullName.Trim();
-            user.Phone = user.Phone.Trim();
+            var user = new User
+            {
+                Email = email,
+                FullName = request.FullName.Trim(),
+                Phone = request.Phone.Trim(),
+                Role = "Customer"
+            };
 
-            // Người đăng ký mới không được tự đặt quyền quản trị.
-            user.Role = "Customer";
-
-            // Không lưu mật khẩu gốc.
             user.PasswordHash = _passwordHasher.HashPassword(
                 user,
                 password
@@ -345,6 +345,17 @@ namespace CinemaBackend.Controllers
     // =====================================================
     // LOGIN REQUEST
     // =====================================================
+
+    public class RegisterRequest
+    {
+        public string FullName { get; set; } = string.Empty;
+
+        public string Email { get; set; } = string.Empty;
+
+        public string PasswordHash { get; set; } = string.Empty;
+
+        public string Phone { get; set; } = string.Empty;
+    }
 
     public class LoginRequest
     {

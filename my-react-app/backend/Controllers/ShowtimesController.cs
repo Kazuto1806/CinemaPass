@@ -174,8 +174,20 @@ namespace CinemaBackend.Controllers
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateShowtime(
-            Showtime showtime)
+            ShowtimeWriteRequest request)
         {
+            var showtime = new Showtime
+            {
+                MovieId = request.MovieId,
+                RoomId = request.RoomId,
+                ShowDate = request.ShowDate,
+                StartTime = request.StartTime,
+                EndTime = request.EndTime,
+                TicketPrice = request.TicketPrice,
+                Status = request.Status,
+                TicketTypePrices = request.TicketTypePrices
+            };
+
             var ticketTypeValidation =
                 await ValidateTicketTypePrices(
                     showtime.TicketTypePrices);
@@ -277,7 +289,7 @@ namespace CinemaBackend.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateShowtime(
             int id,
-            Showtime updatedShowtime)
+            ShowtimeWriteRequest updatedShowtime)
         {
             var ticketTypeValidation =
                 await ValidateTicketTypePrices(
@@ -786,6 +798,18 @@ namespace CinemaBackend.Controllers
             {
                 message = "Xóa suất chiếu thành công."
             });
+        }
+
+        public sealed class ShowtimeWriteRequest
+        {
+            public int MovieId { get; set; }
+            public int RoomId { get; set; }
+            public DateTime ShowDate { get; set; }
+            public TimeSpan StartTime { get; set; }
+            public TimeSpan EndTime { get; set; }
+            public decimal TicketPrice { get; set; }
+            public string Status { get; set; } = "Đang hoạt động";
+            public List<ShowtimeTicketTypeInput> TicketTypePrices { get; set; } = new();
         }
     }
 }

@@ -70,7 +70,8 @@ namespace CinemaBackend.Controllers
         // POST: api/rooms
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateRoom([FromBody] Room room)
+        public async Task<IActionResult> CreateRoom(
+            [FromBody] RoomWriteRequest room)
         {
             if (room == null)
             {
@@ -128,28 +129,31 @@ namespace CinemaBackend.Controllers
                 });
             }
 
-            room.RoomId = 0;
-            room.CreatedAt = DateTime.Now;
-
-            if (string.IsNullOrWhiteSpace(room.Status))
+            var newRoom = new Room
             {
-                room.Status = "Đang hoạt động";
-            }
+                CinemaId = room.CinemaId,
+                RoomName = room.RoomName,
+                Capacity = room.Capacity,
+                Status = string.IsNullOrWhiteSpace(room.Status)
+                    ? "Đang hoạt động"
+                    : room.Status,
+                CreatedAt = DateTime.Now
+            };
 
-            _context.Rooms.Add(room);
+            _context.Rooms.Add(newRoom);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(
                 nameof(GetRoom),
-                new { id = room.RoomId },
+                new { id = newRoom.RoomId },
                 new
                 {
-                    roomId = room.RoomId,
-                    cinemaId = room.CinemaId,
-                    roomName = room.RoomName,
-                    capacity = room.Capacity,
-                    status = room.Status,
-                    createdAt = room.CreatedAt
+                    roomId = newRoom.RoomId,
+                    cinemaId = newRoom.CinemaId,
+                    roomName = newRoom.RoomName,
+                    capacity = newRoom.Capacity,
+                    status = newRoom.Status,
+                    createdAt = newRoom.CreatedAt
                 }
             );
         }
@@ -159,7 +163,7 @@ namespace CinemaBackend.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateRoom(
             int id,
-            [FromBody] Room room)
+            [FromBody] RoomWriteRequest room)
         {
             if (room == null)
             {
@@ -295,6 +299,14 @@ namespace CinemaBackend.Controllers
             {
                 message = "Xóa phòng chiếu thành công."
             });
+        }
+
+        public sealed class RoomWriteRequest
+        {
+            public int CinemaId { get; set; }
+            public string RoomName { get; set; } = string.Empty;
+            public int Capacity { get; set; }
+            public string Status { get; set; } = "Đang hoạt động";
         }
     }
 }
