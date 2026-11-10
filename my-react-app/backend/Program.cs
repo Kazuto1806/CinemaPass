@@ -28,6 +28,7 @@ builder.Services.AddHttpClient<TmdbService>();
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
+
 // =====================================================
 // DATABASE CONTEXT
 // =====================================================
@@ -48,7 +49,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // =====================================================
 // SWAGGER + BEARER JWT
-// Tương thích Swashbuckle.AspNetCore 10.x
 // =====================================================
 
 builder.Services.AddSwaggerGen(options =>
@@ -166,7 +166,6 @@ var app = builder.Build();
 
 // =====================================================
 // BASIC AUTHENTICATION FOR SWAGGER
-// Giữ nguyên cơ chế bảo vệ Swagger hiện tại
 // =====================================================
 
 app.UseWhen(
@@ -246,18 +245,21 @@ app.UseWhen(
 );
 
 // =====================================================
-// SWAGGER
+// SWAGGER - DEVELOPMENT ONLY
 // =====================================================
 
-app.UseSwagger();
-
-app.UseSwaggerUI(options =>
+if (app.Environment.IsDevelopment())
 {
-    options.SwaggerEndpoint(
-        "/swagger/v1/swagger.json",
-        "Cinema Pass API V1"
-    );
-});
+    app.UseSwagger();
+
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint(
+            "/swagger/v1/swagger.json",
+            "Cinema Pass API V1"
+        );
+    });
+}
 
 // =====================================================
 // STATIC FILES + UPLOADS
@@ -294,8 +296,6 @@ app.UseAuthorization();
 
 // =====================================================
 // DATABASE
-// Development: tạo schema nếu database chưa có.
-// Môi trường khác: sử dụng EF Core migrations.
 // =====================================================
 
 using (var scope = app.Services.CreateScope())
@@ -363,6 +363,7 @@ using (var scope = app.Services.CreateScope())
 
 // =====================================================
 // UPLOAD IMAGE TO CLOUDINARY
+// CHỈ ADMIN ĐƯỢC PHÉP UPLOAD
 // =====================================================
 
 app.MapPost(
@@ -404,7 +405,13 @@ app.MapPost(
             url = uploadResult.SecureUrl.ToString()
         });
     }
+).RequireAuthorization(policy =>
+    policy.RequireRole("Admin")
 );
+
+// =====================================================
+// CONTROLLERS
+// =====================================================
 
 app.MapControllers();
 
