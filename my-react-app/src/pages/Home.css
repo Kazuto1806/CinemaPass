@@ -27,7 +27,8 @@
       rgba(8, 15, 35, 0.48),
       rgba(8, 15, 35, 0.38) 45%,
       rgba(8, 15, 35, 0.72)
-    );
+    ),
+    url("../assets/Sảnh rạp chiếu phim tương lai neon.png") center top / cover no-repeat;
 
   filter: saturate(1.5) contrast(1.15);
 }
