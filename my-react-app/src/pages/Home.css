@@ -30,6 +30,7 @@
     ),
     url("../assets/Sảnh rạp chiếu phim tương lai neon.png") center top / cover no-repeat;
 
+  background-attachment: scroll, fixed;
   filter: saturate(1.5) contrast(1.15);
 }
 
