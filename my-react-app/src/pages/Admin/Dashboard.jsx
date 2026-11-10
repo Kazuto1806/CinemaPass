@@ -11,6 +11,7 @@ import {
 
 import "./Dashboard.css";
 import { API_BASE } from "../../constants";
+import { authenticatedFetch as fetch } from "../../utils/apiFetch";
 
 const MOVIES_API =
   `${API_BASE}/api/movies`;

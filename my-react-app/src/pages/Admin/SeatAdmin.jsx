@@ -13,6 +13,7 @@ import { useNotification } from "../../components/useNotification";
 import "./SeatAdmin.css";
 
 import { API_BASE } from "../../constants";
+import { authenticatedFetch as fetch } from "../../utils/apiFetch";
 
 const ROOM_API_URL = `${API_BASE}/api/rooms`;
 const SEAT_API_URL = `${API_BASE}/api/seats`;

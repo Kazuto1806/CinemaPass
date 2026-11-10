@@ -1,5 +1,6 @@
 using CinemaBackend.Data;
 using CinemaBackend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -68,6 +69,7 @@ namespace CinemaBackend.Controllers
 
         // POST: api/rooms
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateRoom([FromBody] Room room)
         {
             if (room == null)
@@ -154,6 +156,7 @@ namespace CinemaBackend.Controllers
 
         // PUT: api/rooms/1
         [HttpPut("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateRoom(
             int id,
             [FromBody] Room room)
@@ -249,6 +252,7 @@ namespace CinemaBackend.Controllers
 
         // DELETE: api/rooms/1
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteRoom(int id)
         {
             var room = await _context.Rooms

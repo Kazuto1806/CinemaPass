@@ -1,4 +1,5 @@
 using CinemaBackend.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,7 @@ namespace CinemaBackend.Controllers
 
         // GET: api/users
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetUsers()
         {
             var users = await _context.Users

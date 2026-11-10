@@ -19,6 +19,7 @@ import "./Booking.css";
 import paymentQr from "../assets/QR.png";
 import { QRCodeSVG } from "qrcode.react";
 import { API_BASE, getMissingPosterFallback } from "../constants";
+import { authenticatedFetch as fetch } from "../utils/apiFetch";
 
 const MOVIE_API_URL = `${API_BASE}/api/movies`;
 const SHOWTIME_API_URL = `${API_BASE}/api/showtimes`;

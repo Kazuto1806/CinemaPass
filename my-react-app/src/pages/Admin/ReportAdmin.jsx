@@ -15,6 +15,7 @@ import {
 
 import { useNotification } from "../../components/useNotification";
 import { API_BASE } from "../../constants";
+import { authenticatedFetch as fetch } from "../../utils/apiFetch";
 import "./ReportAdmin.css";
 const REPORT_API = `${API_BASE}/api/reports`;
 const CINEMA_API = `${API_BASE}/api/cinemas`;

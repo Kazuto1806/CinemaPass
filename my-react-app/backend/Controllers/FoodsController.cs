@@ -1,5 +1,6 @@
 using CinemaBackend.Data;
 using CinemaBackend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -49,6 +50,7 @@ namespace CinemaBackend.Controllers
 
         // POST: api/foods
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateFood(Food food)
         {
             food.FoodId = 0;
@@ -77,6 +79,7 @@ namespace CinemaBackend.Controllers
 
         // PUT: api/foods/5
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateFood(
             int id,
             Food updatedFood)
@@ -109,6 +112,7 @@ namespace CinemaBackend.Controllers
 
         // DELETE: api/foods/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteFood(int id)
         {
             var food = await _context.Foods

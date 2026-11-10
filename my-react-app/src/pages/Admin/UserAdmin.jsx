@@ -3,6 +3,7 @@ import { FaSearch, FaUsers, FaUserShield } from "react-icons/fa";
 
 import "./UserAdmin.css";
 import { API_BASE } from "../../constants";
+import { authenticatedFetch as fetch } from "../../utils/apiFetch";
 
 const API_URL = `${API_BASE}/api/users`;
 

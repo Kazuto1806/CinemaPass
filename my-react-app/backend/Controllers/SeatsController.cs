@@ -1,6 +1,8 @@
 
 using CinemaBackend.Data;
 using CinemaBackend.Models;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -139,6 +141,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpPost("hold")]
+        [Authorize]
         public async Task<IActionResult> HoldSeat(
             [FromBody] HoldSeatRequest request)
         {
@@ -148,6 +151,19 @@ namespace CinemaBackend.Controllers
                 {
                     message = "Suất chiếu không hợp lệ."
                 });
+            }
+
+            if (!int.TryParse(
+                    User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+                    out var authenticatedUserId))
+            {
+                return Forbid();
+            }
+
+            if (request.UserId.HasValue &&
+                request.UserId.Value != authenticatedUserId)
+            {
+                return Forbid();
             }
 
             var seatCode = request.SeatCode.Trim().ToUpperInvariant();
@@ -208,20 +224,6 @@ namespace CinemaBackend.Controllers
                 });
             }
 
-            if (request.UserId.HasValue && request.UserId.Value > 0)
-            {
-                var userExists = await _context.Users
-                    .AnyAsync(u => u.UserId == request.UserId.Value);
-
-                if (!userExists)
-                {
-                    return BadRequest(new
-                    {
-                        message = "Tài khoản không tồn tại."
-                    });
-                }
-            }
-
             var isBooked = await _context.Tickets.AnyAsync(ticket =>
                 ticket.ShowtimeId == request.ShowtimeId &&
                 ticket.SeatId == seat.SeatId &&
@@ -238,7 +240,8 @@ namespace CinemaBackend.Controllers
             var currentHold = await _context.SeatHolds
                 .FirstOrDefaultAsync(hold =>
                     hold.ShowtimeId == request.ShowtimeId &&
-                    hold.SeatId == seat.SeatId);
+                    hold.SeatId == seat.SeatId &&
+                    hold.UserId == authenticatedUserId);
 
             if (currentHold != null)
             {
@@ -252,7 +255,7 @@ namespace CinemaBackend.Controllers
 
                 // Khách sở hữu lượt giữ có thể gia hạn.
                 currentHold.ExpiresAtUtc = now.Add(HoldDuration);
-                currentHold.UserId = request.UserId;
+                currentHold.UserId = authenticatedUserId;
                 await _context.SaveChangesAsync();
 
                 return Ok(new
@@ -269,6 +272,7 @@ var sessionExpiry = await _context.SeatHolds
     .Where(hold =>
         hold.ShowtimeId == request.ShowtimeId &&
         hold.HoldToken == token &&
+        hold.UserId == authenticatedUserId &&
         hold.ExpiresAtUtc > now)
     .Select(hold => (DateTime?)hold.ExpiresAtUtc)
     .MinAsync();
@@ -280,7 +284,7 @@ var newHold = new SeatHold
     ShowtimeId = request.ShowtimeId,
     SeatId = seat.SeatId,
     HoldToken = token,
-    UserId = request.UserId,
+    UserId = authenticatedUserId,
     CreatedAtUtc = now,
     ExpiresAtUtc = expiresAt
 };
@@ -315,9 +319,17 @@ var newHold = new SeatHold
         // =====================================================
 
         [HttpPost("release")]
+        [Authorize]
         public async Task<IActionResult> ReleaseSeat(
             [FromBody] ReleaseSeatRequest request)
         {
+            if (!int.TryParse(
+                    User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+                    out var authenticatedUserId))
+            {
+                return Forbid();
+            }
+
             var token = request.HoldToken.Trim();
             var seatCode = request.SeatCode.Trim().ToUpperInvariant();
 
@@ -335,6 +347,7 @@ var newHold = new SeatHold
                  var hold = await _context.SeatHolds
                  .FirstOrDefaultAsync(h =>
                     h.ShowtimeId == request.ShowtimeId &&
+                    h.UserId == authenticatedUserId &&
                     h.HoldToken == token &&
                   _context.Seats.Any(seat =>
                   seat.SeatId == h.SeatId &&
@@ -363,9 +376,17 @@ var newHold = new SeatHold
         // =====================================================
 
         [HttpPost("release-all")]
+        [Authorize]
         public async Task<IActionResult> ReleaseAllSeats(
             [FromBody] ReleaseAllSeatsRequest request)
         {
+            if (!int.TryParse(
+                    User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+                    out var authenticatedUserId))
+            {
+                return Forbid();
+            }
+
             var token = request.HoldToken.Trim();
 
             if (request.ShowtimeId <= 0 ||
@@ -381,6 +402,7 @@ var newHold = new SeatHold
             var holds = await _context.SeatHolds
                 .Where(h =>
                     h.ShowtimeId == request.ShowtimeId &&
+                    h.UserId == authenticatedUserId &&
                     h.HoldToken == token)
                 .ToListAsync();
 
@@ -434,6 +456,7 @@ var newHold = new SeatHold
         // =====================================================
 
         [HttpPost("bulk")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateSeatsBulk(
             [FromBody] BulkSeatRequest request)
         {
@@ -556,6 +579,7 @@ var newHold = new SeatHold
         // =====================================================
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteSeat(int id)
         {
             var seat = await _context.Seats
@@ -606,6 +630,7 @@ var newHold = new SeatHold
         // =====================================================
 
         [HttpDelete("room/{roomId:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteSeatsByRoom(int roomId)
         {
             var room = await _context.Rooms

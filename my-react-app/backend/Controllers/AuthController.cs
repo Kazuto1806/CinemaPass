@@ -1,9 +1,14 @@
 
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using CinemaBackend.Data;
 using CinemaBackend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace CinemaBackend.Controllers
 {
@@ -12,11 +17,15 @@ namespace CinemaBackend.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
         private readonly PasswordHasher<User> _passwordHasher = new();
 
-        public AuthController(AppDbContext context)
+        public AuthController(
+            AppDbContext context,
+            IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         // =====================================================
@@ -25,6 +34,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> Register(
             [FromBody] User user)
         {
@@ -103,6 +113,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(
             [FromBody] LoginRequest request)
         {
@@ -187,15 +198,56 @@ namespace CinemaBackend.Controllers
                 }
             }
 
+            var token = GenerateJwtToken(user);
+
             return Ok(new
             {
                 message = "Đăng nhập thành công.",
+                accessToken = token,
                 userId = user.UserId,
                 fullName = user.FullName,
                 email = user.Email,
                 phone = user.Phone,
                 role = user.Role
             });
+        }
+
+        private string GenerateJwtToken(User user)
+        {
+            var key = _configuration["Jwt:Key"]
+                ?? throw new InvalidOperationException(
+                    "Chưa cấu hình Jwt:Key."
+                );
+            var issuer = _configuration["Jwt:Issuer"]
+                ?? throw new InvalidOperationException(
+                    "Chưa cấu hình Jwt:Issuer."
+                );
+            var audience = _configuration["Jwt:Audience"]
+                ?? throw new InvalidOperationException(
+                    "Chưa cấu hình Jwt:Audience."
+                );
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Name, user.FullName),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role)
+            };
+
+            var credentials = new SigningCredentials(
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+                SecurityAlgorithms.HmacSha256
+            );
+            var token = new JwtSecurityToken(
+                issuer,
+                audience,
+                claims,
+                expires: DateTime.UtcNow.AddHours(1),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         // =====================================================
@@ -278,6 +330,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpGet("users/count")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetUsersCount()
         {
             var totalUsers = await _context.Users.CountAsync();

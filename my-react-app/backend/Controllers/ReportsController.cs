@@ -1,4 +1,5 @@
 using CinemaBackend.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +17,7 @@ namespace CinemaBackend.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetReport(
             [FromQuery] DateTime? startDate,
             [FromQuery] DateTime? endDate,

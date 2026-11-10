@@ -14,6 +14,7 @@ import {
 } from "react-icons/fa";
 
 import { API_BASE } from "../constants";
+import { authenticatedFetch as fetch } from "../utils/apiFetch";
 import "./TicketHistory.css";
 
 const API_URL = `${API_BASE}/api`;

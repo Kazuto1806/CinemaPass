@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNotification } from "../../components/useNotification";
 import { API_BASE } from "../../constants";
+import { authenticatedFetch as fetch } from "../../utils/apiFetch";
 import "./PaymentAdmin.css";
 
 const PAYMENT_STATUSES = [

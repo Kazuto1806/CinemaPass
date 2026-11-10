@@ -1,5 +1,6 @@
 using CinemaBackend.Data;
 using CinemaBackend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -53,6 +54,7 @@ namespace CinemaBackend.Controllers
         // POST: api/cinemas
         // Thêm rạp mới
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateCinema(Cinema cinema)
         {
             cinema.CinemaId = 0;
@@ -77,6 +79,7 @@ namespace CinemaBackend.Controllers
         // PUT: api/cinemas/5
         // Cập nhật rạp
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateCinema(
             int id,
             Cinema updatedCinema)
@@ -108,6 +111,7 @@ namespace CinemaBackend.Controllers
         // DELETE: api/cinemas/5
         // Xóa rạp
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCinema(int id)
         {
             var cinema = await _context.Cinemas

@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text;
 using CinemaBackend.Data;
 using CinemaBackend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -171,6 +172,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateShowtime(
             Showtime showtime)
         {
@@ -272,6 +274,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateShowtime(
             int id,
             Showtime updatedShowtime)
@@ -699,6 +702,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteShowtime(int id)
         {
             var showtime = await _context.Showtimes

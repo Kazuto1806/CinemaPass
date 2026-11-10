@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import NotificationPopup from "../../components/NotificationPopup";
 import { API_BASE } from "../../constants";
+import { authenticatedFetch as fetch } from "../../utils/apiFetch";
 import "./CinemaAdmin.css";
 
 const API_URL = `${API_BASE}/api/cinemas`;

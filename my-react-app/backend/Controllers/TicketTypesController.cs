@@ -1,5 +1,6 @@
 using CinemaBackend.Data;
 using CinemaBackend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -70,6 +71,7 @@ namespace CinemaBackend.Controllers
 
         // POST: api/tickettypes
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateTicketType(
             [FromBody] TicketType ticketType)
         {
@@ -150,6 +152,7 @@ namespace CinemaBackend.Controllers
 
         // PUT: api/tickettypes/1
         [HttpPut("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateTicketType(
             int id,
             [FromBody] TicketType ticketType)
@@ -265,6 +268,7 @@ namespace CinemaBackend.Controllers
 
         // DELETE: api/tickettypes/1
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteTicketType(int id)
         {
             var ticketType =

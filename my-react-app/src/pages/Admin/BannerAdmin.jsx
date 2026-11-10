@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { FaImage, FaTrash, FaUpload } from "react-icons/fa";
 import { API_BASE } from "../../constants";
 import { useNotification } from "../../components/useNotification";
+import { authenticatedFetch as fetch } from "../../utils/apiFetch";
 import "./BannerAdmin.css";
 
 const API_URL = `${API_BASE}/api/banners`;

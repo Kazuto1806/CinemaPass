@@ -2,6 +2,7 @@ using CinemaBackend.Data;
 using CinemaBackend.Models;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -54,6 +55,7 @@ namespace CinemaBackend.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [RequestSizeLimit(10 * 1024 * 1024)]
         public async Task<IActionResult> CreateBanner(
             IFormFile? imageFile,
@@ -114,6 +116,7 @@ namespace CinemaBackend.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteBanner(int id)
         {
             var banner = await _context.Banners.FindAsync(id);

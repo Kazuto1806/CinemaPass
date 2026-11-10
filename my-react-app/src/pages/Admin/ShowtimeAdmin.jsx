@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import NotificationPopup from "../../components/NotificationPopup";
 import { API_BASE } from "../../constants";
+import { authenticatedFetch as fetch } from "../../utils/apiFetch";
 import "./ShowtimeAdmin.css";
 
 const API_URL = `${API_BASE}/api/showtimes`;

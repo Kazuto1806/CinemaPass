@@ -1,8 +1,10 @@
 using System.Data;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
+using System.Security.Claims;
 using CinemaBackend.Data;
 using CinemaBackend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -80,6 +82,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpPost("book")]
+        [Authorize]
         public async Task<IActionResult> BookTickets(
             [FromBody] BookingRequest request)
         {
@@ -97,6 +100,14 @@ namespace CinemaBackend.Controllers
                 {
                     message = "User chưa đăng nhập hoặc không hợp lệ."
                 });
+            }
+
+            if (!int.TryParse(
+                    User.FindFirstValue(ClaimTypes.NameIdentifier),
+                    out var authenticatedUserId) ||
+                authenticatedUserId != request.UserId)
+            {
+                return Forbid();
             }
 
             if (request.MovieId <= 0)
@@ -572,6 +583,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetTickets()
         {
             var tickets = await _context.Tickets
@@ -679,8 +691,17 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpGet("user/{userId:int}")]
+        [Authorize]
         public async Task<IActionResult> GetTicketsByUser(int userId)
         {
+            if (!int.TryParse(
+                    User.FindFirstValue(ClaimTypes.NameIdentifier),
+                    out var authenticatedUserId) ||
+                authenticatedUserId != userId)
+            {
+                return Forbid();
+            }
+
             if (userId <= 0)
             {
                 return BadRequest(new
@@ -769,6 +790,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpGet("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetTicket(int id)
         {
             var ticket = await _context.Tickets
@@ -886,6 +908,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpPut("{id:int}/payment")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdatePayment(
             int id,
             [FromBody] PaymentRequest request)
@@ -977,6 +1000,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public IActionResult CreateTicket([FromBody] Ticket ticket)
         {
             return BadRequest(new
@@ -992,6 +1016,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpPut("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateTicket(
             int id,
             [FromBody] Ticket ticket)
@@ -1173,6 +1198,7 @@ namespace CinemaBackend.Controllers
         // =====================================================
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteTicket(int id)
         {
             var ticket = await _context.Tickets

@@ -1,5 +1,7 @@
 using CinemaBackend.Data;
 using CinemaBackend.Models;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +21,7 @@ namespace CinemaBackend.Controllers
         // GET: api/FoodOrders
         // Dành cho trang quản trị
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetFoodOrders()
         {
             var orders = await _context.FoodOrders
@@ -54,8 +57,17 @@ namespace CinemaBackend.Controllers
         // GET: api/FoodOrders/user/1
         // Lấy lịch sử đơn bắp nước của một tài khoản
         [HttpGet("user/{userId:int}")]
+        [Authorize]
         public async Task<IActionResult> GetFoodOrdersByUser(int userId)
         {
+            if (!int.TryParse(
+                    User.FindFirstValue(ClaimTypes.NameIdentifier),
+                    out var authenticatedUserId) ||
+                authenticatedUserId != userId)
+            {
+                return Forbid();
+            }
+
             if (userId <= 0)
             {
                 return BadRequest(new
@@ -105,6 +117,7 @@ namespace CinemaBackend.Controllers
 
         // GET: api/FoodOrders/1
         [HttpGet("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetFoodOrder(int id)
         {
             var order = await _context.FoodOrders
@@ -147,6 +160,7 @@ namespace CinemaBackend.Controllers
 
         // POST: api/FoodOrders
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateFoodOrder(
             [FromBody] CreateFoodOrderRequest request)
         {
@@ -164,6 +178,14 @@ namespace CinemaBackend.Controllers
                 {
                     message = "UserId không hợp lệ."
                 });
+            }
+
+            if (!int.TryParse(
+                    User.FindFirstValue(ClaimTypes.NameIdentifier),
+                    out var authenticatedUserId) ||
+                authenticatedUserId != request.UserId)
+            {
+                return Forbid();
             }
 
             if (request.Items == null || request.Items.Count == 0)
@@ -267,6 +289,7 @@ namespace CinemaBackend.Controllers
 
         // PUT: api/FoodOrders/1/status
         [HttpPut("{id:int}/status")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateFoodOrderStatus(
             int id,
             [FromBody] UpdateFoodOrderStatusRequest request)
@@ -322,6 +345,7 @@ namespace CinemaBackend.Controllers
 
         // DELETE: api/FoodOrders/1
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteFoodOrder(int id)
         {
             var order = await _context.FoodOrders

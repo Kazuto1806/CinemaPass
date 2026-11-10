@@ -15,6 +15,7 @@ import {
 import NotificationPopup from "../../components/NotificationPopup";
 import { useNotification } from "../../components/useNotification";
 import { API_BASE } from "../../constants";
+import { authenticatedFetch as fetch } from "../../utils/apiFetch";
 
 import "./TicketTypeAdmin.css";
 

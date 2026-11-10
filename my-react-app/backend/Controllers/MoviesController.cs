@@ -1,5 +1,6 @@
 using CinemaBackend.Data;
 using CinemaBackend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CloudinaryDotNet;
@@ -90,6 +91,7 @@ public MoviesController(
         // =========================
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateMovie(
             [FromForm] Movie movie,
             IFormFile? PosterFile)
@@ -157,6 +159,7 @@ public MoviesController(
         // =========================
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateMovie(
             int id,
             [FromForm] Movie movie,
@@ -247,6 +250,7 @@ public MoviesController(
         // =========================
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteMovie(int id)
         {
             var movie = await _context.Movies

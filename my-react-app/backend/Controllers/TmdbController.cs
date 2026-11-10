@@ -1,6 +1,7 @@
 using CinemaBackend.Data;
 using CinemaBackend.Models;
 using CinemaBackend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
@@ -81,6 +82,7 @@ public class TmdbController : ControllerBase
 
     // 3. Tự động tìm và cập nhật trailer cho toàn bộ phim chưa có trailer trong SQL Server
     [HttpGet("auto-sync-trailers")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AutoSyncTrailers(CancellationToken cancellationToken)
     {
         // Lấy danh sách các phim chưa có TrailerUrl

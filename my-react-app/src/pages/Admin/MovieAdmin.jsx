@@ -12,6 +12,7 @@ import {
 
 import NotificationPopup from "../../components/NotificationPopup";
 import { API_BASE, getMissingPosterFallback } from "../../constants";
+import { authenticatedFetch as fetch } from "../../utils/apiFetch";
 
 import "./MovieAdmin.css";
 

@@ -145,6 +145,15 @@ function Login() {
         return;
       }
 
+      if (typeof data.accessToken !== "string" || !data.accessToken.trim()) {
+        showPopup(
+          "error",
+          "Đăng nhập thất bại",
+          "Backend chưa trả về token xác thực. Vui lòng cập nhật backend rồi thử lại."
+        );
+        return;
+      }
+
       // =========================
       // LƯU THÔNG TIN USER
       // =========================
@@ -152,6 +161,7 @@ function Login() {
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userId", data.userId);
       localStorage.setItem("userEmail", data.email);
+      localStorage.setItem("authToken", data.accessToken);
 
       // Header.jsx lấy userName
       localStorage.setItem("userName", data.fullName);
