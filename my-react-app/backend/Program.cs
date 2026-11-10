@@ -1,7 +1,6 @@
 
 using System;
 using System.IO;
-using System.Net;
 using System.Security.Claims;
 using System.Text;
 
@@ -165,101 +164,19 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // =====================================================
-// BASIC AUTHENTICATION FOR SWAGGER
+// PUBLIC, READ-ONLY SWAGGER DOCUMENTATION
 // =====================================================
 
-app.UseWhen(
-    context => context.Request.Path.StartsWithSegments("/swagger"),
-    swaggerApp =>
-    {
-        swaggerApp.Use(async (context, next) =>
-        {
-            var expectedUser =
-                Environment.GetEnvironmentVariable("SWAGGER_USERNAME");
+app.UseSwagger();
 
-            var expectedPassword =
-                Environment.GetEnvironmentVariable("SWAGGER_PASSWORD");
-
-            if (string.IsNullOrWhiteSpace(expectedUser) ||
-                string.IsNullOrWhiteSpace(expectedPassword))
-            {
-                context.Response.StatusCode =
-                    StatusCodes.Status503ServiceUnavailable;
-
-                await context.Response.WriteAsync(
-                    "Swagger authentication is not configured."
-                );
-
-                return;
-            }
-
-            var authHeader =
-                context.Request.Headers.Authorization.ToString();
-
-            if (authHeader.StartsWith(
-                "Basic ",
-                StringComparison.OrdinalIgnoreCase))
-            {
-                try
-                {
-                    var encoded = authHeader["Basic ".Length..].Trim();
-
-                    var decoded = Encoding.UTF8.GetString(
-                        Convert.FromBase64String(encoded)
-                    );
-
-                    var separator = decoded.IndexOf(':');
-
-                    if (separator >= 0)
-                    {
-                        var username = decoded[..separator];
-                        var password = decoded[(separator + 1)..];
-
-                        if (string.Equals(
-                                username,
-                                expectedUser,
-                                StringComparison.Ordinal) &&
-                            string.Equals(
-                                password,
-                                expectedPassword,
-                                StringComparison.Ordinal))
-                        {
-                            await next();
-                            return;
-                        }
-                    }
-                }
-                catch (FormatException)
-                {
-                    // Header Basic Authentication không hợp lệ.
-                }
-            }
-
-            context.Response.Headers.WWWAuthenticate =
-                "Basic realm=\"CinemaPass Swagger\", charset=\"UTF-8\"";
-
-            context.Response.StatusCode =
-                (int)HttpStatusCode.Unauthorized;
-        });
-    }
-);
-
-// =====================================================
-// SWAGGER - DEVELOPMENT ONLY
-// =====================================================
-
-if (app.Environment.IsDevelopment())
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint(
-            "/swagger/v1/swagger.json",
-            "Cinema Pass API V1"
-        );
-    });
-}
+    options.SwaggerEndpoint(
+        "/swagger/v1/swagger.json",
+        "Cinema Pass API V1"
+    );
+    options.SupportedSubmitMethods();
+});
 
 // =====================================================
 // STATIC FILES + UPLOADS
