@@ -394,7 +394,7 @@ function MovieAdmin() {
       showNotification(
         "error",
         "Thao tác thất bại",
-        "Không thể chỉnh sửa phim khi đang có vé đặt"
+        error.message || "Không thể lưu thông tin phim."
       );
     } finally {
       setSaving(false);

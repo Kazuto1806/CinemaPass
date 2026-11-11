@@ -7,7 +7,7 @@ import { useNotification } from "./useNotification";
 import {
   API_BASE,
   getMissingPosterFallback,
-  getOptimizedCloudinaryUrl,
+  getOptimizedCloudinaryPosterUrl,
 } from "../constants";
 
 const getPosterUrl = (posterUrl) => {
@@ -102,10 +102,9 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
 
   const trailerUrl = movie?.trailerUrl ?? movie?.TrailerUrl ?? "";
   const posterUrl = getPosterUrl(movie.posterUrl);
-  const optimizedPosterUrl = getOptimizedCloudinaryUrl(posterUrl, {
+  const optimizedPosterUrl = getOptimizedCloudinaryPosterUrl(posterUrl, {
     width: 520,
     height: 780,
-    crop: "fill",
   });
   const responsivePoster = posterUrl.includes("res.cloudinary.com")
     ? null
@@ -113,14 +112,14 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
   const posterSrcSet = posterUrl.includes("res.cloudinary.com")
     ? [260, 390, 520]
         .map((width) =>
-          `${getOptimizedCloudinaryUrl(posterUrl, {
+          `${getOptimizedCloudinaryPosterUrl(posterUrl, {
             width,
             height: Math.round(width * 1.5),
-            crop: "fill",
           })} ${width}w`
         )
         .join(", ")
     : responsivePoster?.srcSet;
+  const posterSrc = responsivePoster?.src ?? optimizedPosterUrl;
 
   const handleTrailerClick = (event) => {
     event.preventDefault();
@@ -180,7 +179,7 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
           {/* POSTER */}
           {movie.posterUrl ? (
             <img
-              src={responsivePoster?.src ?? optimizedPosterUrl}
+              src={posterSrc}
               srcSet={posterSrcSet}
               sizes="(max-width: 650px) 45vw, (max-width: 1000px) 30vw, 262px"
               alt={movie.title}
@@ -190,7 +189,7 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
               fetchPriority={fetchPriority}
               decoding="async"
               loading={fetchPriority === "high" ? "eager" : "lazy"}
-              data-fallback-src={responsivePoster ? optimizedPosterUrl : undefined}
+              data-fallback-src={posterSrc !== posterUrl ? posterUrl : undefined}
               onError={(event) => {
                 const fallbackSrc = event.currentTarget.dataset.fallbackSrc;
                 if (fallbackSrc) {

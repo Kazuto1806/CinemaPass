@@ -50,3 +50,19 @@ export const getOptimizedCloudinaryUrl = (
 
     return `${baseUrl}${marker}${dimensions}/${publicId}`;
 };
+
+export const getOptimizedCloudinaryPosterUrl = (
+    imageUrl,
+    { width = 520, height = Math.round(width * 1.5) } = {}
+) => {
+    const value = String(imageUrl ?? "").trim();
+    const marker = "/image/upload/";
+
+    if (!value.includes("res.cloudinary.com") || !value.includes(marker)) {
+        return value;
+    }
+
+    const [baseUrl, publicId] = value.split(marker, 2);
+
+    return `${baseUrl}${marker}w_${width},h_${height},c_fill,f_webp,q_auto:eco/${publicId}`;
+};

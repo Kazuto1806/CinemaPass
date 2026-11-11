@@ -364,7 +364,13 @@ private async Task<string> SavePoster(IFormFile file)
             file.FileName,
             stream
         ),
-        Folder = "cinemapass/posters"
+        Folder = "cinemapass/posters",
+        EagerTransforms =
+        [
+            CreatePosterTransformation(260),
+            CreatePosterTransformation(390),
+            CreatePosterTransformation(520)
+        ]
     };
 
     var result = await cloudinary.UploadAsync(uploadParams);
@@ -380,6 +386,16 @@ private async Task<string> SavePoster(IFormFile file)
 
     // Lưu URL HTTPS đầy đủ vào SQL Server
     return result.SecureUrl.ToString();
+}
+
+private static Transformation CreatePosterTransformation(int width)
+{
+    return new Transformation()
+        .Width(width)
+        .Height((int)Math.Round(width * 1.5))
+        .Crop("fill")
+        .FetchFormat("webp")
+        .Quality("auto:eco");
 }
 
 

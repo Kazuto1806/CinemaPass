@@ -16,6 +16,7 @@ chạy code: Start-Process ".\Start.bat"
 Tối ưu ảnh:
 - Ảnh gốc được giữ nguyên; các bản WebP tối ưu nằm trong `my-react-app/src/assets/optimized/`.
 - Khi cập nhật ảnh nguồn, chạy `npm run optimize:images` trong thư mục `my-react-app` rồi build và deploy lại frontend.
+- Khi admin tải poster phim lên, backend yêu cầu Cloudinary tạo sẵn bản WebP 260, 390 và 520 px; website dùng bản phù hợp và vẫn dự phòng ảnh gốc.
 
 Swagger và quyền API:
 - Swagger công khai, chỉ xem tài liệu và tắt chức năng gửi request từ giao diện. Mở `https://api.cinemapass.id.vn/swagger/index.html` sau khi deploy backend.

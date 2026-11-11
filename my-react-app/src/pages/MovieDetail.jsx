@@ -15,7 +15,11 @@ import {
 } from "react-icons/fa";
 
 import "./MovieDetail.css";
-import { API_BASE, getMissingPosterFallback } from '../constants';
+import {
+  API_BASE,
+  getMissingPosterFallback,
+  getOptimizedCloudinaryPosterUrl,
+} from "../constants";
 const API_URL =`${API_BASE}/api/movies`;
 
 
@@ -383,11 +387,23 @@ function MovieDetail() {
             {movie.posterUrl ? (
 
               <img
-                src={movie.posterUrl}
+                src={getOptimizedCloudinaryPosterUrl(movie.posterUrl)}
                 alt={movie.title}
                 fetchPriority="high"
                 decoding="async"
+                data-fallback-src={
+                  getOptimizedCloudinaryPosterUrl(movie.posterUrl) !== movie.posterUrl
+                    ? movie.posterUrl
+                    : undefined
+                }
                 onError={(e) => {
+                  const fallbackSrc = e.currentTarget.dataset.fallbackSrc;
+                  if (fallbackSrc) {
+                    delete e.currentTarget.dataset.fallbackSrc;
+                    e.currentTarget.src = fallbackSrc;
+                    return;
+                  }
+
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
                     <svg xmlns="http://www.w3.org/2000/svg" width="600" height="900" viewBox="0 0 600 900">
