@@ -29,6 +29,11 @@
     url("../assets/Sảnh rạp chiếu phim tương lai neon.png")
     center center / cover no-repeat fixed;
 
+  background-image: image-set(
+    url("../assets/optimized/cinema-lobby.webp") type("image/webp"),
+    url("../assets/Sảnh rạp chiếu phim tương lai neon.png") type("image/png")
+  );
+
   filter: saturate(0.85);
 }
 

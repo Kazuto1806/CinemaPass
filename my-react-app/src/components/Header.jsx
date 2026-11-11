@@ -12,6 +12,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { API_BASE } from "../constants";
 import "./Header.css";
 import CinemaPass from "../assets/Cinema_Pass.png";
+import CinemaPassOptimized from "../assets/optimized/cinema-pass.webp";
 
 function Header() {
   // =========================
@@ -282,10 +283,16 @@ function Header() {
             to="/"
             className="logo"
           >
-            <img
-              src={CinemaPass}
-              alt="Cinema Pass"
-            />
+            <picture>
+              <source srcSet={CinemaPassOptimized} type="image/webp" />
+              <img
+                src={CinemaPass}
+                width="310"
+                height="141"
+                alt="Cinema Pass"
+                decoding="async"
+              />
+            </picture>
           </Link>
 
           {/* =========================

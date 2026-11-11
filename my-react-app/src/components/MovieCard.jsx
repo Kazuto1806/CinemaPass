@@ -48,6 +48,53 @@ const getPosterUrl = (posterUrl) => {
   return normalized;
 };
 
+const localPosterAssets = import.meta.glob(
+  "../assets/*.{png,jpg,jpeg,webp}",
+  {
+    eager: true,
+    query: "?url",
+    import: "default",
+  }
+);
+
+const optimizedPosterAssets = import.meta.glob(
+  "../assets/optimized/posters/*.webp",
+  {
+    eager: true,
+    query: "?url",
+    import: "default",
+  }
+);
+
+const getResponsivePoster = (posterUrl) => {
+  const matchingSource = Object.entries(localPosterAssets).find(
+    ([, url]) => url === posterUrl
+  );
+  const fileName =
+    matchingSource?.[0].split("/").pop() ??
+    posterUrl.split(/[?#]/)[0].split("/").pop();
+  const baseName = fileName?.replace(/\.[^.]+$/, "");
+
+  if (!baseName) return null;
+
+  const variants = Object.entries(optimizedPosterAssets)
+    .map(([path, url]) => {
+      const match = path.match(/\/([^/]+)-(\d+)\.webp$/);
+      return match?.[1] === baseName
+        ? { url, width: Number(match[2]) }
+        : null;
+    })
+    .filter(Boolean)
+    .sort((left, right) => left.width - right.width);
+
+  if (variants.length === 0) return null;
+
+  return {
+    src: variants[variants.length - 1].url,
+    srcSet: variants.map(({ url, width }) => `${url} ${width}w`).join(", "),
+  };
+};
+
 function MovieCard({ movie, fetchPriority = "auto" }) {
   const [showTrailer, setShowTrailer] = useState(false);
   const { notify } = useNotification();
@@ -60,6 +107,9 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
     height: 780,
     crop: "fill",
   });
+  const responsivePoster = posterUrl.includes("res.cloudinary.com")
+    ? null
+    : getResponsivePoster(posterUrl);
   const posterSrcSet = posterUrl.includes("res.cloudinary.com")
     ? [260, 390, 520]
         .map((width) =>
@@ -70,7 +120,7 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
           })} ${width}w`
         )
         .join(", ")
-    : undefined;
+    : responsivePoster?.srcSet;
 
   const handleTrailerClick = (event) => {
     event.preventDefault();
@@ -130,7 +180,7 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
           {/* POSTER */}
           {movie.posterUrl ? (
             <img
-              src={optimizedPosterUrl}
+              src={responsivePoster?.src ?? optimizedPosterUrl}
               srcSet={posterSrcSet}
               sizes="(max-width: 650px) 45vw, (max-width: 1000px) 30vw, 262px"
               alt={movie.title}
@@ -140,7 +190,16 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
               fetchPriority={fetchPriority}
               decoding="async"
               loading={fetchPriority === "high" ? "eager" : "lazy"}
+              data-fallback-src={responsivePoster ? optimizedPosterUrl : undefined}
               onError={(event) => {
+                const fallbackSrc = event.currentTarget.dataset.fallbackSrc;
+                if (fallbackSrc) {
+                  delete event.currentTarget.dataset.fallbackSrc;
+                  event.currentTarget.removeAttribute("srcset");
+                  event.currentTarget.src = fallbackSrc;
+                  return;
+                }
+
                 event.currentTarget.onerror = null;
                 event.currentTarget.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
                   <svg xmlns="http://www.w3.org/2000/svg" width="600" height="900" viewBox="0 0 600 900">

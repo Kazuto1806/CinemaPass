@@ -13,6 +13,10 @@ Lấy code từ github về: git pull
 
 chạy code: Start-Process ".\Start.bat"
 
+Tối ưu ảnh:
+- Ảnh gốc được giữ nguyên; các bản WebP tối ưu nằm trong `my-react-app/src/assets/optimized/`.
+- Khi cập nhật ảnh nguồn, chạy `npm run optimize:images` trong thư mục `my-react-app` rồi build và deploy lại frontend.
+
 Swagger và quyền API:
 - Swagger công khai, chỉ xem tài liệu và tắt chức năng gửi request từ giao diện. Mở `https://api.cinemapass.id.vn/swagger/index.html` sau khi deploy backend.
 - Cấu hình `Jwt__Key`, `Jwt__Issuer` và `Jwt__Audience` cho backend; không commit các giá trị bí mật vào repository.

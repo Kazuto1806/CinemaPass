@@ -78,6 +78,7 @@
 .news-card { overflow: hidden; }
 .news-card-featured { grid-column: 1 / -1; display: grid; grid-template-columns: 1.25fr 1fr; }
 .news-card-image { position: relative; min-height: 220px; overflow: hidden; background: #111a30; }
+.news-card-image picture { position: absolute; inset: 0; display: block; }
 .news-card-featured .news-card-image { min-height: 330px; }
 .news-card-image img { width: 100%; height: 100%; display: block; object-fit: cover; }
 .news-card-image span {

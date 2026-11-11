@@ -3,6 +3,8 @@ import { FaArrowRight, FaCalendarAlt } from "react-icons/fa";
 import cinemaImage from "../assets/Rạp chiếu phim dưới ánh xanh tím.png";
 import lobbyImage from "../assets/Sảnh rạp chiếu phim tương lai neon.png";
 import cinemaPassImage from "../assets/Cinema_Pass.png";
+import optimizedLobbyImage from "../assets/optimized/cinema-lobby.webp";
+import optimizedCinemaPassImage from "../assets/optimized/cinema-pass.webp";
 import "./InformationPages.css";
 
 const news = [
@@ -19,6 +21,7 @@ const news = [
     summary: "Một vài gợi ý đơn giản giúp bạn chọn vị trí xem rõ màn hình, thoải mái và tận hưởng trọn vẹn âm thanh.",
     date: "05/11/2026",
     image: lobbyImage,
+    optimizedImage: optimizedLobbyImage,
   },
   {
     category: "CinemaPass",
@@ -26,6 +29,7 @@ const news = [
     summary: "Khám phá lợi ích thành viên CinemaPass và cách theo dõi điểm tích lũy cho mỗi giao dịch của bạn.",
     date: "01/11/2026",
     image: cinemaPassImage,
+    optimizedImage: optimizedCinemaPassImage,
   },
 ];
 
@@ -47,12 +51,18 @@ function CinemaNews() {
           {news.map((article, index) => (
             <article className={index === 0 ? "news-card news-card-featured" : "news-card"} key={article.title}>
               <div className="news-card-image">
-                <img
-                  src={article.image}
-                  alt=""
-                  fetchPriority={index === 0 ? "high" : "auto"}
-                  decoding="async"
-                />
+                <picture>
+                  {article.optimizedImage && (
+                    <source srcSet={article.optimizedImage} type="image/webp" />
+                  )}
+                  <img
+                    src={article.image}
+                    alt=""
+                    fetchPriority={index === 0 ? "high" : "auto"}
+                    loading={index === 0 ? "eager" : "lazy"}
+                    decoding="async"
+                  />
+                </picture>
                 <span>{article.category}</span>
               </div>
               <div className="news-card-body">
