@@ -388,6 +388,7 @@ const Home = () => {
             alt={banners[currentBanner].alt}
             width="1280"
             height="520"
+            loading="eager"
             fetchPriority="high"
             decoding="async"
           />

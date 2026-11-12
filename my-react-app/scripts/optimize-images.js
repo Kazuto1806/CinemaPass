@@ -25,10 +25,6 @@ const staticImages = [
 
 const posterImages = [
   {
-    source: join(assetsRoot, "bat-tien.jpeg"),
-    name: "bat-tien",
-  },
-  {
     source: join(
       projectRoot,
       "backend",
