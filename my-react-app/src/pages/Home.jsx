@@ -113,6 +113,7 @@ const Home = () => {
 
   useEffect(() => {
     let cancelled = false;
+    let scheduleId;
     const loadBanner = () => {
       fetch(`${API_BASE}/api/banners`)
         .then((response) => {
@@ -131,12 +132,22 @@ const Home = () => {
         .catch((error) => console.error("Lỗi lấy danh sách banner:", error));
     };
 
-    const scheduleId = window.requestIdleCallback
-      ? window.requestIdleCallback(loadBanner, { timeout: 1500 })
-      : window.setTimeout(loadBanner, 300);
+    const scheduleBannerLoad = () => {
+      scheduleId = window.requestIdleCallback
+        ? window.requestIdleCallback(loadBanner, { timeout: 3000 })
+        : window.setTimeout(loadBanner, 1000);
+    };
+
+    if (document.readyState === "complete") {
+      scheduleBannerLoad();
+    } else {
+      window.addEventListener("load", scheduleBannerLoad, { once: true });
+    }
 
     return () => {
       cancelled = true;
+      window.removeEventListener("load", scheduleBannerLoad);
+      if (scheduleId === undefined) return;
       if (window.cancelIdleCallback) window.cancelIdleCallback(scheduleId);
       else window.clearTimeout(scheduleId);
     };
