@@ -196,14 +196,10 @@ const Home = () => {
       }
     };
 
-    const scheduleId = window.requestIdleCallback
-      ? window.requestIdleCallback(() => loadMovies(), { timeout: 1200 })
-      : window.setTimeout(loadMovies, 200);
+    loadMovies();
 
     return () => {
       cancelled = true;
-      if (window.cancelIdleCallback) window.cancelIdleCallback(scheduleId);
-      else window.clearTimeout(scheduleId);
     };
   }, []);
 

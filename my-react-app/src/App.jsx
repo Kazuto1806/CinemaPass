@@ -5,8 +5,8 @@ import { Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { NotificationProvider } from "./components/NotificationProvider";
+import Home from "./pages/Home";
 
-const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
 const Food = lazy(() => import("./pages/Food"));
 const Account = lazy(() => import("./pages/Account"));
