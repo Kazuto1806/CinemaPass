@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import MovieCard from "../components/MovieCard";
 import QuickBooking from "../components/QuickBooking";
@@ -111,6 +111,7 @@ const Home = () => {
   // Banner bắt đầu từ ảnh đầu tiên
   const [currentBanner, setCurrentBanner] = useState(0);
   const [bannerTransitionEnabled, setBannerTransitionEnabled] = useState(true);
+  const [isPageVisible, setIsPageVisible] = useState(!document.hidden);
 
   useEffect(() => {
     let cancelled = false;
@@ -155,14 +156,44 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    if (banners.length < 2) return undefined;
+    if (banners.length < 2 || !isPageVisible) return undefined;
 
     const timeoutId = window.setTimeout(() => {
       setCurrentBanner((current) => current + 1);
-    }, 3000);
+    }, 4000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [banners.length, currentBanner]);
+  }, [banners.length, currentBanner, isPageVisible]);
+
+  const resetBannerTrack = useCallback(() => {
+    setBannerTransitionEnabled(false);
+    setCurrentBanner(0);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => setBannerTransitionEnabled(true));
+    });
+  }, []);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const pageIsVisible = !document.hidden;
+      setIsPageVisible(pageIsVisible);
+
+      if (pageIsVisible && currentBanner === banners.length) {
+        resetBannerTrack();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [banners.length, currentBanner, resetBannerTrack]);
+
+  useEffect(() => {
+    if (currentBanner !== banners.length) return undefined;
+
+    const resetTimeoutId = window.setTimeout(resetBannerTrack, 1500);
+    return () => window.clearTimeout(resetTimeoutId);
+  }, [banners.length, currentBanner, resetBannerTrack]);
 
   const showPreviousBanner = () => {
     if (banners.length < 2) return;
@@ -189,11 +220,7 @@ const Home = () => {
       return;
     }
 
-    setBannerTransitionEnabled(false);
-    setCurrentBanner(0);
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => setBannerTransitionEnabled(true));
-    });
+    resetBannerTrack();
   };
 
   useEffect(() => {
@@ -403,13 +430,14 @@ const Home = () => {
       <section className="partner-section" aria-label="Đối tác">
         <div className="partner-banner">
           <div
-            className="partner-banner-track"
-            style={{
-              transform: `translateX(-${currentBanner * 100}%)`,
-              transition: bannerTransitionEnabled ? undefined : "none",
-            }}
-            onTransitionEnd={handleBannerTransitionEnd}
-          >
+  className={`partner-banner-track ${
+    bannerTransitionEnabled ? "" : "no-transition"
+  }`}
+  style={{
+    transform: `translate3d(-${currentBanner * 100}%, 0, 0)`,
+  }}
+  onTransitionEnd={handleBannerTransitionEnd}
+>
             {bannerSlides.map((banner, index) => (
               <div
                 className="partner-banner-slide"
