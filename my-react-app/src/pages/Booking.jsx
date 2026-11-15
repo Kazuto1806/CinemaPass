@@ -817,6 +817,28 @@ const changeTicketTypeQuantity = (ticketTypeId, change) => {
     setSelectedTicketTypeId(id);
   }
 };
+
+const refreshSeatList = async (showtimeId) => {
+  const response = await fetch(
+    `${SEAT_API_URL}?showtimeId=${showtimeId}&holdToken=${encodeURIComponent(
+      holdToken
+    )}`
+  );
+
+  if (!response.ok) return;
+
+  const refreshedData = await response.json();
+
+  if (Array.isArray(refreshedData)) {
+    setSeatList(
+      refreshedData.map((item) => ({
+        ...item,
+        seatCode: String(item.seatCode || "").trim().toUpperCase(),
+      }))
+    );
+  }
+};
+
 const toggleSeat = async (seat) => {
   const seatCode = String(seat || "").trim().toUpperCase();
   const showtimeId = Number(selectedShowtime?.showtimeId);
@@ -848,7 +870,39 @@ const toggleSeat = async (seat) => {
     );
     return;
   }
+
+  const previousHoldExpiresAt = holdExpiresAt;
+  const previousHoldExpired = holdExpired;
+  const previousTicketTypeId = seatTicketTypeIds[seatCode];
+
   setSeatActionLoading(true);
+
+  if (currentlySelected) {
+    setSelectedSeats((current) =>
+      current.filter((item) => item !== seatCode)
+    );
+    setSeatTicketTypeIds((current) => {
+      const next = { ...current };
+      delete next[seatCode];
+      return next;
+    });
+  } else {
+    setHoldExpiresAt((current) =>
+      current && current > Date.now()
+        ? current
+        : Date.now() + 5 * 60 * 1000
+    );
+    setHoldExpired(false);
+    setSelectedSeats((current) =>
+      current.includes(seatCode) ? current : [...current, seatCode]
+    );
+    setSeatTicketTypeIds((current) => ({
+      ...current,
+      [seatCode]: Number(
+        selectedTicketTypeId || availableTicketTypes[0]?.ticketTypeId
+      ),
+    }));
+  }
 
   try {
     const endpoint = currentlySelected ? "release" : "hold";
@@ -869,90 +923,45 @@ const toggleSeat = async (seat) => {
     });
 
     const data = await response.json().catch(() => ({}));
-console.log("HTTP status:", response.status);
-console.log("API response:", JSON.stringify(data, null, 2));
     if (!response.ok) {
       throw new Error(
         data.message ||
           `Không thể ${currentlySelected ? "nhả" : "giữ"} ghế ${seatCode}.`
       );
     }
+  } catch (error) {
+    console.error("Lỗi giữ/nhả ghế:", error);
 
     if (currentlySelected) {
       setSelectedSeats((current) =>
+        current.includes(seatCode) ? current : [...current, seatCode]
+      );
+      if (previousTicketTypeId != null) {
+        setSeatTicketTypeIds((current) => ({
+          ...current,
+          [seatCode]: previousTicketTypeId,
+        }));
+      }
+    } else {
+      setSelectedSeats((current) =>
         current.filter((item) => item !== seatCode)
       );
-
       setSeatTicketTypeIds((current) => {
         const next = { ...current };
         delete next[seatCode];
         return next;
       });
-    } else {
-  setHoldExpiresAt((current) => {
-    if (current && current > Date.now()) {
-      return current;
+      setHoldExpiresAt(previousHoldExpiresAt);
+      setHoldExpired(previousHoldExpired);
     }
-
-    setHoldExpired(false);
-    return Date.now() + 5 * 60 * 1000;
-  });
-
-  setSelectedSeats((current) =>
-    current.includes(seatCode) ? current : [...current, seatCode]
-  );
-
-      setSeatTicketTypeIds((current) => ({
-        ...current,
-        [seatCode]: Number(
-          selectedTicketTypeId || availableTicketTypes[0]?.ticketTypeId
-        ),
-      }));
-    }
-
-    const refreshResponse = await fetch(
-      `${SEAT_API_URL}?showtimeId=${showtimeId}&holdToken=${encodeURIComponent(holdToken)}`
-    );
-
-    if (refreshResponse.ok) {
-      const refreshedData = await refreshResponse.json();
-
-      if (Array.isArray(refreshedData)) {
-        setSeatList(
-          refreshedData.map((item) => ({
-            ...item,
-            seatCode: String(item.seatCode || "").trim().toUpperCase(),
-          }))
-        );
-      }
-    }
-  } catch (error) {
-    console.error("Lỗi giữ/nhả ghế:", error);
 
     notify(
       error.message || "Không thể cập nhật ghế. Vui lòng thử lại."
     );
 
-    try {
-      const refreshResponse = await fetch(
-        `${SEAT_API_URL}?showtimeId=${showtimeId}&holdToken=${encodeURIComponent(holdToken)}`
-      );
-
-      if (refreshResponse.ok) {
-        const refreshedData = await refreshResponse.json();
-
-        if (Array.isArray(refreshedData)) {
-          setSeatList(
-            refreshedData.map((item) => ({
-              ...item,
-              seatCode: String(item.seatCode || "").trim().toUpperCase(),
-            }))
-          );
-        }
-      }
-    } catch (refreshError) {
+    refreshSeatList(showtimeId).catch((refreshError) => {
       console.error("Không thể làm mới sơ đồ ghế:", refreshError);
-    }
+    });
   } finally {
     setSeatActionLoading(false);
   }
