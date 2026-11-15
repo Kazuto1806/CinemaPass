@@ -110,6 +110,7 @@ const Home = () => {
 
   // Banner bắt đầu từ ảnh đầu tiên
   const [currentBanner, setCurrentBanner] = useState(0);
+  const [bannerTransitionEnabled, setBannerTransitionEnabled] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -153,16 +154,46 @@ const Home = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (banners.length < 2) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      setCurrentBanner((current) => current + 1);
+    }, 3000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [banners.length, currentBanner]);
+
   const showPreviousBanner = () => {
-    setCurrentBanner((current) =>
-      (current - 1 + banners.length) % banners.length
-    );
+    if (banners.length < 2) return;
+
+    setCurrentBanner((current) => {
+      const currentIndex = current === banners.length ? 0 : current;
+      return currentIndex === 0 ? banners.length - 1 : currentIndex - 1;
+    });
   };
 
   const showNextBanner = () => {
+    if (banners.length < 2) return;
+
     setCurrentBanner((current) =>
-      (current + 1) % banners.length
+      current >= banners.length ? current : current + 1
     );
+  };
+
+  const handleBannerTransitionEnd = (event) => {
+    if (
+      event.propertyName !== "transform" ||
+      currentBanner !== banners.length
+    ) {
+      return;
+    }
+
+    setBannerTransitionEnabled(false);
+    setCurrentBanner(0);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => setBannerTransitionEnabled(true));
+    });
   };
 
   useEffect(() => {
@@ -345,6 +376,10 @@ const Home = () => {
   );
   const showQuickBooking = location.hash === "#quick-booking";
   const movieSkeletons = Array.from({ length: MOVIES_PER_PAGE });
+  const bannerSlides =
+    banners.length > 1 ? [...banners, banners[0]] : banners;
+  const activeBannerIndex =
+    currentBanner === banners.length ? 0 : currentBanner;
 
   return (
     <main className="home">
@@ -367,38 +402,50 @@ const Home = () => {
       {/* BANNER PARTNER */}
       <section className="partner-section" aria-label="Đối tác">
         <div className="partner-banner">
-          <img
-            key={banners[currentBanner].id}
-            className="partner-banner-image"
-            src={getOptimizedCloudinaryUrl(banners[currentBanner].image, {
-              width: 1280,
-              height: 520,
-              crop: "fill",
-            })}
-            srcSet={
-              String(banners[currentBanner].image).includes("res.cloudinary.com")
-                ? [640, 960, 1280, 1600]
-                    .map((width) =>
-                      `${getOptimizedCloudinaryUrl(
-                        banners[currentBanner].image,
-                        {
-                          width,
-                          height: Math.round(width * 0.40625),
-                          crop: "fill",
-                        }
-                      )} ${width}w`
-                    )
-                    .join(", ")
-                : undefined
-            }
-            sizes="(max-width: 650px) 100vw, (max-width: 1320px) 95vw, 1320px"
-            alt={banners[currentBanner].alt}
-            width="1280"
-            height="520"
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-          />
+          <div
+            className="partner-banner-track"
+            style={{
+              transform: `translateX(-${currentBanner * 100}%)`,
+              transition: bannerTransitionEnabled ? undefined : "none",
+            }}
+            onTransitionEnd={handleBannerTransitionEnd}
+          >
+            {bannerSlides.map((banner, index) => (
+              <div
+                className="partner-banner-slide"
+                key={`${banner.id}-${index}`}
+              >
+                <img
+                  className="partner-banner-image"
+                  src={getOptimizedCloudinaryUrl(banner.image, {
+                    width: 1280,
+                    height: 520,
+                    crop: "fill",
+                  })}
+                  srcSet={
+                    String(banner.image).includes("res.cloudinary.com")
+                      ? [640, 960, 1280, 1600]
+                          .map((width) =>
+                            `${getOptimizedCloudinaryUrl(banner.image, {
+                              width,
+                              height: Math.round(width * 0.40625),
+                              crop: "fill",
+                            })} ${width}w`
+                          )
+                          .join(", ")
+                      : undefined
+                  }
+                  sizes="(max-width: 650px) 100vw, (max-width: 1320px) 95vw, 1320px"
+                  alt={banner.alt}
+                  width="1280"
+                  height="520"
+                  loading={index <= currentBanner + 1 ? "eager" : "lazy"}
+                  fetchPriority={index === 0 ? "high" : "auto"}
+                  decoding="async"
+                />
+              </div>
+            ))}
+          </div>
 
           {/* MŨI TÊN TRÁI */}
           <button
@@ -427,10 +474,10 @@ const Home = () => {
                 key={banner.id}
                 type="button"
                 className={`partner-dot ${
-                  index === currentBanner ? "active" : ""
+                  index === activeBannerIndex ? "active" : ""
                 }`}
                 aria-label={`Chuyển đến banner ${index + 1}`}
-                aria-current={index === currentBanner ? "true" : undefined}
+                aria-current={index === activeBannerIndex ? "true" : undefined}
                 onClick={() => setCurrentBanner(index)}
               />
             ))}
