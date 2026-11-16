@@ -26,6 +26,7 @@ import {
 } from "react-icons/fa";
 
 import NotificationPopup from "../components/NotificationPopup";
+import { QRCodeSVG } from "qrcode.react";
 
 
 
@@ -503,6 +504,7 @@ function Food() {
   const [isCartOpen, setIsCartOpen] =
 
     useState(false);
+    const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
 
 
@@ -1076,6 +1078,20 @@ function Food() {
 
 
   
+const openPayment = () => {
+  if (!selectedCinema) {
+    showNotification("warning", "Chưa chọn rạp", "Vui lòng chọn rạp trước khi đặt hàng.");
+    return;
+  }
+
+  if (totalItems === 0 || cartItems.length === 0) {
+    showNotification("warning", "Giỏ hàng trống", "Vui lòng chọn ít nhất một sản phẩm.");
+    return;
+  }
+
+  setIsPaymentOpen(true);
+};
+
 const handleOrder = async () => {
   // 1. Kiểm tra đã chọn rạp chưa
   if (!selectedCinema) {
@@ -1159,6 +1175,7 @@ const handleOrder = async () => {
     // 5. Chỉ xóa giỏ sau khi backend xác nhận thành công
     setQuantities({});
     setIsCartOpen(false);
+    setIsPaymentOpen(false);
 
     sessionStorage.removeItem("foodCheckoutCinema");
     sessionStorage.removeItem("foodCheckoutQuantities");
@@ -1166,8 +1183,8 @@ const handleOrder = async () => {
     // 6. Thông báo mã đơn thực tế do backend trả về
     showNotification(
       "success",
-      "Đặt hàng thành công",
-      `Mã đơn: #${result.foodOrderId} | Rạp: ${selectedCinemaName} | Tổng tiền: ${formatPrice(result.totalAmount)}. Đơn đã được lưu vào hệ thống.`
+        "Thanh toán xem thử thành công",
+        `Mã đơn: #${result.foodOrderId} | Rạp: ${selectedCinemaName} | Tổng tiền: ${formatPrice(result.totalAmount)}. Đây là đơn xem thử, không phát sinh thanh toán.`
     );
   } catch (error) {
     console.error("Lỗi tạo đơn bắp nước:", error);
@@ -2108,7 +2125,7 @@ const handleOrder = async () => {
 
           className="order-btn"
 
-          onClick={handleOrder}
+          onClick={openPayment}
 
         >
 
@@ -2490,7 +2507,7 @@ const handleOrder = async () => {
 
                 onClick={
 
-                  handleOrder
+                  openPayment
 
                 }
 
@@ -2510,7 +2527,27 @@ const handleOrder = async () => {
 
       )}
 
-      <NotificationPopup
+      {isPaymentOpen && (
+  <div className="food-payment-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsPaymentOpen(false); }}>
+    <section className="food-payment-modal" role="dialog" aria-modal="true" aria-labelledby="food-payment-title">
+      <button type="button" className="food-payment-close" onClick={() => setIsPaymentOpen(false)} aria-label="Đóng thanh toán">×</button>
+      <div className="food-payment-eyebrow">CINEMAPASS · BẮP NƯỚC</div>
+      <h2 id="food-payment-title">Quét mã QR thanh toán</h2>
+      <p className="food-payment-subtitle">Đơn hàng tại {selectedCinemaName}</p>
+      <div className="food-payment-qr">
+        <QRCodeSVG value={JSON.stringify({ type: "CINEMAPASS_DEMO", cinema: selectedCinemaName, amount: totalPrice, items: cartItems.map((item) => ({ id: item.id, quantity: quantities[item.id] })) })} size={220} includeMargin />
+      </div>
+      <div className="food-payment-total"><span>Tổng thanh toán</span><strong>{formatPrice(totalPrice)}</strong></div>
+      <div className="food-payment-demo-note">Mã QR xem trước, chưa kết nối ngân hàng. Nút dưới đây giả lập thanh toán thành công để bạn xem giao diện; đơn thử sẽ được lưu vào hệ thống.</div>
+      <button type="button" className="food-demo-paid-btn" onClick={handleOrder}>
+        ✓　GIẢ LẬP THANH TOÁN THÀNH CÔNG
+      </button>
+      <button type="button" className="food-payment-cancel" onClick={() => setIsPaymentOpen(false)}>Để sau</button>
+    </section>
+  </div>
+)}
+
+<NotificationPopup
 
         show={notification.show}
 
