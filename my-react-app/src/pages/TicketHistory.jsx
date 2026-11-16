@@ -255,10 +255,7 @@ const qrUrl = token
                     <div className="history-card-top">
                                   {posterSrc && <img className="history-movie-poster" src={posterSrc} alt={`Poster ${ticket.movieTitle || "phim"}`} onError={(event) => { event.currentTarget.style.display = "none"; }} />}
 
-                      <div className="history-card-icon">
-                        <FaTicketAlt />
-                      </div>
-
+                    
                       <div className="history-card-title">
                         <h3>
                           {ticket.movieTitle ||
