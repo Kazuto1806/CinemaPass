@@ -970,7 +970,7 @@
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.28);
 }
 
-.food-payment-qr svg {
+.food-payment-qr img, .food-payment-qr svg {
   display: block;
   max-width: min(220px, 60vw);
   height: auto;

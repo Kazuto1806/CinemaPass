@@ -26,7 +26,7 @@ import {
 } from "react-icons/fa";
 
 import NotificationPopup from "../components/NotificationPopup";
-import { QRCodeSVG } from "qrcode.react";
+import acbPaymentQr from "../assets/QR.png";
 
 
 
@@ -2535,12 +2535,12 @@ const handleOrder = async () => {
       <h2 id="food-payment-title">Quét mã QR thanh toán</h2>
       <p className="food-payment-subtitle">Đơn hàng tại {selectedCinemaName}</p>
       <div className="food-payment-qr">
-        <QRCodeSVG value={JSON.stringify({ type: "CINEMAPASS_DEMO", cinema: selectedCinemaName, amount: totalPrice, items: cartItems.map((item) => ({ id: item.id, quantity: quantities[item.id] })) })} size={220} includeMargin />
+                <img src={acbPaymentQr} alt="Mã QR thanh toán ACB" />
       </div>
       <div className="food-payment-total"><span>Tổng thanh toán</span><strong>{formatPrice(totalPrice)}</strong></div>
-      <div className="food-payment-demo-note">Mã QR xem trước, chưa kết nối ngân hàng. Nút dưới đây giả lập thanh toán thành công để bạn xem giao diện; đơn thử sẽ được lưu vào hệ thống.</div>
+            <div className="food-payment-demo-note">Quét QR ACB để chuyển khoản. Nút bên dưới giúp xem trước xác nhận thành công; CinemaPass hiện chưa tự kiểm tra giao dịch với ngân hàng.</div>
       <button type="button" className="food-demo-paid-btn" onClick={handleOrder}>
-        ✓　GIẢ LẬP THANH TOÁN THÀNH CÔNG
+                  ✓　TÔI ĐÃ THANH TOÁN THÀNH CÔNG
       </button>
       <button type="button" className="food-payment-cancel" onClick={() => setIsPaymentOpen(false)}>Để sau</button>
     </section>
