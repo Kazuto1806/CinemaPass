@@ -420,3 +420,6 @@
     align-self: center;
   }
 }
+
+.history-movie-poster { width: 64px; height: 92px; flex: 0 0 64px; object-fit: cover; border: 1px solid #425170; border-radius: 9px; background: #0b1427; box-shadow: 0 8px 18px rgba(0,0,0,.28); }
+.ticket-qr-section { background: #f3f5f9; }

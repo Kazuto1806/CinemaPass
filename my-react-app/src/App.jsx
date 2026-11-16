@@ -16,6 +16,7 @@ const MovieList = lazy(() => import("./pages/MovieList"));
 const MovieDetail = lazy(() => import("./pages/MovieDetail"));
 const Booking = lazy(() => import("./pages/Booking"));
 const TicketHistory = lazy(() => import("./pages/TicketHistory"));
+const TicketVerify = lazy(() => import("./pages/TicketVerify"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const CinemaNews = lazy(() => import("./pages/CinemaNews"));
@@ -67,7 +68,8 @@ function App() {
             LỊCH SỬ MUA HÀNG
         ========================= */}
 
-        <Route
+                <Route path="/verify-ticket/:token" element={<TicketVerify />} />
+<Route
           path="/tickets"
           element={<TicketHistory />}
         />

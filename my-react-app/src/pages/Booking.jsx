@@ -1284,7 +1284,7 @@ setBookingSuccess(true);
 
                           {token ? (
                             <QRCodeSVG
-                              value={`https://www.cinemapass.id.vn/verify-ticket/${encodeURIComponent(
+                              value={`${window.location.origin}/verify-ticket/${encodeURIComponent(
                                 token
                               )}`}
                               size={150}

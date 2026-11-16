@@ -1,0 +1,29 @@
+.ticket-verify-page { min-height: calc(100vh - 90px); padding: 48px 18px 64px; display: flex; flex-direction: column; align-items: center; gap: 22px; color: #f4f6ff; background: radial-gradient(ellipse at top, #1a1b46 0, #0c1529 58%, #091225 100%); }
+.ticket-verify-card { width: min(920px, 100%); overflow: hidden; border: 1px solid #34466e; border-radius: 20px; background: rgba(18, 30, 54, .96); box-shadow: 0 24px 70px rgba(0,0,0,.35); }
+.ticket-verify-banner { min-height: 104px; padding: 22px 28px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #2c3b5c; background: linear-gradient(105deg, rgba(116,61,222,.23), rgba(22,35,61,.2)); }
+.ticket-verify-mark { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 14px; background: #6739c9; color: #fff; font-size: 22px; }
+.ticket-verify-banner span { color: #b9a3ff; font-size: 11px; font-weight: 800; letter-spacing: 1.8px; }
+.ticket-verify-banner h1 { margin: 4px 0 0; font-size: clamp(21px, 4vw, 29px); }
+.ticket-verify-status { margin-left: auto; padding: 8px 12px; border-radius: 999px; background: #49391d; color: #ffd27a; font-size: 11px; font-weight: 800; white-space: nowrap; }
+.ticket-verify-status.paid { background: #153e34; color: #7ce0ba; }
+.ticket-verify-content { display: grid; grid-template-columns: 210px 1fr; gap: 28px; padding: 28px; }
+.ticket-verify-poster { width: 210px; height: 310px; object-fit: cover; border: 1px solid #354362; border-radius: 13px; background: #0b1427; box-shadow: 0 12px 30px rgba(0,0,0,.3); }
+.ticket-verify-details { min-width: 0; }
+.ticket-verify-eyebrow { margin: 2px 0 6px; color: #b7a0ff; font-size: 12px; font-weight: 800; letter-spacing: 1.4px; }
+.ticket-verify-details h2 { margin: 0 0 25px; font-size: clamp(23px, 4vw, 32px); }
+.ticket-verify-grid { display: grid; gap: 20px; }
+.ticket-verify-grid > div { display: flex; gap: 13px; align-items: flex-start; color: #b8a1ff; }
+.ticket-verify-grid svg { flex: 0 0 18px; margin-top: 3px; }
+.ticket-verify-grid span { display: grid; gap: 4px; }
+.ticket-verify-grid small { color: #9ba9c3; font-size: 12px; }
+.ticket-verify-grid strong { color: #eef2ff; font-size: 14px; line-height: 1.45; }
+.ticket-verify-total { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 24px; padding-top: 18px; border-top: 1px solid #2d3b58; color: #afbbd0; }
+.ticket-verify-total strong { color: #ffd34d; font-size: 23px; }
+.ticket-verify-note { margin: 0; padding: 15px 28px 20px; border-top: 1px dashed #34415e; color: #9eacc4; font-size: 13px; text-align: center; }
+.ticket-verify-home, .ticket-verify-state a { display: inline-flex; align-items: center; gap: 8px; padding: 12px 19px; border-radius: 10px; background: linear-gradient(100deg, #7438ea, #a832dc); color: #fff; font-weight: 800; text-decoration: none; }
+.ticket-verify-state { width: min(580px, 100%); margin: 12vh auto; padding: 45px 24px; border: 1px solid #34466e; border-radius: 18px; background: #121e36; color: #e8edfc; text-align: center; line-height: 1.65; }
+.ticket-verify-state > svg { color: #b49aff; font-size: 35px; }
+.ticket-verify-state h1 { margin: 14px 0 8px; }
+.ticket-verify-state p { color: #aeb9ce; }
+.ticket-verify-error a { margin-top: 12px; }
+@media (max-width: 600px) { .ticket-verify-page { padding: 25px 12px 40px; } .ticket-verify-banner { padding: 17px; gap: 11px; flex-wrap: wrap; } .ticket-verify-mark { width: 42px; height: 42px; } .ticket-verify-status { margin-left: 53px; } .ticket-verify-content { grid-template-columns: 105px 1fr; gap: 16px; padding: 18px 15px; } .ticket-verify-poster { width: 105px; height: 158px; } .ticket-verify-details h2 { margin-bottom: 17px; } .ticket-verify-grid { gap: 14px; } .ticket-verify-grid strong { font-size: 12px; } .ticket-verify-total strong { font-size: 19px; } .ticket-verify-note { padding: 14px 16px 18px; } }

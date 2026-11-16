@@ -236,8 +236,13 @@ function TicketHistory({ embedded = false }) {
                 const ticketId =
                   ticket.ticketId ?? ticket.TicketId;
 
-                const qrUrl = token
-                  ? `https://www.cinemapass.id.vn/verify-ticket/${encodeURIComponent(
+                              const posterValue = ticket.posterUrl || ticket.PosterUrl || "";
+              const posterSrc = posterValue
+                ? (/^https?:\/\//i.test(posterValue) ? posterValue : `${API_BASE}${posterValue.startsWith("/") ? "" : "/"}${posterValue}`)
+                : "";
+
+const qrUrl = token
+                  ? `${window.location.origin}/verify-ticket/${encodeURIComponent(
                       token
                     )}`
                   : "";
@@ -248,6 +253,8 @@ function TicketHistory({ embedded = false }) {
                     key={ticketId}
                   >
                     <div className="history-card-top">
+                                  {posterSrc && <img className="history-movie-poster" src={posterSrc} alt={`Poster ${ticket.movieTitle || "phim"}`} onError={(event) => { event.currentTarget.style.display = "none"; }} />}
+
                       <div className="history-card-icon">
                         <FaTicketAlt />
                       </div>
@@ -388,7 +395,9 @@ function TicketHistory({ embedded = false }) {
                 className="history-card"
                 key={order.foodOrderId}
               >
-                <div className="history-card-top">
+                
+                
+                  <div className="history-card-top">
                   <div className="history-card-icon food-icon">
                     <FaUtensils />
                   </div>

@@ -738,6 +738,8 @@ namespace CinemaBackend.Controllers
                         ? t.Movie.Title
                         : "",
 
+                                        posterUrl = t.Movie != null ? t.Movie.PosterUrl : "",
+
                     showtimeId = t.ShowtimeId,
 
                     showDate = t.Showtime != null
@@ -789,7 +791,38 @@ namespace CinemaBackend.Controllers
         // Lấy thông tin một vé.
         // =====================================================
 
-        [HttpGet("{id:int}")]
+                // GET: api/tickets/verify/{token}
+        // Trang xem vé từ mã QR; token ngẫu nhiên dùng để tra cứu vé.
+        [HttpGet("verify/{token}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyByQrToken(string token)
+        {
+            var ticket = await _context.Tickets
+                .AsNoTracking()
+                .Where(t => t.QrCodeToken == token)
+                .Select(t => new
+                {
+                    ticketId = t.TicketId,
+                    movieTitle = t.Movie != null ? t.Movie.Title : "",
+                    posterUrl = t.Movie != null ? t.Movie.PosterUrl : "",
+                    cinemaName = t.Showtime != null && t.Showtime.Room != null && t.Showtime.Room.Cinema != null
+                        ? t.Showtime.Room.Cinema.Name : "",
+                    roomName = t.Showtime != null && t.Showtime.Room != null ? t.Showtime.Room.RoomName : "",
+                    showDate = t.Showtime != null ? t.Showtime.ShowDate : DateTime.MinValue,
+                    startTime = t.Showtime != null ? t.Showtime.StartTime : TimeSpan.Zero,
+                    endTime = t.Showtime != null ? t.Showtime.EndTime : TimeSpan.Zero,
+                    seatCode = t.Seat != null ? t.Seat.SeatCode : "",
+                    ticketTypeName = t.TicketType != null ? t.TicketType.Name : "",
+                    ticketPrice = t.TicketPrice,
+                    status = t.Status,
+                    paymentStatus = t.PaymentStatus
+                })
+                .FirstOrDefaultAsync();
+
+            return ticket == null ? NotFound(new { message = "Không tìm thấy vé hợp lệ." }) : Ok(ticket);
+        }
+
+[HttpGet("{id:int}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetTicket(int id)
         {
