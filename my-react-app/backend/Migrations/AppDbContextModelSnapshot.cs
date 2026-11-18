@@ -197,6 +197,18 @@ namespace CinemaBackend.Migrations
                     b.Property<int>("Duration")
                         .HasColumnType("int");
 
+                    b.Property<string>("EnglishDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EnglishDirector")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EnglishGenre")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EnglishTitle")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Genre")
                         .HasColumnType("nvarchar(max)");
 

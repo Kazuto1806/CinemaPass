@@ -146,11 +146,15 @@ public MoviesController(
             var newMovie = new Movie
             {
                 Title = movie.Title,
+                EnglishTitle = movie.EnglishTitle,
                 Description = movie.Description,
+                EnglishDescription = movie.EnglishDescription,
                 Genre = movie.Genre,
+                EnglishGenre = movie.EnglishGenre,
                 Duration = movie.Duration,
                 ReleaseDate = movie.ReleaseDate,
                 Director = movie.Director,
+                EnglishDirector = movie.EnglishDirector,
                 AgeRating = movie.AgeRating,
                 PosterUrl = movie.PosterUrl,
                 TrailerUrl = movie.TrailerUrl,
@@ -221,11 +225,15 @@ public MoviesController(
             // =========================
 
             existingMovie.Title = movie.Title;
+            existingMovie.EnglishTitle = movie.EnglishTitle;
             existingMovie.Description = movie.Description;
+            existingMovie.EnglishDescription = movie.EnglishDescription;
             existingMovie.Genre = movie.Genre;
+            existingMovie.EnglishGenre = movie.EnglishGenre;
             existingMovie.Duration = movie.Duration;
             existingMovie.ReleaseDate = movie.ReleaseDate;
             existingMovie.Director = movie.Director;
+            existingMovie.EnglishDirector = movie.EnglishDirector;
             existingMovie.AgeRating = movie.AgeRating;
             existingMovie.TrailerUrl = movie.TrailerUrl;
 
@@ -443,11 +451,15 @@ private static Transformation CreatePosterTransformation(int width)
         public sealed class MovieWriteRequest
         {
             public string Title { get; set; } = string.Empty;
+            public string? EnglishTitle { get; set; }
             public string? Description { get; set; }
+            public string? EnglishDescription { get; set; }
             public string? Genre { get; set; }
+            public string? EnglishGenre { get; set; }
             public int Duration { get; set; }
             public DateTime? ReleaseDate { get; set; }
             public string? Director { get; set; }
+            public string? EnglishDirector { get; set; }
             public string? AgeRating { get; set; }
             public string? PosterUrl { get; set; }
             public string? TrailerUrl { get; set; }

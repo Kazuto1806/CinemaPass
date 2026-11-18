@@ -9,6 +9,7 @@ import {
   getMissingPosterFallback,
   getOptimizedCloudinaryPosterUrl,
 } from "../constants";
+import { getMovieText, useMovieLanguage } from "../utils/movieLanguage";
 
 const getPosterUrl = (posterUrl) => {
   if (!posterUrl) return "";
@@ -96,6 +97,7 @@ const getResponsivePoster = (posterUrl) => {
 };
 
 function MovieCard({ movie, fetchPriority = "auto" }) {
+  const language = useMovieLanguage();
   const [showTrailer, setShowTrailer] = useState(false);
   const { notify } = useNotification();
   const navigate = useNavigate();
@@ -182,7 +184,7 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
               src={posterSrc}
               srcSet={posterSrcSet}
               sizes="(max-width: 650px) 45vw, (max-width: 1000px) 30vw, 262px"
-              alt={movie.title}
+              alt={getMovieText(movie, "title")}
               width="260"
               height="390"
               className="movie-poster"
@@ -220,11 +222,11 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
           {/* LỚP THÔNG TIN KHI DI CHUỘT */}
           <div className="movie-overlay">
             <div className="movie-info">
-              <h3>{movie.title}</h3>
+              <h3>{getMovieText(movie, "title")}</h3>
 
               <p>
                 <strong>Thể loại:</strong>{" "}
-                {movie.genre || "Chưa cập nhật"}
+                {getMovieText(movie, "genre", "Chưa cập nhật")}
               </p>
 
               <p>
@@ -241,7 +243,7 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
 
               <p>
                 <strong>Đạo diễn:</strong>{" "}
-                {movie.director || "Chưa cập nhật"}
+                {getMovieText(movie, "director", "Chưa cập nhật")}
               </p>
             </div>
           </div>
@@ -253,8 +255,8 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
         </div>
 
         {/* TÊN PHIM */}
-        <h3 className="movie-card-title" title={movie.title}>
-          {movie.title}
+        <h3 className="movie-card-title" title={getMovieText(movie, "title")}>
+          {getMovieText(movie, "title")}
         </h3>
 
         {/* NÚT TRAILER */}
@@ -263,10 +265,10 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
             type="button"
             className="movie-trailer-btn"
             onClick={handleTrailerClick}
-            aria-label={`Xem trailer phim ${movie.title}`}
+            aria-label={`${language === "EN" ? "Watch trailer for" : "Xem trailer phim"} ${getMovieText(movie, "title")}`}
           >
             <span className="movie-trailer-icon">▶</span>
-            <span>Xem Trailer</span>
+            <span>{language === "EN" ? "Watch Trailer" : "Xem Trailer"}</span>
           </button>
 
           <button
@@ -278,7 +280,7 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
               openMovieDetail();
             }}
           >
-            Xem chi tiết
+            {language === "EN" ? "View Details" : "Xem chi tiết"}
           </button>
         </div>
       </div>
@@ -286,7 +288,7 @@ function MovieCard({ movie, fetchPriority = "auto" }) {
       <TrailerModal
         isOpen={showTrailer}
         onClose={closeTrailer}
-        title={movie.title}
+        title={getMovieText(movie, "title")}
         trailerUrl={trailerUrl}
       />
     </>

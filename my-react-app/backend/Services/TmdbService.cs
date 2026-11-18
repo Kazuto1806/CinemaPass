@@ -24,9 +24,9 @@ public class TmdbService
     }
 
     // 1. Tìm phim theo từ khóa
-    public async Task<JsonElement> SearchMovies(string query, CancellationToken cancellationToken = default)
+    public async Task<JsonElement> SearchMovies(string query, CancellationToken cancellationToken = default, string language = "vi-VN")
     {
-        var url = $"search/movie?query={Uri.EscapeDataString(query)}&language=vi-VN&page=1";
+        var url = $"search/movie?query={Uri.EscapeDataString(query)}&language={Uri.EscapeDataString(language)}&page=1";
 
         using var response = await _httpClient.GetAsync(url, cancellationToken);
         response.EnsureSuccessStatusCode();
@@ -51,5 +51,20 @@ public class TmdbService
             cancellationToken: cancellationToken);
 
         return json.RootElement.GetProperty("results").Clone();
+    }
+
+    // Lấy thông tin chi tiết bằng ngôn ngữ được yêu cầu
+    public async Task<JsonElement> GetMovieDetails(int tmdbMovieId, string language, CancellationToken cancellationToken = default)
+    {
+        var url = $"movie/{tmdbMovieId}?language={Uri.EscapeDataString(language)}&append_to_response=credits";
+
+        using var response = await _httpClient.GetAsync(url, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        using var json = await JsonDocument.ParseAsync(
+            await response.Content.ReadAsStreamAsync(cancellationToken),
+            cancellationToken: cancellationToken);
+
+        return json.RootElement.Clone();
     }
 }

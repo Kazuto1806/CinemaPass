@@ -121,11 +121,15 @@ function MovieAdmin() {
 
   const emptyForm = {
     title: "",
+    englishTitle: "",
     description: "",
+    englishDescription: "",
     genre: "",
+    englishGenre: "",
     duration: "",
     releaseDate: "",
     director: "",
+    englishDirector: "",
     ageRating: "T13",
     posterUrl: "",
     posterFile: null,
@@ -246,6 +250,46 @@ function MovieAdmin() {
     }
   };
 
+  const autoFetchEnglishInfo = async (movieTitle) => {
+    const query = movieTitle?.trim();
+    if (!query) return;
+
+    try {
+      setIsFetchingTrailer(true);
+      const searchRes = await fetch(
+        `${API_BASE}/api/tmdb/search?query=${encodeURIComponent(query)}`
+      );
+      if (!searchRes.ok) return;
+
+      const results = await searchRes.json();
+      if (!results?.length) return;
+
+      const detailsRes = await fetch(
+        `${API_BASE}/api/tmdb/movies/${results[0].id}/details?language=en-US`
+      );
+      if (!detailsRes.ok) return;
+
+      const details = await detailsRes.json();
+      const director = details.credits?.crew?.find(
+        (person) => person.job === "Director"
+      )?.name;
+      const genres = details.genres?.map((genre) => genre.name).join(", ");
+
+      setForm((prev) => ({
+        ...prev,
+        englishTitle: details.title || prev.englishTitle,
+        englishDescription: details.overview || prev.englishDescription,
+        englishGenre: genres || prev.englishGenre,
+        englishDirector: director || prev.englishDirector,
+        duration: prev.duration || String(details.runtime || ""),
+      }));
+    } catch (error) {
+      console.warn("Không thể tự động lấy thông tin tiếng Anh TMDB:", error);
+    } finally {
+      setIsFetchingTrailer(false);
+    }
+  };
+
   // =====================================================
   // MỞ FORM THÊM PHIM
   // =====================================================
@@ -264,13 +308,17 @@ function MovieAdmin() {
     setEditingMovie(movie);
     setForm({
       title: movie.title || "",
+      englishTitle: movie.englishTitle || "",
       description: movie.description || "",
+      englishDescription: movie.englishDescription || "",
       genre: movie.genre || "",
+      englishGenre: movie.englishGenre || "",
       duration: movie.duration || "",
       releaseDate: movie.releaseDate
         ? movie.releaseDate.substring(0, 10)
         : "",
       director: movie.director || "",
+      englishDirector: movie.englishDirector || "",
       ageRating: movie.ageRating || "T13",
       posterUrl: movie.posterUrl || "",
       posterFile: null,
@@ -331,8 +379,11 @@ function MovieAdmin() {
 
     const formData = new FormData();
     formData.append("Title", form.title.trim());
+    formData.append("EnglishTitle", form.englishTitle.trim());
     formData.append("Description", form.description.trim());
+    formData.append("EnglishDescription", form.englishDescription.trim());
     formData.append("Genre", form.genre.trim());
+    formData.append("EnglishGenre", form.englishGenre.trim());
     formData.append("Duration", String(Number(form.duration)));
 
     if (form.releaseDate) {
@@ -340,6 +391,7 @@ function MovieAdmin() {
     }
 
     formData.append("Director", form.director.trim());
+    formData.append("EnglishDirector", form.englishDirector.trim());
     formData.append("AgeRating", form.ageRating);
     formData.append("TrailerUrl", form.trailerUrl.trim());
     formData.append("Status", form.status);
@@ -691,6 +743,7 @@ function MovieAdmin() {
                       if (!form.trailerUrl) {
                         autoFetchTrailerForTitle(e.target.value);
                       }
+                      autoFetchEnglishInfo(e.target.value);
                     }}
                     placeholder="Nhập tên phim (VD: Mai, Conan, Dune...)"
                   />
@@ -708,6 +761,28 @@ function MovieAdmin() {
                   />
                 </div>
 
+                <div className="movie-form-field full">
+                  <label>English title</label>
+                  <input
+                    type="text"
+                    name="englishTitle"
+                    value={form.englishTitle}
+                    onChange={handleFormChange}
+                    placeholder="Automatically filled from TMDB"
+                  />
+                </div>
+
+                <div className="movie-form-field full">
+                  <label>English description</label>
+                  <textarea
+                    name="englishDescription"
+                    value={form.englishDescription}
+                    onChange={handleFormChange}
+                    placeholder="Automatically filled from TMDB"
+                    rows="3"
+                  />
+                </div>
+
                 {/* THỂ LOẠI */}
                 <div className="movie-form-field">
                   <label>Thể loại</label>
@@ -717,6 +792,17 @@ function MovieAdmin() {
                     value={form.genre}
                     onChange={handleFormChange}
                     placeholder="Ví dụ: Hành động"
+                  />
+                </div>
+
+                <div className="movie-form-field">
+                  <label>English genre</label>
+                  <input
+                    type="text"
+                    name="englishGenre"
+                    value={form.englishGenre}
+                    onChange={handleFormChange}
+                    placeholder="Automatically filled from TMDB"
                   />
                 </div>
 
@@ -753,6 +839,17 @@ function MovieAdmin() {
                     value={form.director}
                     onChange={handleFormChange}
                     placeholder="Nhập tên đạo diễn"
+                  />
+                </div>
+
+                <div className="movie-form-field">
+                  <label>English director</label>
+                  <input
+                    type="text"
+                    name="englishDirector"
+                    value={form.englishDirector}
+                    onChange={handleFormChange}
+                    placeholder="Automatically filled from TMDB"
                   />
                 </div>
 

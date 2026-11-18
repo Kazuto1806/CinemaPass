@@ -43,7 +43,25 @@ public class TmdbController : ControllerBase
         }
     }
 
-    // 2. Lấy danh sách trailer của một phim theo TMDB Movie ID
+    // 2. Lấy thông tin chi tiết theo ngôn ngữ
+    [HttpGet("movies/{id:int}/details")]
+    public async Task<IActionResult> Details(
+        int id,
+        [FromQuery] string language = "en-US",
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var details = await _tmdbService.GetMovieDetails(id, language, cancellationToken);
+            return Ok(details);
+        }
+        catch (HttpRequestException)
+        {
+            return StatusCode(502, new { message = "Không thể lấy thông tin phim từ TMDB." });
+        }
+    }
+
+    // 3. Lấy danh sách trailer của một phim theo TMDB Movie ID
     [HttpGet("movies/{id:int}/trailers")]
     public async Task<IActionResult> Trailers(
         int id,

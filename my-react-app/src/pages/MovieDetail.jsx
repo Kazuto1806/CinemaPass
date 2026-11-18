@@ -20,6 +20,7 @@ import {
   getMissingPosterFallback,
   getOptimizedCloudinaryPosterUrl,
 } from "../constants";
+import { getMovieText, useMovieLanguage } from "../utils/movieLanguage";
 const API_URL =`${API_BASE}/api/movies`;
 
 
@@ -168,6 +169,7 @@ const getStatusText = (status) => {
 
 
 function MovieDetail() {
+  useMovieLanguage();
 
   const { movieName } = useParams();
 
@@ -388,7 +390,7 @@ function MovieDetail() {
 
               <img
                 src={getOptimizedCloudinaryPosterUrl(movie.posterUrl)}
-                alt={movie.title}
+                alt={getMovieText(movie, "title")}
                 fetchPriority="high"
                 decoding="async"
                 data-fallback-src={
@@ -460,14 +462,14 @@ function MovieDetail() {
             {/* TÊN PHIM */}
 
             <h1>
-              {movie.title}
+              {getMovieText(movie, "title")}
             </h1>
 
 
             {/* THỂ LOẠI */}
 
             <p className="movie-detail-genre">
-              {movie.genre ||
+              {getMovieText(movie, "genre", "") ||
                 "Chưa cập nhật thể loại"}
             </p>
 
@@ -533,7 +535,7 @@ function MovieDetail() {
                     Đạo diễn
                   </small>
 
-                  {movie.director ||
+                  {getMovieText(movie, "director", "") ||
                     "Chưa cập nhật"}
 
                 </span>
@@ -574,7 +576,7 @@ function MovieDetail() {
               </h2>
 
               <p>
-                {movie.description ||
+                {getMovieText(movie, "description", "") ||
                   "Chưa có mô tả cho bộ phim này."}
               </p>
 
