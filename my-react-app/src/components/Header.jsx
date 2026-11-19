@@ -403,18 +403,18 @@ function Header() {
                 <div className="user-menu">
 
                   <Link to="/account">
-                    Tài khoản
+                    {language === "VN" ? "Tài khoản" : "Account"}
                   </Link>
 
                   <Link to="/tickets">
-                    Vé của tôi
+                    {language === "VN" ? "Vé của tôi" : "My Tickets"}
                   </Link>
 
                   <button
                     type="button"
                     onClick={handleLogout}
                   >
-                    Đăng xuất
+                    {language === "VN" ? "Đăng xuất" : "Logout"}
                   </button>
 
                 </div>
