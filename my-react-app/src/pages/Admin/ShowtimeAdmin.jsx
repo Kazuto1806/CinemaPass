@@ -647,6 +647,18 @@ function ShowtimeAdmin() {
       console.log("BACKEND RESPONSE:", data);
 
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error(
+            "Phiên đăng nhập đã hết hạn hoặc token không hợp lệ. Vui lòng đăng xuất rồi đăng nhập lại bằng tài khoản Admin."
+          );
+        }
+
+        if (response.status === 403) {
+          throw new Error(
+            "Tài khoản hiện tại không có quyền Admin để thay đổi suất chiếu."
+          );
+        }
+
         throw new Error(
           data.message ||
             data.title ||
@@ -695,6 +707,18 @@ function ShowtimeAdmin() {
       }
 
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error(
+            "Phiên đăng nhập đã hết hạn hoặc token không hợp lệ. Vui lòng đăng xuất rồi đăng nhập lại bằng tài khoản Admin."
+          );
+        }
+
+        if (response.status === 403) {
+          throw new Error(
+            "Tài khoản hiện tại không có quyền Admin để thay đổi suất chiếu."
+          );
+        }
+
         throw new Error(
           data.message ||
             data.title ||
