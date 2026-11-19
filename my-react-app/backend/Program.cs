@@ -164,7 +164,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // =====================================================
-// PUBLIC, READ-ONLY SWAGGER DOCUMENTATION
+// SWAGGER DOCUMENTATION
 // =====================================================
 
 app.UseSwagger();
@@ -175,7 +175,6 @@ app.UseSwaggerUI(options =>
         "/swagger/v1/swagger.json",
         "Cinema Pass API V1"
     );
-    options.SupportedSubmitMethods();
 });
 
 // =====================================================
