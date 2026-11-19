@@ -41,18 +41,6 @@ export const Footer = () => {
         </div>
          <div className="footer-content">
 
-        {/* Logo Bộ Công Thương */}
-        <div className="footer-bct">
-          <img
-            alt={isEnglish
-              ? "Registered with the Ministry of Industry and Trade"
-              : "Đã thông báo Bộ Công Thương"}
-            width="180"
-            height="68"
-          />
-        </div>
-
-
         {/* Thông tin công ty */}
         <div className="footer-company">
 
