@@ -224,7 +224,9 @@ const PHRASE_REPLACEMENTS = [
 
 const restoreOriginalText = (node) => {
   if (node.__cinemaOriginalText !== undefined) {
-    node.nodeValue = node.__cinemaOriginalText;
+    if (node.nodeValue !== node.__cinemaOriginalText) {
+      node.nodeValue = node.__cinemaOriginalText;
+    }
   }
 };
 
@@ -263,7 +265,10 @@ const translateNode = (node) => {
   if (node.__cinemaOriginalText === undefined) {
     node.__cinemaOriginalText = node.nodeValue;
   }
-  node.nodeValue = translateText(node.__cinemaOriginalText);
+  const translated = translateText(node.__cinemaOriginalText);
+  if (node.nodeValue !== translated) {
+    node.nodeValue = translated;
+  }
 };
 
 const ATTRIBUTE_KEYS = ["placeholder", "title", "aria-label", "alt"];
@@ -276,7 +281,10 @@ const translateElement = (element) => {
     if (element[originalKey] === undefined) {
       element[originalKey] = element.getAttribute(key);
     }
-    element.setAttribute(key, translateText(element[originalKey]));
+    const translated = translateText(element[originalKey]);
+    if (element.getAttribute(key) !== translated) {
+      element.setAttribute(key, translated);
+    }
   }
 };
 
@@ -309,7 +317,9 @@ const restoreSubtree = (root) => {
     for (const key of ATTRIBUTE_KEYS) {
       const originalKey = `__cinemaOriginal${key}`;
       if (elementOriginalValue(root, originalKey) !== undefined) {
-        root.setAttribute(key, root[originalKey]);
+        if (root.getAttribute(key) !== root[originalKey]) {
+          root.setAttribute(key, root[originalKey]);
+        }
       }
     }
   }
