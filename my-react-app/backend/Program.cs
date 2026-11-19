@@ -220,49 +220,120 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider
         .GetRequiredService<AppDbContext>();
 
-    try
-    {
         if (app.Environment.IsDevelopment())
         {
             db.Database.EnsureCreated();
         }
         else
         {
+            var productVersion =
+                typeof(DbContext).Assembly.GetName().Version?.ToString(3) ?? "10.0.0";
+
+            db.Database.ExecuteSqlInterpolated($@"
+                IF OBJECT_ID(N'dbo.__EFMigrationsHistory', N'U') IS NULL
+                BEGIN
+                    CREATE TABLE dbo.__EFMigrationsHistory (
+                        MigrationId nvarchar(150) NOT NULL
+                            CONSTRAINT PK___EFMigrationsHistory PRIMARY KEY,
+                        ProductVersion nvarchar(32) NOT NULL
+                    );
+                END;
+
+                DECLARE @InitialTables TABLE (Name sysname NOT NULL);
+                INSERT INTO @InitialTables (Name)
+                VALUES
+                    (N'Cinemas'), (N'Foods'), (N'Movies'), (N'SeatHolds'),
+                    (N'TicketTypes'), (N'Users'), (N'Rooms'), (N'FoodOrders'),
+                    (N'Seats'), (N'Showtimes'), (N'FoodOrderItems'),
+                    (N'ShowtimeTicketTypes'), (N'Tickets');
+
+                IF NOT EXISTS (
+                    SELECT 1 FROM dbo.__EFMigrationsHistory
+                    WHERE MigrationId = N'20261018132217_InitialCreate'
+                )
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM @InitialTables AS requiredTable
+                    LEFT JOIN INFORMATION_SCHEMA.TABLES AS existingTable
+                        ON existingTable.TABLE_SCHEMA = N'dbo'
+                        AND existingTable.TABLE_NAME = requiredTable.Name
+                    WHERE existingTable.TABLE_NAME IS NULL
+                )
+                BEGIN
+                    INSERT INTO dbo.__EFMigrationsHistory (MigrationId, ProductVersion)
+                    VALUES (N'20261018132217_InitialCreate', {productVersion});
+                END;
+
+                IF EXISTS (
+                    SELECT 1 FROM dbo.__EFMigrationsHistory
+                    WHERE MigrationId = N'20261018132217_InitialCreate'
+                )
+                AND OBJECT_ID(N'dbo.Banners', N'U') IS NOT NULL
+                AND NOT EXISTS (
+                    SELECT 1 FROM dbo.__EFMigrationsHistory
+                    WHERE MigrationId = N'20261019132355_AddBanners'
+                )
+                BEGIN
+                    INSERT INTO dbo.__EFMigrationsHistory (MigrationId, ProductVersion)
+                    VALUES (N'20261019132355_AddBanners', {productVersion});
+                END;
+
+                IF OBJECT_ID(N'dbo.Tickets', N'U') IS NOT NULL
+                AND COL_LENGTH(N'dbo.Tickets', N'QrCodeToken') IS NOT NULL
+                AND NOT EXISTS (
+                    SELECT 1 FROM dbo.__EFMigrationsHistory
+                    WHERE MigrationId = N'20261027130323_AddTicketQrCodeToken'
+                )
+                BEGIN
+                    UPDATE dbo.Tickets
+                    SET QrCodeToken = LOWER(REPLACE(CONVERT(varchar(36), NEWID()), '-', ''))
+                    WHERE QrCodeToken IS NULL;
+
+                    ALTER TABLE dbo.Tickets
+                        ALTER COLUMN QrCodeToken nvarchar(64) NOT NULL;
+
+                    IF NOT EXISTS (
+                        SELECT 1 FROM sys.indexes
+                        WHERE object_id = OBJECT_ID(N'dbo.Tickets')
+                            AND name = N'IX_Tickets_QrCodeToken'
+                    )
+                    BEGIN
+                        CREATE UNIQUE INDEX IX_Tickets_QrCodeToken
+                            ON dbo.Tickets(QrCodeToken);
+                    END;
+
+                    INSERT INTO dbo.__EFMigrationsHistory (MigrationId, ProductVersion)
+                    VALUES (N'20261027130323_AddTicketQrCodeToken', {productVersion});
+                END;
+
+                IF OBJECT_ID(N'dbo.Movies', N'U') IS NOT NULL
+                AND (
+                    COL_LENGTH(N'dbo.Movies', N'EnglishTitle') IS NOT NULL
+                    OR COL_LENGTH(N'dbo.Movies', N'EnglishDescription') IS NOT NULL
+                    OR COL_LENGTH(N'dbo.Movies', N'EnglishGenre') IS NOT NULL
+                    OR COL_LENGTH(N'dbo.Movies', N'EnglishDirector') IS NOT NULL
+                )
+                AND NOT EXISTS (
+                    SELECT 1 FROM dbo.__EFMigrationsHistory
+                    WHERE MigrationId = N'20261118143131_AddEnglishMovieFields'
+                )
+                BEGIN
+                    IF COL_LENGTH(N'dbo.Movies', N'EnglishTitle') IS NULL
+                        ALTER TABLE dbo.Movies ADD EnglishTitle nvarchar(max) NULL;
+                    IF COL_LENGTH(N'dbo.Movies', N'EnglishDescription') IS NULL
+                        ALTER TABLE dbo.Movies ADD EnglishDescription nvarchar(max) NULL;
+                    IF COL_LENGTH(N'dbo.Movies', N'EnglishGenre') IS NULL
+                        ALTER TABLE dbo.Movies ADD EnglishGenre nvarchar(max) NULL;
+                    IF COL_LENGTH(N'dbo.Movies', N'EnglishDirector') IS NULL
+                        ALTER TABLE dbo.Movies ADD EnglishDirector nvarchar(max) NULL;
+
+                    INSERT INTO dbo.__EFMigrationsHistory (MigrationId, ProductVersion)
+                    VALUES (N'20261118143131_AddEnglishMovieFields', {productVersion});
+                END;
+            ");
+
             db.Database.Migrate();
         }
-    }
-    catch (Exception ex) when (
-        ex is InvalidOperationException ||
-        ex is Microsoft.Data.SqlClient.SqlException)
-    {
-        var connection = db.Database.GetDbConnection();
-
-        if (connection.State != System.Data.ConnectionState.Open)
-        {
-            connection.Open();
-        }
-
-        using var command = connection.CreateCommand();
-
-        command.CommandText = @"
-            SELECT CASE
-                WHEN EXISTS (
-                    SELECT 1
-                    FROM INFORMATION_SCHEMA.TABLES
-                    WHERE TABLE_NAME = 'Cinemas'
-                ) THEN 1
-                ELSE 0
-            END;";
-
-        var result = Convert.ToInt32(command.ExecuteScalar());
-
-        if (result != 1)
-        {
-            throw;
-        }
-
-        // Database đã có bảng Cinemas nên tiếp tục khởi động.
-    }
 
     db.Database.ExecuteSqlRaw(@"
         IF OBJECT_ID(N'dbo.Banners', N'U') IS NULL
