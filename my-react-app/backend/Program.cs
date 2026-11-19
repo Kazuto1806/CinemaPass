@@ -276,6 +276,22 @@ using (var scope = app.Services.CreateScope())
                 CreatedAt datetime2 NOT NULL
             );
         END;");
+
+    db.Database.ExecuteSqlRaw(@"
+        IF OBJECT_ID(N'dbo.Movies', N'U') IS NOT NULL
+        BEGIN
+            IF COL_LENGTH(N'dbo.Movies', N'EnglishTitle') IS NULL
+                ALTER TABLE dbo.Movies ADD EnglishTitle nvarchar(max) NULL;
+
+            IF COL_LENGTH(N'dbo.Movies', N'EnglishDescription') IS NULL
+                ALTER TABLE dbo.Movies ADD EnglishDescription nvarchar(max) NULL;
+
+            IF COL_LENGTH(N'dbo.Movies', N'EnglishGenre') IS NULL
+                ALTER TABLE dbo.Movies ADD EnglishGenre nvarchar(max) NULL;
+
+            IF COL_LENGTH(N'dbo.Movies', N'EnglishDirector') IS NULL
+                ALTER TABLE dbo.Movies ADD EnglishDirector nvarchar(max) NULL;
+        END;");
 }
 
 // =====================================================
