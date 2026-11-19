@@ -265,6 +265,12 @@ const translateNode = (node) => {
   if (node.__cinemaOriginalText === undefined) {
     node.__cinemaOriginalText = node.nodeValue;
   }
+  const translatedFromCache = translateText(node.__cinemaOriginalText);
+
+  if (node.nodeValue !== translatedFromCache) {
+    node.__cinemaOriginalText = node.nodeValue;
+  }
+
   const translated = translateText(node.__cinemaOriginalText);
   if (node.nodeValue !== translated) {
     node.nodeValue = translated;
@@ -281,6 +287,11 @@ const translateElement = (element) => {
     if (element[originalKey] === undefined) {
       element[originalKey] = element.getAttribute(key);
     }
+    const translatedFromCache = translateText(element[originalKey]);
+    if (element.getAttribute(key) !== translatedFromCache) {
+      element[originalKey] = element.getAttribute(key);
+    }
+
     const translated = translateText(element[originalKey]);
     if (element.getAttribute(key) !== translated) {
       element.setAttribute(key, translated);
