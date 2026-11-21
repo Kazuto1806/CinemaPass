@@ -14,6 +14,7 @@ import {
   FaTicketAlt,
 } from "react-icons/fa";
 
+import TrailerModal from "../components/TrailerModal";
 import "./MovieDetail.css";
 import {
   API_BASE,
@@ -188,6 +189,11 @@ function MovieDetail() {
 
   const [error, setError] =
     useState("");
+
+  const [showTrailer, setShowTrailer] =
+    useState(false);
+
+  const closeTrailer = () => setShowTrailer(false);
 
 
   // =========================
@@ -594,20 +600,17 @@ function MovieDetail() {
 
               {movie.trailerUrl && (
 
-                <a
-                  href={
-                    movie.trailerUrl
-                  }
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  type="button"
                   className="movie-trailer-button"
+                  onClick={() => setShowTrailer(true)}
                 >
 
                   <FaPlay />
 
                   XEM TRAILER
 
-                </a>
+                </button>
 
               )}
 
@@ -642,6 +645,13 @@ function MovieDetail() {
         </section>
 
       </div>
+
+      <TrailerModal
+        isOpen={showTrailer}
+        onClose={closeTrailer}
+        title={getMovieText(movie, "title", movie.title)}
+        trailerUrl={movie.trailerUrl}
+      />
 
     </main>
 
