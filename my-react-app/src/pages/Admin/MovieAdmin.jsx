@@ -95,6 +95,7 @@ function MovieAdmin() {
 
   const [movies, setMovies] = useState([]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [editingMovie, setEditingMovie] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -515,13 +516,15 @@ function MovieAdmin() {
 
   const filteredMovies = movies.filter((movie) => {
     const keyword = search.toLowerCase().trim();
-    if (!keyword) return true;
 
-    return (
+    const matchesSearch = !keyword || (
       movie.title?.toLowerCase().includes(keyword) ||
       movie.genre?.toLowerCase().includes(keyword) ||
       movie.director?.toLowerCase().includes(keyword)
     );
+
+    return matchesSearch &&
+      (statusFilter === "all" || movie.status === statusFilter);
   });
 
   // =====================================================
@@ -584,9 +587,21 @@ function MovieAdmin() {
           />
         </div>
 
+        <select
+          className="admin-filter-select"
+          aria-label="Lọc phim theo trạng thái"
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+        >
+          <option value="all">Tất cả trạng thái</option>
+          <option value="NowShowing">Đang chiếu</option>
+          <option value="ComingSoon">Sắp chiếu</option>
+          <option value="Ended">Đã kết thúc</option>
+        </select>
+
         <div className="movie-count">
           <FaFilm />
-          <span>{filteredMovies.length} phim</span>
+          <span>{filteredMovies.length} / {movies.length} phim</span>
         </div>
       </div>
 

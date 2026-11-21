@@ -1,6 +1,6 @@
 
 import { lazy, Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -40,9 +40,12 @@ const BannerAdmin = lazy(() => import("./pages/Admin/BannerAdmin"));
 import "./App.css";
 
 function App() {
+  const { pathname } = useLocation();
+  const isAdminPage = pathname.startsWith("/admin");
+
   return (
     <NotificationProvider>
-      <Header />
+      {!isAdminPage && <Header />}
 
       <Suspense fallback={<div className="app-route-loading" aria-label="Đang tải trang">Đang tải...</div>}>
         <Routes>
@@ -247,7 +250,7 @@ function App() {
         </Routes>
       </Suspense>
 
-      <Footer />
+      {!isAdminPage && <Footer />}
     </NotificationProvider>
   );
 }

@@ -135,6 +135,8 @@ function ShowtimeAdmin() {
   });
 
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [cinemaFilter, setCinemaFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
@@ -766,16 +768,17 @@ function ShowtimeAdmin() {
   const filteredShowtimes = showtimes.filter((showtime) => {
     const keyword = search.toLowerCase().trim();
 
-    if (!keyword) {
-      return true;
-    }
-
-    return (
+    const matchesSearch = !keyword || (
       (showtime.movieTitle || "").toLowerCase().includes(keyword) ||
       (showtime.cinemaName || "").toLowerCase().includes(keyword) ||
       (showtime.roomName || "").toLowerCase().includes(keyword) ||
       String(showtime.showtimeId).includes(keyword)
     );
+
+    return matchesSearch &&
+      (statusFilter === "all" || showtime.status === statusFilter) &&
+      (cinemaFilter === "all" ||
+        String(showtime.cinemaId) === cinemaFilter);
   });
 
   return (
@@ -803,6 +806,33 @@ function ShowtimeAdmin() {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
+        <select
+          className="admin-filter-select"
+          aria-label="Lọc suất chiếu theo rạp"
+          value={cinemaFilter}
+          onChange={(event) => setCinemaFilter(event.target.value)}
+        >
+          <option value="all">Tất cả rạp</option>
+          {cinemas.map((cinema) => (
+            <option key={cinema.cinemaId} value={String(cinema.cinemaId)}>
+              {cinema.name}
+            </option>
+          ))}
+        </select>
+        <select
+          className="admin-filter-select"
+          aria-label="Lọc suất chiếu theo trạng thái"
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+        >
+          <option value="all">Tất cả trạng thái</option>
+          <option value="Đang hoạt động">Đang hoạt động</option>
+          <option value="Tạm ngưng">Tạm ngưng</option>
+          <option value="Đã kết thúc">Đã kết thúc</option>
+        </select>
+        <span className="showtime-count">
+          {filteredShowtimes.length} / {showtimes.length} suất chiếu
+        </span>
       </div>
 
       {/* Bảng suất chiếu */}

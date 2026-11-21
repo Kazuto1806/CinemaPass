@@ -10,6 +10,7 @@ const API_URL = `${API_BASE}/api/users`;
 function UserAdmin() {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -47,16 +48,19 @@ function UserAdmin() {
   const filteredUsers = users.filter((user) => {
     const keyword = search.toLowerCase().trim();
 
-    if (!keyword) {
-      return true;
-    }
-
-    return (
+    const matchesSearch = !keyword || (
       user.fullName?.toLowerCase().includes(keyword) ||
       user.email?.toLowerCase().includes(keyword) ||
       user.phone?.toLowerCase().includes(keyword) ||
       user.role?.toLowerCase().includes(keyword)
     );
+
+    const matchesRole =
+      roleFilter === "all" ||
+      (roleFilter === "admin" && user.role === "Admin") ||
+      (roleFilter === "customer" && user.role !== "Admin");
+
+    return matchesSearch && matchesRole;
   });
 
   // Hiển thị quyền
@@ -96,11 +100,22 @@ function UserAdmin() {
           />
         </div>
 
+        <select
+          className="admin-filter-select"
+          aria-label="Lọc người dùng theo vai trò"
+          value={roleFilter}
+          onChange={(event) => setRoleFilter(event.target.value)}
+        >
+          <option value="all">Tất cả vai trò</option>
+          <option value="admin">Quản trị viên</option>
+          <option value="customer">Khách hàng</option>
+        </select>
+
         <div className="user-count">
           <FaUsers />
 
           <span>
-            {filteredUsers.length} người dùng
+            {filteredUsers.length} / {users.length} người dùng
           </span>
         </div>
 

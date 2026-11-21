@@ -74,13 +74,14 @@
 .ticket-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  justify-content: flex-start;
   gap: 20px;
   margin-bottom: 20px;
 }
 
 .ticket-search {
-  width: 430px;
+  width: min(430px, 100%);
   height: 44px;
   display: flex;
   align-items: center;
@@ -113,11 +114,18 @@
 }
 
 .ticket-count {
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 9px;
   color: #94a3b8;
   font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .ticket-count {
+    margin-left: 0;
+  }
 }
 
 .ticket-count svg {

@@ -70,13 +70,14 @@
 .showtime-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  justify-content: flex-start;
   gap: 20px;
   margin-bottom: 20px;
 }
 
 .showtime-toolbar input {
-  width: 380px;
+  width: min(380px, 100%);
   max-width: 100%;
   height: 44px;
   padding: 0 14px;
@@ -87,6 +88,28 @@
   outline: none;
   color: #ffffff;
   font-size: 14px;
+}
+
+.showtime-count {
+  margin-left: auto;
+  color: #94a3b8;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .showtime-toolbar {
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .showtime-toolbar input {
+    width: 100%;
+  }
+
+  .showtime-count {
+    margin-left: 0;
+  }
 }
 
 .showtime-toolbar input::placeholder {

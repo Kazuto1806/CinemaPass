@@ -7,40 +7,51 @@
   display: flex;
   flex-direction: column;
 
-  background: #0d162b;
+  background: transparent;
 }
 
 /* HEADER */
 
 .menu-admin-header {
-  padding: 28px 24px;
-  border-bottom: 1px solid #263452;
+  padding: 26px 22px 22px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
 }
 
 .menu-admin-header h2 {
   margin: 0;
-  color: white;
-  font-size: 22px;
+  color: #f8fafc;
+  font-size: 20px;
   font-weight: 800;
+  letter-spacing: 0.12em;
 }
 
 .menu-admin-header p {
-  margin: 5px 0 0;
-  color: #8998b8;
-  font-size: 14px;
+  margin: 7px 0 0;
+  color: #99a6bf;
+  font-size: 12px;
+}
+
+.menu-admin-header::after {
+  content: "CONTROL CENTER";
+  display: block;
+  margin-top: 14px;
+  color: #7665bb;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.17em;
 }
 
 /* MENU */
 
 .menu-admin-list {
   flex: 1;
-  padding: 18px 12px;
+  padding: 15px 11px;
   min-height: 0;
   overflow-y: auto;
 
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .menu-admin-item {
@@ -51,17 +62,18 @@
   width: 100%;
   box-sizing: border-box;
 
-  padding: 14px 16px;
+  padding: 12px 13px;
 
   color: #aab7d0;
   text-decoration: none;
 
-  border-radius: 8px;
+  border: 1px solid transparent;
+  border-radius: 10px;
 
   font-size: 15px;
   font-weight: 600;
 
-  transition: 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .menu-admin-item svg {
@@ -70,18 +82,15 @@
 }
 
 .menu-admin-item:hover {
-  background: #1a2744;
+  background: rgba(148, 163, 184, 0.09);
   color: white;
 }
 
 .menu-admin-item.active {
-  background: linear-gradient(
-    90deg,
-    #6936ad,
-    #8149c4
-  );
-
-  color: white;
+  background: linear-gradient(100deg, rgba(124, 84, 220, 0.28), rgba(91, 64, 158, 0.13));
+  border-color: rgba(167, 139, 250, 0.2);
+  color: #e9ddff;
+  box-shadow: inset 3px 0 #a78bfa;
 }
 
 /* LOGOUT */
@@ -90,7 +99,7 @@
   margin-top: auto;
   padding: 12px;
 
-  border-top: 1px solid #263452;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
 }
 
 .menu-admin-logout {
@@ -117,5 +126,56 @@
 }
 
 .menu-admin-logout:hover {
-  background: #291a2b;
+  background: rgba(244, 63, 94, 0.1);
+}
+
+@media (max-width: 900px) {
+  .menu-admin-header {
+    padding: 21px 8px;
+    text-align: center;
+  }
+
+  .menu-admin-header h2 {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+
+  .menu-admin-header p,
+  .menu-admin-header::after,
+  .menu-admin-item span,
+  .menu-admin-logout span {
+    display: none;
+  }
+
+  .menu-admin-list,
+  .menu-admin-bottom {
+    padding-right: 7px;
+    padding-left: 7px;
+  }
+
+  .menu-admin-item,
+  .menu-admin-logout {
+    justify-content: center;
+    padding: 13px 8px;
+  }
+
+  .menu-admin-item svg,
+  .menu-admin-logout svg {
+    width: 18px;
+  }
+}
+
+@media (max-width: 600px) {
+  .menu-admin-header {
+    padding: 18px 4px;
+  }
+
+  .menu-admin-header h2 {
+    font-size: 9px;
+  }
+
+  .menu-admin-item,
+  .menu-admin-logout {
+    padding: 12px 5px;
+  }
 }

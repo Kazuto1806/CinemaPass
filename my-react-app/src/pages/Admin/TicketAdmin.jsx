@@ -39,6 +39,7 @@ const parseDateTime = (dateString) => {
 function TicketAdmin() {
   const [tickets, setTickets] = useState([]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -246,10 +247,6 @@ function TicketAdmin() {
   const filteredTickets = tickets.filter((ticket) => {
     const keyword = search.toLowerCase().trim();
 
-    if (!keyword) {
-      return true;
-    }
-
     const ticketId = String(ticket.ticketId ?? "");
     const userName = String(ticket.userName ?? "");
     const movieTitle = String(ticket.movieTitle ?? "");
@@ -260,14 +257,21 @@ function TicketAdmin() {
     );
     const status = String(ticket.status ?? "");
 
-    return (
+    const matchesSearch = !keyword || (
       ticketId.includes(keyword) ||
       userName.toLowerCase().includes(keyword) ||
       movieTitle.toLowerCase().includes(keyword) ||
       seatCode.toLowerCase().includes(keyword) ||
       status.toLowerCase().includes(keyword)
     );
+
+    return matchesSearch &&
+      (statusFilter === "all" || status === statusFilter);
   });
+
+  const ticketStatuses = [...new Set(
+    tickets.map((ticket) => String(ticket.status || "").trim()).filter(Boolean)
+  )];
 
   // =====================================================
   // GIAO DIỆN
@@ -316,11 +320,23 @@ function TicketAdmin() {
           />
         </div>
 
+        <select
+          className="admin-filter-select"
+          aria-label="Lọc vé theo trạng thái"
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+        >
+          <option value="all">Tất cả trạng thái</option>
+          {ticketStatuses.map((status) => (
+            <option key={status} value={status}>{status}</option>
+          ))}
+        </select>
+
         <div className="ticket-count">
           <FaTicketAlt />
 
           <span>
-            {filteredTickets.length} vé
+            {filteredTickets.length} / {tickets.length} vé
           </span>
         </div>
       </div>
