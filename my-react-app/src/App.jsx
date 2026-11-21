@@ -39,6 +39,7 @@ const PaymentAdmin = lazy(() => import("./pages/Admin/PaymentAdmin"));
 const BannerAdmin = lazy(() => import("./pages/Admin/BannerAdmin"));
 
 import "./App.css";
+import "./CustomerTheme.css";
 
 function App() {
   const { pathname } = useLocation();

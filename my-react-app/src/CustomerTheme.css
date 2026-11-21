@@ -1,0 +1,669 @@
+:root {
+  --cinema-ink: #080f1d;
+  --cinema-surface: #111d33;
+  --cinema-border: rgba(157, 177, 219, 0.18);
+  --cinema-text: #f5f7ff;
+  --cinema-muted: #9eabc3;
+  --cinema-purple: #8b5cf6;
+  --cinema-purple-light: #c4a8ff;
+  --cinema-blue: #4f8df7;
+  --cinema-gradient: linear-gradient(120deg, #7849df, #4f74dc);
+}
+
+body {
+  background:
+    radial-gradient(ellipse at 50% -18%, rgba(86, 62, 153, 0.16), transparent 44%),
+    var(--cinema-ink);
+  color: var(--cinema-text);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+:is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--cinema-purple-light);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Shared navigation */
+.header {
+  background: rgba(8, 15, 29, 0.9);
+  border-bottom: 1px solid rgba(164, 181, 220, 0.12);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(18px);
+}
+
+.header-container {
+  max-width: 1500px;
+}
+
+.header-top {
+  min-height: 84px;
+  border-bottom: 0;
+}
+
+.header-btn {
+  height: 42px;
+  border-radius: 11px;
+  font-size: 12px;
+  letter-spacing: 0.025em;
+}
+
+.booking-btn {
+  background: linear-gradient(120deg, #7645dc, #456ed8);
+}
+
+.food-btn {
+  background: linear-gradient(120deg, #6034b5, #763fd1);
+}
+
+.header .search-box {
+  height: 42px;
+  border: 1px solid rgba(175, 190, 225, 0.2);
+  background: rgba(255, 255, 255, 0.07);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.header .search-box:focus-within {
+  border-color: rgba(176, 143, 255, 0.75);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.header .search-box input {
+  color: #f5f7ff;
+}
+
+.header .search-box input::placeholder {
+  color: #9daac2;
+}
+
+.header .search-icon,
+.header .login svg {
+  color: #c4a8ff;
+}
+
+.header .login {
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.header .user-menu,
+.header .language-menu {
+  border: 1px solid var(--cinema-border);
+  border-radius: 12px;
+  background: #121e34;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.38);
+}
+
+.header .user-menu a,
+.header .user-menu button,
+.header .language-menu button {
+  color: #dce4f4;
+  background: transparent;
+}
+
+.header .user-menu a:hover,
+.header .user-menu button:hover,
+.header .language-menu button:hover,
+.header .language-menu button.language-active {
+  background: rgba(157, 123, 236, 0.16);
+  color: #d7c6ff;
+}
+
+.header .language {
+  border-radius: 10px;
+}
+
+.footer {
+  padding: 0 24px 28px;
+  border-top: 1px solid rgba(164, 181, 220, 0.12);
+  background:
+    radial-gradient(ellipse at 50% 0, rgba(91, 65, 157, 0.14), transparent 52%),
+    #0b1425;
+}
+
+.footer-top {
+  min-height: 76px;
+  border-top: 0;
+  border-bottom-color: rgba(164, 181, 220, 0.12);
+}
+
+.footer-copy {
+  color: #eef1fa;
+  font-size: 14px;
+}
+
+.footer-links {
+  gap: 24px;
+}
+
+.footer-links a {
+  color: #aab6ce;
+  font-size: 13px;
+}
+
+.footer-links a:hover {
+  color: #c4a8ff;
+}
+
+.footer-company p {
+  color: #8492aa;
+}
+
+/* Home page and movie cards */
+body .home {
+  padding-top: 30px;
+  background: #091224;
+}
+
+.home .partner-banner {
+  max-width: 1320px;
+  border-color: rgba(186, 168, 255, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+}
+
+.home .partner-arrow {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 50%;
+  background: rgba(7, 13, 27, 0.58);
+  backdrop-filter: blur(8px);
+}
+
+.home .movie-section h2 {
+  letter-spacing: 0.045em;
+}
+
+.home .movie-section h2::after,
+.movie-catalog .movie-catalog-header h1::after {
+  background: linear-gradient(90deg, var(--cinema-purple), var(--cinema-blue));
+}
+
+.movie-card-wrapper .movie-card {
+  border: 1px solid rgba(180, 193, 224, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.movie-card-wrapper .movie-card:hover {
+  border-color: rgba(184, 154, 255, 0.6);
+  box-shadow: 0 20px 42px rgba(0, 0, 0, 0.38);
+}
+
+.movie-card-wrapper .movie-badge {
+  top: 10px;
+  left: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 7px;
+  background: rgba(96, 59, 173, 0.92);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.movie-card-wrapper .movie-card-title {
+  color: #f5f7ff;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+}
+
+.movie-card-wrapper .movie-trailer-btn {
+  color: #c7d0e2;
+  text-decoration: none;
+}
+
+.movie-card-wrapper .movie-trailer-btn:hover {
+  color: #d7c6ff;
+}
+
+.movie-card-wrapper .movie-detail-btn,
+.home .movie-more-button {
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: var(--cinema-gradient);
+  color: #fff;
+  text-decoration: none;
+}
+
+.movie-card-wrapper .movie-detail-btn:hover,
+.home .movie-more-button:hover {
+  background: linear-gradient(120deg, #895bee, #6085eb);
+  color: #fff;
+}
+
+.home .quick-booking {
+  padding: 25px 28px;
+  border: 1px solid rgba(174, 193, 234, 0.2);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 5% 0, rgba(122, 82, 208, 0.22), transparent 44%),
+    linear-gradient(130deg, #142442, #101a30);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.25);
+}
+
+.home .quick-booking h2,
+.home .quick-booking .quick-booking-message {
+  color: #f4f6ff;
+}
+
+.home .quick-booking .quick-booking-fields select,
+.home .quick-booking .quick-booking-fields input {
+  height: 50px;
+  border-color: rgba(164, 182, 221, 0.22);
+  border-radius: 10px;
+  background: #0c172b;
+  color: #edf1ff;
+  font-size: 14px;
+}
+
+.home .quick-booking .quick-booking-fields select:focus,
+.home .quick-booking .quick-booking-fields input:focus {
+  border-color: #9f7aff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.16);
+}
+
+.home .quick-booking .quick-booking-fields button {
+  height: 50px;
+  border-radius: 10px;
+  background: var(--cinema-gradient);
+}
+
+/* Movie catalog, search and detail */
+.movie-catalog .catalog-card {
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+}
+
+.movie-catalog .catalog-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(170, 144, 244, 0.25);
+  background: rgba(20, 32, 57, 0.54);
+}
+
+.movie-catalog .catalog-poster-link {
+  border-radius: 12px;
+}
+
+.movie-catalog .catalog-title:hover {
+  color: #c4a8ff;
+}
+
+.movie-catalog .catalog-book,
+.movie-catalog .catalog-coming-soon {
+  border: 0;
+  border-radius: 9px;
+  background: var(--cinema-gradient);
+  color: #fff;
+}
+
+.movie-catalog .catalog-book:hover,
+.movie-catalog .catalog-coming-soon:hover {
+  background: linear-gradient(120deg, #895bee, #6085eb);
+}
+
+.movie-search-page .search-result-header h1 {
+  font-size: clamp(30px, 4vw, 42px);
+  letter-spacing: -0.025em;
+}
+
+.movie-search-page .search-message {
+  border-color: var(--cinema-border);
+  border-radius: 18px;
+  background: rgba(17, 29, 51, 0.78);
+  backdrop-filter: blur(10px);
+}
+
+.movie-detail-page .movie-detail-card {
+  border-color: rgba(164, 147, 226, 0.26);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(105, 75, 181, 0.14), transparent 42%),
+    linear-gradient(135deg, #142442, #0b172d);
+  box-shadow: 0 26px 65px rgba(0, 0, 0, 0.34);
+}
+
+.movie-detail-page .movie-detail-poster {
+  border: 1px solid rgba(182, 196, 226, 0.16);
+  border-radius: 16px;
+}
+
+.movie-detail-page .movie-detail-meta > div {
+  border-radius: 12px;
+  background: rgba(5, 17, 40, 0.55);
+}
+
+.movie-detail-page .movie-ticket-button {
+  border-radius: 10px;
+  background: var(--cinema-gradient);
+}
+
+/* Account and membership */
+body .account-page {
+  background:
+    radial-gradient(ellipse at 10% 0, rgba(105, 73, 182, 0.2), transparent 42%),
+    #091224;
+}
+
+.account-page .account-sidebar {
+  border: 1px solid rgba(190, 169, 255, 0.18);
+  border-radius: 17px;
+  background: linear-gradient(160deg, #32235e, #1d2850 65%, #172440);
+}
+
+.account-page .account-avatar {
+  border: 3px solid rgba(220, 204, 255, 0.48);
+  background: linear-gradient(145deg, #8b5cf6, #4d69c8);
+}
+
+.account-page .account-menu-item {
+  border-radius: 9px;
+}
+
+.account-page .account-menu-item.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.account-page .account-box {
+  border: 1px solid rgba(160, 179, 220, 0.18);
+  border-radius: 17px;
+  background: linear-gradient(145deg, rgba(20, 33, 58, 0.98), rgba(15, 27, 49, 0.98));
+  color: #f4f6ff;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.2);
+}
+
+.account-page .account-box-title {
+  border-bottom-color: rgba(164, 181, 220, 0.16);
+}
+
+.account-page .account-box-title h2,
+.account-page .account-field label {
+  color: #edf1ff;
+}
+
+.account-page .account-box-title svg {
+  color: #b89aff;
+}
+
+.account-page .account-field input {
+  border-color: rgba(164, 181, 220, 0.24);
+  border-radius: 9px;
+  background: #0b172c;
+  color: #f5f7ff;
+}
+
+.account-page .account-field input:read-only {
+  background: #111e35;
+  color: #b5c0d4;
+}
+
+.account-page .account-field input::placeholder {
+  color: #8290a8;
+}
+
+.account-page .account-save-button {
+  border-radius: 9px;
+  background: var(--cinema-gradient);
+  font-size: 13px;
+}
+
+.membership-page:not(.membership-embedded) {
+  background:
+    radial-gradient(ellipse at 80% 0, rgba(99, 73, 164, 0.18), transparent 42%),
+    #091224;
+  color: #f4f6ff;
+}
+
+.membership-page .membership-progress-panel,
+.membership-page .membership-benefits,
+.membership-page .membership-history {
+  border-color: var(--cinema-border);
+  border-radius: 19px;
+  background: #121e34;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+
+.membership-page .membership-section-heading h2,
+.membership-page .membership-progress-labels strong,
+.membership-page .membership-benefit h3,
+.membership-page .membership-empty-state h3 {
+  color: #f2f4ff;
+}
+
+.membership-page .membership-section-heading p,
+.membership-page .membership-progress-labels span,
+.membership-page .membership-progress-note,
+.membership-page .membership-benefit p,
+.membership-page .membership-empty-state p {
+  color: #a7b3c9;
+}
+
+.membership-page .membership-section-icon,
+.membership-page .membership-benefit-icon,
+.membership-page .membership-empty-icon {
+  background: rgba(139, 92, 246, 0.15);
+  color: #c4a8ff;
+}
+
+.membership-page .membership-progress-track {
+  background: #25334e;
+}
+
+.membership-page .membership-progress-fill {
+  background: linear-gradient(90deg, #7849df, #68a0ff);
+}
+
+.membership-page .membership-benefit {
+  border-color: rgba(157, 177, 219, 0.16);
+  border-radius: 14px;
+  background: #172541;
+}
+
+.membership-page .membership-benefit:hover {
+  border-color: rgba(184, 154, 255, 0.48);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Food, booking and customer information */
+body .food-page {
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(96, 71, 169, 0.15), transparent 45%),
+    #091224;
+}
+
+.food-page .cinema-selector,
+.food-page .product-card {
+  border-color: rgba(157, 177, 219, 0.2);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.18);
+}
+
+.food-page .product-card {
+  border-radius: 17px;
+  background: linear-gradient(150deg, #142442, #0e1b31);
+}
+
+.food-page .product-card:hover {
+  border-color: rgba(184, 154, 255, 0.58);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.3);
+}
+
+.food-page .product-price {
+  color: #c4a8ff;
+}
+
+.food-page .add-cart-btn,
+.food-page .floating-cart-btn {
+  background: var(--cinema-gradient);
+}
+
+.booking-page .booking-header-card,
+.booking-page .booking-panel,
+.payment-page .booking-panel {
+  border-color: rgba(157, 177, 219, 0.22);
+  border-radius: 20px;
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.24);
+}
+
+.booking-page .booking-panel,
+.payment-page .booking-panel {
+  background: linear-gradient(145deg, rgba(18, 32, 56, 0.97), rgba(13, 25, 45, 0.97));
+}
+
+.booking-page .time-button,
+.booking-page .ticket-type-option {
+  border-radius: 11px;
+}
+
+.information-page .information-hero,
+.information-page .policy-card,
+.information-page .policy-detail,
+.information-page .faq-item,
+.information-page .faq-support,
+.information-page .news-card,
+.ticket-verify-page .ticket-verify-card,
+.ticket-verify-page .ticket-verify-state {
+  border-radius: 18px;
+}
+
+.information-page .policy-card,
+.information-page .policy-detail,
+.information-page .faq-item,
+.information-page .faq-support,
+.information-page .news-card,
+.ticket-verify-page .ticket-verify-card,
+.ticket-verify-page .ticket-verify-state {
+  border-color: var(--cinema-border);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.2);
+}
+
+.information-page .policy-card:hover,
+.information-page .news-card:hover {
+  border-color: rgba(184, 154, 255, 0.36);
+}
+
+/* Tickets, login and responsive adjustments */
+body .ticket-history-page {
+  background:
+    radial-gradient(ellipse at 50% 0, rgba(85, 67, 151, 0.15), transparent 45%),
+    #091224;
+}
+
+.ticket-history-page .history-back-button:hover,
+.ticket-history-page .history-refresh-button:hover {
+  border-color: #b89aff;
+  color: #d2beff;
+}
+
+.ticket-history-page .history-eyebrow,
+.ticket-history-page .history-tabs button.active,
+.ticket-history-page .history-card-icon,
+.ticket-history-page .history-card-bottom strong {
+  color: #c4a8ff;
+}
+
+.ticket-history-page .history-tabs button.active {
+  border-bottom-color: #a986f5;
+}
+
+.ticket-history-page .history-card {
+  border-color: var(--cinema-border);
+  border-radius: 18px;
+  background: linear-gradient(145deg, #14223c, #111d33);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+}
+
+.ticket-history-page .history-card-icon,
+.ticket-history-page .history-status {
+  background: rgba(139, 92, 246, 0.16);
+}
+
+.ticket-history-page .history-status {
+  color: #d3bdff;
+}
+
+.ticket-history-page .history-empty button,
+.ticket-history-page .history-error button {
+  border-radius: 9px;
+  background: var(--cinema-gradient);
+  color: #fff;
+}
+
+.login-page .login-box {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 28px 75px rgba(0, 0, 0, 0.42);
+}
+
+.login-page .login-field input {
+  border-radius: 9px;
+}
+
+@media (max-width: 850px) {
+  .header {
+    position: sticky;
+  }
+
+  .header-top {
+    min-height: 0;
+  }
+
+  .footer {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  body .home {
+    padding-top: 18px;
+  }
+
+  .home .partner-banner {
+    border-radius: 14px;
+  }
+
+  .home .quick-booking {
+    padding: 20px 14px;
+    border-radius: 14px;
+  }
+
+  .account-page .account-box {
+    border-radius: 14px;
+    padding: 20px;
+  }
+
+  .membership-page .membership-progress-panel,
+  .membership-page .membership-benefits,
+  .membership-page .membership-history {
+    padding: 20px;
+  }
+
+  .membership-page .membership-benefit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .login-page .login-box {
+    padding: 30px 22px 25px;
+  }
+}
