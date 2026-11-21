@@ -430,14 +430,14 @@ const Home = () => {
       <section className="partner-section" aria-label="Đối tác">
         <div className="partner-banner">
           <div
-  className={`partner-banner-track ${
-    bannerTransitionEnabled ? "" : "no-transition"
-  }`}
-  style={{
-    transform: `translate3d(-${currentBanner * 100}%, 0, 0)`,
-  }}
-  onTransitionEnd={handleBannerTransitionEnd}
->
+            className={`partner-banner-track ${
+              bannerTransitionEnabled ? "" : "no-transition"
+            }`}
+            style={{
+              transform: `translate3d(-${currentBanner * 100}%, 0, 0)`,
+            }}
+            onTransitionEnd={handleBannerTransitionEnd}
+          >
             {bannerSlides.map((banner, index) => (
               <div
                 className="partner-banner-slide"
@@ -467,8 +467,12 @@ const Home = () => {
                   alt={banner.alt}
                   width="1280"
                   height="520"
-                  loading={index <= currentBanner + 1 ? "eager" : "lazy"}
-                  fetchPriority={index === 0 ? "high" : "auto"}
+                  loading="eager"
+                  fetchPriority={
+                    index === currentBanner || index === currentBanner + 1
+                      ? "high"
+                      : "auto"
+                  }
                   decoding="async"
                 />
               </div>
