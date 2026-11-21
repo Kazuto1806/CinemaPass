@@ -48,11 +48,18 @@ function Login() {
   // POPUP
   // =========================
 
-  const [popup, setPopup] = useState({
-    show: false,
-    type: "success",
-    title: "",
-    message: "",
+  const [popup, setPopup] = useState(() => {
+    const authExpired =
+      new URLSearchParams(window.location.search).get("authExpired") === "1";
+
+    return {
+      show: authExpired,
+      type: authExpired ? "warning" : "success",
+      title: authExpired ? "Phiên đăng nhập đã hết hạn" : "",
+      message: authExpired
+        ? "Vui lòng đăng nhập lại để tiếp tục sử dụng."
+        : "",
+    };
   });
 
   const showPopup = (type, title, message) => {
@@ -198,15 +205,24 @@ function Login() {
       // =========================
 
       setTimeout(() => {
+        const params = new URLSearchParams(window.location.search);
+        const returnUrl = params.get("returnUrl");
+
         if (data.role === "Admin") {
-          navigate("/admin/movies");
+          const safeAdminReturnUrl =
+            returnUrl &&
+            (returnUrl === "/admin" || returnUrl.startsWith("/admin/")) &&
+            !returnUrl.startsWith("//") &&
+            !returnUrl.includes("\\")
+              ? returnUrl
+              : "/admin/movies";
+
+          navigate(safeAdminReturnUrl);
           return;
         }
 
         // Neu nguoi dung duoc chuyen den trang dang nhap tu luong dat ve,
         // quay lai dung trang do sau khi dang nhap thanh cong.
-        const params = new URLSearchParams(window.location.search);
-        const returnUrl = params.get("returnUrl");
         const safeReturnUrl =
           returnUrl &&
           returnUrl.startsWith("/") &&
