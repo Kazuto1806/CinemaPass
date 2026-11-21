@@ -4,11 +4,14 @@
 
 .header {
   width: 100%;
-  background: #0d162b;
+  background: rgba(8, 15, 29, 0.94);
   color: white;
   position: sticky;
   top: 0;
   z-index: 9999;
+  border-bottom: 1px solid rgba(164, 181, 220, 0.14);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(18px);
 }
 
 
@@ -30,11 +33,10 @@
 ========================= */
 
 .header-top {
-  min-height: 80px;
+  min-height: 84px;
   display: flex;
   align-items: center;
-  gap: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 16px;
 }
 
 
@@ -54,6 +56,13 @@
   width: 100%;
   height: auto;
   display: block;
+  filter: drop-shadow(0 5px 12px rgba(112, 78, 201, 0.16));
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.logo:hover img {
+  filter: drop-shadow(0 7px 16px rgba(143, 111, 240, 0.3));
+  transform: translateY(-1px);
 }
 
 .logo picture {
@@ -69,14 +78,14 @@
 .header-buttons {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
 .header-btn {
-  height: 40px;
+  height: 42px;
   border: none;
-  border-radius: 4px;
+  border-radius: 11px;
   padding: 0 17px;
 
   display: flex;
@@ -87,14 +96,15 @@
 
   color: white;
 
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
+  letter-spacing: 0.025em;
 
   cursor: pointer;
 
   white-space: nowrap;
 
-  transition: 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
 .header-btn svg {
@@ -107,11 +117,7 @@
 ========================= */
 
 .booking-btn {
-  background: linear-gradient(
-    135deg,
-    #6936ad,
-    #396fd2
-  );
+  background: linear-gradient(120deg, #7645dc, #456ed8);
 }
 
 
@@ -120,15 +126,15 @@
 ========================= */
 
 .food-btn {
-  background: #6936ad;
+  background: linear-gradient(120deg, #6034b5, #763fd1);
 }
 
 .header-btn:hover {
   transform: translateY(-2px);
-
   box-shadow:
-    0 5px 15px
-    rgba(105, 54, 173, 0.3);
+    0 8px 20px
+    rgba(105, 75, 190, 0.3);
+  filter: brightness(1.08);
 }
 
 
@@ -138,7 +144,7 @@
 
 .search-box {
   width: 300px;
-  height: 46px;
+  height: 42px;
 
   margin-left: auto;
 
@@ -147,13 +153,19 @@
 
   position: relative;
 
-  background: white;
-
-  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(175, 190, 225, 0.2);
+  border-radius: 12px;
 
   box-sizing: border-box;
 
   overflow: hidden;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.search-box:focus-within {
+  border-color: rgba(176, 143, 255, 0.75);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 
@@ -170,9 +182,9 @@
 
   background: transparent;
 
-  border-radius: 25px;
+  border-radius: 12px;
 
-  color: #222;
+  color: #f5f7ff;
 
   font-size: 14px;
 
@@ -180,7 +192,7 @@
 }
 
 .search-box input::placeholder {
-  color: #888;
+  color: #9daac2;
 }
 
 
@@ -195,7 +207,7 @@
   top: 0;
 
   width: 48px;
-  height: 46px;
+  height: 42px;
 
   border: none;
 
@@ -211,11 +223,11 @@
 }
 
 .search-submit:hover {
-  background: rgba(23, 35, 59, 0.08);
+  background: rgba(157, 123, 236, 0.12);
 }
 
 .search-icon {
-  color: #17233b;
+  color: #c4a8ff;
 
   font-size: 18px;
 
@@ -246,7 +258,7 @@
 
   padding: 8px 5px;
 
-  border-radius: 5px;
+  border-radius: 10px;
 
   transition: 0.2s;
 }
@@ -254,7 +266,7 @@
 .login svg {
   font-size: 29px;
 
-  color: #6936ad;
+  color: #c4a8ff;
 }
 
 .login:hover {
@@ -287,15 +299,16 @@
 
   width: 180px;
 
-  background: #ffffff;
+  background: #121e34;
 
-  border-radius: 6px;
+  border: 1px solid rgba(157, 177, 219, 0.18);
+  border-radius: 12px;
 
   padding: 8px 0;
 
   box-shadow:
-    0 8px 25px
-    rgba(0, 0, 0, 0.25);
+    0 18px 40px
+    rgba(0, 0, 0, 0.38);
 
   display: none;
 
@@ -326,7 +339,7 @@
 
   background: transparent;
 
-  color: #333;
+  color: #dce4f4;
 
   text-decoration: none;
 
@@ -342,7 +355,8 @@
 
 .user-menu a:hover,
 .user-menu button:hover {
-  background: #f2f2f2;
+  background: rgba(157, 123, 236, 0.16);
+  color: #d7c6ff;
 }
 
 
@@ -381,7 +395,7 @@
 
   cursor: pointer;
 
-  border-radius: 5px;
+  border-radius: 10px;
 }
 
 .language:hover {
@@ -434,7 +448,8 @@
 
   padding: 6px;
 
-  background: white;
+  border: 1px solid rgba(157, 177, 219, 0.18);
+  background: #121e34;
 
   border-radius: 8px;
 
@@ -456,9 +471,9 @@
 
   border: none;
 
-  background: white;
+  background: transparent;
 
-  color: #222;
+  color: #dce4f4;
 
   display: flex;
   align-items: center;
@@ -478,18 +493,18 @@
 }
 
 .language-menu button:hover {
-  background: #f2f2f2;
+  background: rgba(157, 123, 236, 0.16);
 
-  color: #6936ad;
+  color: #d7c6ff;
 }
 
 
 /* Ngôn ngữ đang chọn */
 
 .language-menu button.language-active {
-  background: #eee8f7;
+  background: rgba(157, 123, 236, 0.2);
 
-  color: #6936ad;
+  color: #d7c6ff;
 }
 
 
@@ -549,7 +564,6 @@
 
   .header-top {
     flex-wrap: wrap;
-
     padding: 12px 0;
   }
 
@@ -600,11 +614,22 @@
 
     padding: 0 8px;
 
-    font-size: 11px;
+    font-size: 10px;
+  }
+
+  .header-buttons {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .header-btn {
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .header-btn svg {
-    display: none;
+    flex: 0 0 auto;
+    font-size: 12px;
   }
 
   .login span {
