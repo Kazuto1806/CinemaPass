@@ -130,7 +130,10 @@
 }
 
 .admin-page-content {
+  width: 100%;
+  min-width: 0;
   min-height: calc(100vh - 76px);
+  box-sizing: border-box;
 }
 
 .admin-filter-select {

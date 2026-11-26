@@ -1,5 +1,7 @@
 .room-admin {
   width: 100%;
+  padding: 30px;
+  box-sizing: border-box;
   color: #f5f7ff;
 }
 
@@ -472,6 +474,10 @@
 }
 
 @media (max-width: 700px) {
+  .room-admin {
+    padding: 24px 18px 40px;
+  }
+
   .room-admin-header {
     align-items: flex-start;
     flex-direction: column;
@@ -488,5 +494,11 @@
 
   .room-search {
     width: 100%;
+  }
+}
+
+@media (max-width: 450px) {
+  .room-admin {
+    padding: 20px 14px 32px;
   }
 }

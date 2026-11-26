@@ -1,6 +1,8 @@
 .report-admin {
   width: 100%;
   min-width: 0;
+  padding: 30px;
+  box-sizing: border-box;
   color: #fff;
 }
 
@@ -655,6 +657,10 @@
 }
 
 @media (max-width: 650px) {
+  .report-admin {
+    padding: 24px 18px 40px;
+  }
+
   .report-selector {
     grid-template-columns: 1fr;
   }
@@ -688,6 +694,12 @@
 
   .report-stat-card {
     padding: 16px;
+  }
+}
+
+@media (max-width: 450px) {
+  .report-admin {
+    padding: 20px 14px 32px;
   }
 
   .report-chart-grid {
