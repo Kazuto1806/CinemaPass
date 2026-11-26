@@ -105,6 +105,20 @@ public MoviesController(
                 });
             }
 
+            if (string.IsNullOrWhiteSpace(movie.EnglishTitle) ||
+                (!string.IsNullOrWhiteSpace(movie.Description) &&
+                 string.IsNullOrWhiteSpace(movie.EnglishDescription)) ||
+                (!string.IsNullOrWhiteSpace(movie.Genre) &&
+                 string.IsNullOrWhiteSpace(movie.EnglishGenre)) ||
+                (!string.IsNullOrWhiteSpace(movie.Director) &&
+                 string.IsNullOrWhiteSpace(movie.EnglishDirector)))
+            {
+                return BadRequest(new
+                {
+                    message = "Vui lòng nhập tên phim tiếng Anh và bản tiếng Anh cho các mục mô tả, thể loại hoặc đạo diễn đã điền."
+                });
+            }
+
             // Kiểm tra thời lượng
             if (movie.Duration <= 0)
             {

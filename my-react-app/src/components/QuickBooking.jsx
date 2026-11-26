@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import "./QuickBooking.css";
+import { getMovieText, useMovieLanguage } from "../utils/movieLanguage";
 
 function QuickBooking({
   cinemas = [],
@@ -10,6 +11,8 @@ function QuickBooking({
   error = "",
   onBook,
 }) {
+  useMovieLanguage();
+
   const [cinemaId, setCinemaId] = useState("");
   const [movieId, setMovieId] = useState("");
   const [date, setDate] = useState("");
@@ -75,7 +78,7 @@ function QuickBooking({
           <option value="">2. Chọn Phim</option>
           {movies.map((movie) => (
             <option key={movie.id} value={movie.id}>
-              {movie.title}
+              {getMovieText(movie, "title")}
             </option>
           ))}
         </select>

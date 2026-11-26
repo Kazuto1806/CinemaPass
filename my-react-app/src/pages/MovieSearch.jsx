@@ -101,14 +101,18 @@ function MovieSearch() {
     }
 
     return availableMovies.filter((movie) => {
-      const title =
-        movie.title?.toLowerCase() || "";
-
-      const genre =
-        movie.genre?.toLowerCase() || "";
-
-      const director =
-        movie.director?.toLowerCase() || "";
+      const title = [
+        movie.title,
+        movie.englishTitle ?? movie.EnglishTitle,
+      ].filter(Boolean).join(" ").toLowerCase();
+      const genre = [
+        movie.genre,
+        movie.englishGenre ?? movie.EnglishGenre,
+      ].filter(Boolean).join(" ").toLowerCase();
+      const director = [
+        movie.director,
+        movie.englishDirector ?? movie.EnglishDirector,
+      ].filter(Boolean).join(" ").toLowerCase();
 
       return (
         title.includes(search) ||

@@ -23,11 +23,13 @@ export const getMovieText = (movie, field, fallback = "") => {
 
   const language = getCurrentLanguage();
   const pascalField = field.charAt(0).toUpperCase() + field.slice(1);
-  const englishKey = `English${pascalField}`;
+  const englishKey = `english${pascalField}`;
+  const vietnameseText = movie[field] || movie[pascalField];
+  const englishText = movie[englishKey] || movie[`English${pascalField}`];
 
   if (language === "EN") {
-    return movie[englishKey] || movie[field] || fallback;
+    return englishText || vietnameseText || fallback;
   }
 
-  return movie[field] || movie[englishKey] || fallback;
+  return vietnameseText || englishText || fallback;
 };

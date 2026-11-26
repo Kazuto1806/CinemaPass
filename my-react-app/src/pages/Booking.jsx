@@ -20,6 +20,7 @@ import paymentQr from "../assets/QR.png";
 import { QRCodeSVG } from "qrcode.react";
 import { API_BASE, getMissingPosterFallback } from "../constants";
 import { authenticatedFetch as fetch } from "../utils/apiFetch";
+import { getMovieText, useMovieLanguage } from "../utils/movieLanguage";
 
 const MOVIE_API_URL = `${API_BASE}/api/movies`;
 const SHOWTIME_API_URL = `${API_BASE}/api/showtimes`;
@@ -115,6 +116,8 @@ const currency = (value) =>
   }).format(Number(value) || 0);
 
 function Booking() {
+  useMovieLanguage();
+
   const navigate = useNavigate();
   const location = useLocation();
   const { notify } = useNotification();
@@ -1183,7 +1186,7 @@ setBookingSuccess(true);
               <div>
                 <span>Phim</span>
                 <strong>
-                  {bookingResult?.movieTitle || selectedMovie.title}
+                  {getMovieText(selectedMovie, "title")}
                 </strong>
               </div>
 
@@ -1343,7 +1346,7 @@ setBookingSuccess(true);
             <section className="booking-header-card">
               <img
                 src={selectedMovie.posterUrl || ""}
-                alt={selectedMovie.title}
+                alt={getMovieText(selectedMovie, "title")}
                 className="booking-poster"
                 onError={(event) => {
                   event.currentTarget.style.display = "none";
@@ -1353,9 +1356,9 @@ setBookingSuccess(true);
               <div className="booking-movie-info">
                 <span className="booking-label">Đặt vé</span>
 
-                <h1>{selectedMovie.title}</h1>
+                <h1>{getMovieText(selectedMovie, "title")}</h1>
 
-                <p>{selectedMovie.genre || "Chưa cập nhật thể loại"}</p>
+                <p>{getMovieText(selectedMovie, "genre", "Chưa cập nhật thể loại")}</p>
 
                 <div className="booking-meta">
                   <span>
@@ -1686,7 +1689,7 @@ setBookingSuccess(true);
                 <div className="booking-summary-box">
                   <div>
                     <small>Phim</small>
-                    <strong>{selectedMovie.title}</strong>
+                    <strong>{getMovieText(selectedMovie, "title")}</strong>
                   </div>
 
                   <div>
@@ -1919,7 +1922,7 @@ setBookingSuccess(true);
                   {selectedMovie.posterUrl ? (
                     <img
                       src={selectedMovie.posterUrl}
-                      alt={selectedMovie.title}
+                      alt={getMovieText(selectedMovie, "title")}
                     />
                   ) : (
                     <div className="payment-poster-empty">
@@ -1928,8 +1931,8 @@ setBookingSuccess(true);
                   )}
 
                   <div>
-                    <strong>{selectedMovie.title}</strong>
-                    <span>{selectedMovie.genre || "Phim điện ảnh"}</span>
+                    <strong>{getMovieText(selectedMovie, "title")}</strong>
+                    <span>{getMovieText(selectedMovie, "genre", "Phim điện ảnh")}</span>
                   </div>
                 </div>
 

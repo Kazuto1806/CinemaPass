@@ -407,6 +407,21 @@ function MovieAdmin() {
       return;
     }
 
+    const missingEnglishInfo =
+      !form.englishTitle.trim() ||
+      (form.description.trim() && !form.englishDescription.trim()) ||
+      (form.genre.trim() && !form.englishGenre.trim()) ||
+      (form.director.trim() && !form.englishDirector.trim());
+
+    if (!editingMovie && missingEnglishInfo) {
+      showNotification(
+        "warning",
+        "Thiếu thông tin tiếng Anh",
+        "Vui lòng nhập tên phim tiếng Anh và bản tiếng Anh cho các mục mô tả, thể loại hoặc đạo diễn đã điền. Hệ thống sẽ thử lấy thông tin từ TMDB khi rời ô tên phim."
+      );
+      return;
+    }
+
     const formData = new FormData();
     formData.append("Title", form.title.trim());
     formData.append("EnglishTitle", form.englishTitle.trim());
@@ -962,13 +977,13 @@ function MovieAdmin() {
                 </div>
 
                 <div className="movie-form-field full">
-                  <label>English title</label>
+                  <label>English title *</label>
                   <input
                     type="text"
                     name="englishTitle"
                     value={form.englishTitle}
                     onChange={handleFormChange}
-                    placeholder="Automatically filled from TMDB"
+                    placeholder="Bắt buộc; tự lấy từ TMDB nếu tìm thấy"
                   />
                 </div>
 
