@@ -41,6 +41,33 @@
   font-size: 15px;
 }
 
+.catalog-filter {
+  display: flex;
+  max-width: 1250px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin: 0 auto 24px;
+  color: #c5ccda;
+  font-size: 14px;
+}
+
+.catalog-filter select {
+  min-width: 190px;
+  padding: 10px 36px 10px 12px;
+  border: 1px solid #53617b;
+  border-radius: 6px;
+  background: #18243a;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.catalog-filter select:focus-visible {
+  outline: 2px solid #a77bff;
+  outline-offset: 2px;
+}
+
 .catalog-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -219,6 +246,16 @@
 
   .movie-catalog-header h1 {
     font-size: 25px;
+  }
+
+  .catalog-filter {
+    justify-content: space-between;
+  }
+
+  .catalog-filter select {
+    min-width: 0;
+    flex: 1;
+    max-width: 230px;
   }
 
   .movie-catalog-back {

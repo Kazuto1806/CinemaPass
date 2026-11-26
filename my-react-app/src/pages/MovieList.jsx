@@ -66,12 +66,38 @@ function MovieList() {
   const navigate = useNavigate();
 
   const [movies, setMovies] = useState([]);
+  const [genreFilter, setGenreFilter] = useState({ type, genre: "" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const isNowShowing = type === "now-showing";
   const isComingSoon = type === "coming-soon";
   const validType = isNowShowing || isComingSoon;
+  const selectedGenre = genreFilter.type === type ? genreFilter.genre : "";
+
+  const genres = [
+    ...new Map(
+      movies
+        .flatMap((movie) =>
+          String(movie.genre ?? "")
+            .split(",")
+            .map((genre) => genre.trim())
+            .filter(Boolean)
+        )
+        .map((genre) => [genre.toLowerCase(), genre])
+    ).values(),
+  ].sort((a, b) => a.localeCompare(b, "vi"));
+
+  const filteredMovies = selectedGenre
+    ? movies.filter((movie) =>
+        String(movie.genre ?? "")
+          .split(",")
+          .some(
+            (genre) =>
+              genre.trim().toLowerCase() === selectedGenre.toLowerCase()
+          )
+      )
+    : movies;
 
   useEffect(() => {
     let cancelled = false;
@@ -180,17 +206,43 @@ function MovieList() {
           <p>Vui lòng quay lại sau.</p>
         </div>
       ) : (
-        <div className="catalog-grid">
-          {movies.map((movie) => (
-            <div
-              className="catalog-card"
-              key={movie.movieId ?? movie.MovieId ?? movie.title}
+        <>
+          <div className="catalog-filter">
+            <label htmlFor="movie-genre-filter">Thể loại</label>
+            <select
+              id="movie-genre-filter"
+              value={selectedGenre}
+              onChange={(event) =>
+                setGenreFilter({ type, genre: event.target.value })
+              }
             >
-              <MovieCard movie={movie} />
+              <option value="">Tất cả thể loại</option>
+              {genres.map((genre) => (
+                <option key={genre} value={genre}>
+                  {genre}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {filteredMovies.length === 0 ? (
+            <p className="catalog-message">
+              Không có phim thuộc thể loại này.
+            </p>
+          ) : (
+            <div className="catalog-grid">
+              {filteredMovies.map((movie) => (
+                <div
+                  className="catalog-card"
+                  key={movie.movieId ?? movie.MovieId ?? movie.title}
+                >
+                  <MovieCard movie={movie} />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )      }
+          )}
+        </>
+      )}
     </main>  );
 }
 
