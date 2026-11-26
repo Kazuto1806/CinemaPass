@@ -257,7 +257,10 @@ export default function PaymentAdmin() {
         );
       }
 
-      notify("Cập nhật thanh toán thành công.", "success");
+      notify(
+        data.message || "Cập nhật thanh toán thành công.",
+        data.emailSent === false ? "warning" : "success"
+      );
 
       setSelectedTicket(null);
 

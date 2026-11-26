@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Security.Claims;
 using CinemaBackend.Data;
 using CinemaBackend.Models;
+using CinemaBackend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -56,10 +57,17 @@ namespace CinemaBackend.Controllers
     public class TicketsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly ITicketEmailService _ticketEmailService;
+        private readonly ILogger<TicketsController> _logger;
 
-        public TicketsController(AppDbContext context)
+        public TicketsController(
+            AppDbContext context,
+            ITicketEmailService ticketEmailService,
+            ILogger<TicketsController> logger)
         {
             _context = context;
+            _ticketEmailService = ticketEmailService;
+            _logger = logger;
         }
 
         private static DateTime GetVietnamNow()
@@ -965,6 +973,8 @@ namespace CinemaBackend.Controllers
                 });
             }
 
+            var wasAlreadyPaid = ticket.PaymentStatus == "Đã thanh toán";
+
             var allowedStatuses = new[]
             {
                 "Chưa thanh toán",
@@ -1017,13 +1027,39 @@ namespace CinemaBackend.Controllers
 
             await _context.SaveChangesAsync();
 
+            bool? emailSent = null;
+            var responseMessage = "Cập nhật thanh toán thành công.";
+
+            if (paymentStatus == "Đã thanh toán" && !wasAlreadyPaid)
+            {
+                try
+                {
+                    await _ticketEmailService.SendPaidTicketAsync(ticket.TicketId);
+                    emailSent = true;
+                    responseMessage =
+                        "Cập nhật thanh toán thành công và đã gửi mã vé qua email.";
+                }
+                catch (TicketEmailException exception)
+                {
+                    _logger.LogError(
+                        exception,
+                        "Không gửi được email vé cho TicketId {TicketId}.",
+                        ticket.TicketId);
+                    emailSent = false;
+                    responseMessage =
+                        "Đã xác nhận thanh toán nhưng chưa gửi được email vé. " +
+                        "Hãy kiểm tra cấu hình Gmail SMTP.";
+                }
+            }
+
             return Ok(new
             {
-                message = "Cập nhật thanh toán thành công.",
+                message = responseMessage,
                 ticketId = ticket.TicketId,
                 paymentStatus = ticket.PaymentStatus,
                 paymentMethod = ticket.PaymentMethod,
-                paymentTransactionId = ticket.PaymentTransactionId
+                paymentTransactionId = ticket.PaymentTransactionId,
+                emailSent
             });
         }
 
