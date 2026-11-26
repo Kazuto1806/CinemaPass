@@ -17,6 +17,12 @@ import { authenticatedFetch as fetch } from "../../utils/apiFetch";
 import "./MovieAdmin.css";
 
 const API_URL = `${API_BASE}/api/movies`;
+const MOVIES_PER_PAGE = 10;
+const getMovieGenres = (genre) =>
+  String(genre ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 
 // =====================================================
 // LẤY ẢNH TRONG SRC/ASSETS
@@ -96,6 +102,9 @@ function MovieAdmin() {
   const [movies, setMovies] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [genreFilter, setGenreFilter] = useState("all");
+  const [ageRatingFilter, setAgeRatingFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [editingMovie, setEditingMovie] = useState(null);
   const [previewPoster, setPreviewPoster] = useState(null);
@@ -530,6 +539,22 @@ function MovieAdmin() {
   // TÌM KIẾM
   // =====================================================
 
+  const genreOptions = [
+    ...new Map(
+      movies
+        .flatMap((movie) => getMovieGenres(movie.genre))
+        .map((genre) => [genre.toLowerCase(), genre])
+    ).values(),
+  ].sort((a, b) => a.localeCompare(b, "vi"));
+  const ageRatingOptions = [
+    ...new Map(
+      movies.map((movie) => {
+        const ageRating = String(movie.ageRating || "P").trim();
+        return [ageRating.toLowerCase(), ageRating];
+      })
+    ).values(),
+  ].sort((a, b) => a.localeCompare(b, "vi"));
+
   const filteredMovies = movies.filter((movie) => {
     const keyword = search.toLowerCase().trim();
 
@@ -539,9 +564,31 @@ function MovieAdmin() {
       movie.director?.toLowerCase().includes(keyword)
     );
 
-    return matchesSearch &&
-      (statusFilter === "all" || movie.status === statusFilter);
+    const matchesGenre =
+      genreFilter === "all" ||
+      getMovieGenres(movie.genre).some(
+        (genre) => genre.toLowerCase() === genreFilter.toLowerCase()
+      );
+    const ageRating = String(movie.ageRating || "P").trim();
+    const matchesAgeRating =
+      ageRatingFilter === "all" ||
+      ageRating.toLowerCase() === ageRatingFilter.toLowerCase();
+
+    return (
+      matchesSearch &&
+      (statusFilter === "all" || movie.status === statusFilter) &&
+      matchesGenre &&
+      matchesAgeRating
+    );
   });
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredMovies.length / MOVIES_PER_PAGE)
+  );
+  const displayedMovies = filteredMovies.slice(
+    (Math.min(currentPage, totalPages) - 1) * MOVIES_PER_PAGE,
+    Math.min(currentPage, totalPages) * MOVIES_PER_PAGE
+  );
 
   // =====================================================
   // FORMAT NGÀY
@@ -599,7 +646,10 @@ function MovieAdmin() {
             type="text"
             placeholder="Tìm kiếm phim..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setCurrentPage(1);
+              setSearch(e.target.value);
+            }}
           />
         </div>
 
@@ -607,12 +657,49 @@ function MovieAdmin() {
           className="admin-filter-select"
           aria-label="Lọc phim theo trạng thái"
           value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
+          onChange={(event) => {
+            setCurrentPage(1);
+            setStatusFilter(event.target.value);
+          }}
         >
           <option value="all">Tất cả trạng thái</option>
           <option value="NowShowing">Đang chiếu</option>
           <option value="ComingSoon">Sắp chiếu</option>
           <option value="Ended">Đã kết thúc</option>
+        </select>
+
+        <select
+          className="admin-filter-select"
+          aria-label="Lọc phim theo thể loại"
+          value={genreFilter}
+          onChange={(event) => {
+            setCurrentPage(1);
+            setGenreFilter(event.target.value);
+          }}
+        >
+          <option value="all">Tất cả thể loại</option>
+          {genreOptions.map((genre) => (
+            <option key={genre} value={genre}>
+              {genre}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="admin-filter-select"
+          aria-label="Lọc phim theo độ tuổi"
+          value={ageRatingFilter}
+          onChange={(event) => {
+            setCurrentPage(1);
+            setAgeRatingFilter(event.target.value);
+          }}
+        >
+          <option value="all">Tất cả độ tuổi</option>
+          {ageRatingOptions.map((ageRating) => (
+            <option key={ageRating} value={ageRating}>
+              {ageRating}
+            </option>
+          ))}
         </select>
 
         <div className="movie-count">
@@ -647,9 +734,9 @@ function MovieAdmin() {
                 </td>
               </tr>
             ) : filteredMovies.length > 0 ? (
-              filteredMovies.map((movie, index) => (
+              displayedMovies.map((movie, index) => (
                 <tr key={movie.movieId}>
-                  <td>{index + 1}</td>
+                  <td>{(Math.min(currentPage, totalPages) - 1) * MOVIES_PER_PAGE + index + 1}</td>
                   <td>
                     <div className="movie-name-cell">
                       {movie.posterUrl ? (
@@ -734,6 +821,30 @@ function MovieAdmin() {
           </tbody>
         </table>
       </div>
+
+      {!loading && totalPages > 1 && (
+        <nav className="movie-pagination" aria-label="Phân trang danh sách phim">
+          <button
+            type="button"
+            onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+            disabled={currentPage <= 1}
+          >
+            Trước
+          </button>
+          <span>
+            Trang {Math.min(currentPage, totalPages)} / {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() =>
+              setCurrentPage((page) => Math.min(totalPages, page + 1))
+            }
+            disabled={currentPage >= totalPages}
+          >
+            Sau
+          </button>
+        </nav>
+      )}
 
       {previewPoster && (
         <div
