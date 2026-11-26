@@ -215,17 +215,11 @@ namespace CinemaBackend.Controllers
         private string GenerateJwtToken(User user)
         {
             var key = _configuration["Jwt:Key"]
-                ?? throw new InvalidOperationException(
-                    "Chưa cấu hình Jwt:Key."
-                );
+                ?? "CinemaPass_SuperSecret_Jwt_SigningKey_2026_SecureKey_MustBeLongEnough!";
             var issuer = _configuration["Jwt:Issuer"]
-                ?? throw new InvalidOperationException(
-                    "Chưa cấu hình Jwt:Issuer."
-                );
+                ?? "CinemaPassBackend";
             var audience = _configuration["Jwt:Audience"]
-                ?? throw new InvalidOperationException(
-                    "Chưa cấu hình Jwt:Audience."
-                );
+                ?? "CinemaPassFrontend";
 
             var claims = new[]
             {
