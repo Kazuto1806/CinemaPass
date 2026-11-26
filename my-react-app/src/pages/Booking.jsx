@@ -273,10 +273,17 @@ const [ticketTypeQuantities, setTicketTypeQuantities] = useState({});
         }
 
         const normalizedMovies = Array.isArray(movieData)
-          ? movieData.map((movie) => ({
-              ...movie,
-              posterUrl: getPosterUrl(movie.posterUrl),
-            }))
+          ? movieData
+              .filter(
+                (movie) =>
+                  String(movie.status ?? movie.Status ?? "")
+                    .trim()
+                    .toLowerCase() !== "ended"
+              )
+              .map((movie) => ({
+                ...movie,
+                posterUrl: getPosterUrl(movie.posterUrl),
+              }))
           : [];
 
         const normalizedTicketTypes = Array.isArray(ticketTypeData)

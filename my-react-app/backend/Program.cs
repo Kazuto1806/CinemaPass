@@ -24,6 +24,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpClient<TmdbService>();
 builder.Services.AddScoped<ITicketEmailService, TicketEmailService>();
+builder.Services.AddHostedService<MovieReleaseEndBackgroundService>();
 
 builder.Services.AddControllers();
 

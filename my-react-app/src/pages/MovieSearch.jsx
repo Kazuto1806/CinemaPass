@@ -88,11 +88,19 @@ function MovieSearch() {
         .trim()
         .toLowerCase();
 
+    const availableMovies = movies.filter((movie) => {
+      const status = String(movie.status ?? movie.Status ?? "")
+        .trim()
+        .toLowerCase();
+
+      return status === "nowshowing" || status === "comingsoon";
+    });
+
     if (!search) {
-      return movies;
+      return availableMovies;
     }
 
-    return movies.filter((movie) => {
+    return availableMovies.filter((movie) => {
       const title =
         movie.title?.toLowerCase() || "";
 

@@ -239,6 +239,13 @@ function MovieDetail() {
           throw new Error("Không tìm thấy bộ phim");
         }
 
+        if (
+          String(movieData.status ?? movieData.Status ?? "")
+            .trim()
+            .toLowerCase() === "ended"
+        ) {
+          throw new Error("Không tìm thấy bộ phim");
+        }
 
         setMovie({
           ...movieData,
