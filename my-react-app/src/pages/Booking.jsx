@@ -234,7 +234,6 @@ const [ticketTypeQuantities, setTicketTypeQuantities] = useState({});
   const [bookingStep, setBookingStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState("qr");
   const [paymentLoading, setPaymentLoading] = useState(false);
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingResult, setBookingResult] = useState(null);
 
@@ -1023,7 +1022,7 @@ const toggleSeat = async (seat) => {
   };
 
   // Gửi từng ghế cùng loại vé và giá tương ứng đến backend.
-  const handleBooking = async () => {
+  const handleBooking = async (confirmTestPayment = false) => {
     if (redirectToLogin()) return;
 
     if (!selectedShowtime) {
@@ -1042,14 +1041,6 @@ const toggleSeat = async (seat) => {
       )
     ) {
       notify("Vui lòng chọn loại vé cho từng ghế.", "warning");
-      return;
-    }
-
-    if (!paymentConfirmed) {
-      notify(
-        "Vui lòng xác nhận bạn đã thanh toán trước khi tiếp tục.",
-        "warning"
-      );
       return;
     }
 
@@ -1084,6 +1075,8 @@ const toggleSeat = async (seat) => {
 
           ticketPrice: Number(ticketUnitPrice),
           ticketTypeId: Number(selectedTicketTypeId),
+          confirmTestPayment,
+          paymentMethod,
         }),
       });
 
@@ -1097,6 +1090,7 @@ const toggleSeat = async (seat) => {
       setBookingResult({
   ...data,
   totalPrice: totalPrice,
+  paymentConfirmationMessage: data.message,
   bookedSeats: data.bookedSeats?.length
     ? data.bookedSeats
     : [...selectedSeats],
@@ -1172,7 +1166,8 @@ setBookingSuccess(true);
           <h1>Đặt vé thành công!</h1>
 
           <p className="success-message">
-            Vé của bạn đã được xác nhận.
+            {bookingResult?.paymentConfirmationMessage ||
+              "Vé của bạn đã được xác nhận."}
           </p>
 
           <div className="success-ticket success-ticket-layout">
@@ -1775,7 +1770,6 @@ setBookingSuccess(true);
                       }`}
                       onClick={() => {
                         setPaymentMethod("qr");
-                        setPaymentConfirmed(false);
                       }}
                     >
                       <div className="payment-method-icon">
@@ -1801,7 +1795,6 @@ setBookingSuccess(true);
                       }`}
                       onClick={() => {
                         setPaymentMethod("card");
-                        setPaymentConfirmed(false);
                       }}
                     >
                       <div className="payment-method-icon">
@@ -1827,7 +1820,6 @@ setBookingSuccess(true);
                       }`}
                       onClick={() => {
                         setPaymentMethod("wallet");
-                        setPaymentConfirmed(false);
                       }}
                     >
                       <div className="payment-method-icon">
@@ -1900,26 +1892,13 @@ setBookingSuccess(true);
 
                 <button
                   type="button"
-                  className="payment-confirmed-btn"
-                  onClick={() => setPaymentConfirmed(true)}
-                  disabled={paymentConfirmed}
-                >
-                  {paymentConfirmed
-                    ? "✓ Đã xác nhận thanh toán"
-                    : "Tôi đã thanh toán"}
-                </button>
-
-                <button
-                  type="button"
                   className="payment-submit-btn"
-                  onClick={handleBooking}
-                  disabled={paymentLoading || !paymentConfirmed}
+                  onClick={() => handleBooking(true)}
+                  disabled={paymentLoading}
                 >
                   {paymentLoading
-                    ? "Đang xử lý thanh toán..."
-                    : !paymentConfirmed
-                      ? "Xác nhận thanh toán trước"
-                      : `Hoàn tất đặt vé • ${currency(totalPrice)}`}
+                    ? "Đang xác nhận thanh toán..."
+                    : `Tôi đã thanh toán • ${currency(totalPrice)}`}
                 </button>
               </div>
 

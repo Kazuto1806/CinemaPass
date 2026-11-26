@@ -33,6 +33,8 @@ namespace CinemaBackend.Controllers
         public int? TicketTypeId { get; set; }
 
         public string HoldToken { get; set; } = string.Empty;
+        public bool ConfirmTestPayment { get; set; }
+        public string PaymentMethod { get; set; } = string.Empty;
     }
 
     public class PaymentRequest
@@ -59,15 +61,18 @@ namespace CinemaBackend.Controllers
         private readonly AppDbContext _context;
         private readonly ITicketEmailService _ticketEmailService;
         private readonly ILogger<TicketsController> _logger;
+        private readonly IConfiguration _configuration;
 
         public TicketsController(
             AppDbContext context,
             ITicketEmailService ticketEmailService,
-            ILogger<TicketsController> logger)
+            ILogger<TicketsController> logger,
+            IConfiguration configuration)
         {
             _context = context;
             _ticketEmailService = ticketEmailService;
             _logger = logger;
+            _configuration = configuration;
         }
 
         private static DateTime GetVietnamNow()
@@ -109,6 +114,41 @@ namespace CinemaBackend.Controllers
                 {
                     message = "Dữ liệu đặt vé không hợp lệ."
                 });
+            }
+
+            string? paymentMethodLabel = null;
+            if (request.ConfirmTestPayment)
+            {
+                if (!_configuration.GetValue<bool>(
+                        "Payments:AllowTestPaymentConfirmation"))
+                {
+                    return StatusCode(
+                        StatusCodes.Status403Forbidden,
+                        new
+                        {
+                            message =
+                                "Xác nhận thanh toán thử đang tắt. " +
+                                "Hãy bật Payments__AllowTestPaymentConfirmation " +
+                                "ở cấu hình backend để kiểm thử."
+                        });
+                }
+
+                paymentMethodLabel =
+                    request.PaymentMethod?.Trim().ToLowerInvariant() switch
+                    {
+                        "qr" => "QR",
+                        "card" => "Thẻ",
+                        "wallet" => "Ví điện tử",
+                        _ => null
+                    };
+
+                if (paymentMethodLabel == null)
+                {
+                    return BadRequest(new
+                    {
+                        message = "Phương thức thanh toán thử không hợp lệ."
+                    });
+                }
             }
 
             if (!int.TryParse(
@@ -504,8 +544,12 @@ namespace CinemaBackend.Controllers
                         TicketTypeId = selectedTicketType.TicketTypeId,
                         TicketPrice = finalTicketPrice,
                         Status = "Đã đặt",
-                        PaymentStatus = "Chưa thanh toán",
-                        PaymentMethod = null,
+                        PaymentStatus = request.ConfirmTestPayment
+                            ? "Đã thanh toán"
+                            : "Chưa thanh toán",
+                        PaymentMethod = paymentMethodLabel == null
+                            ? null
+                            : $"Kiểm thử - {paymentMethodLabel}",
                         PaymentTransactionId = null,
                         CreatedAt = GetVietnamNow()
                     };
@@ -530,6 +574,38 @@ namespace CinemaBackend.Controllers
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                bool? emailSent = null;
+                var responseMessage = "Đặt vé thành công.";
+
+                if (request.ConfirmTestPayment)
+                {
+                    emailSent = true;
+                    responseMessage =
+                        "Đặt vé thành công và đã xác nhận thanh toán thử.";
+
+                    foreach (var ticket in createdTickets)
+                    {
+                        try
+                        {
+                            await _ticketEmailService.SendPaidTicketAsync(
+                                ticket.TicketId);
+                        }
+                        catch (TicketEmailException exception)
+                        {
+                            _logger.LogError(
+                                exception,
+                                "Không gửi được email vé cho TicketId {TicketId}.",
+                                ticket.TicketId);
+                            emailSent = false;
+                        }
+                    }
+
+                    responseMessage = emailSent.Value
+                        ? "Thanh toán thử thành công, mã vé đã được gửi qua email."
+                        : "Đã xác nhận thanh toán thử nhưng chưa gửi được email vé. " +
+                            "Hãy kiểm tra cấu hình Gmail SMTP.";
+                }
 
                 // Trả về thông tin thực tế của từng vé vừa tạo.
                 var createdTicketResults = createdTickets
@@ -559,13 +635,16 @@ namespace CinemaBackend.Controllers
 
                 return Ok(new
                 {
-                    message = "Đặt vé thành công",
+                    message = responseMessage,
                     bookedSeats = normalizedSeatCodes,
                     tickets = createdTicketResults,
                     showtimeId = request.ShowtimeId,
                     totalTickets = createdTickets.Count,
                     totalPrice = totalPrice,
-                    paymentStatus = "Chưa thanh toán"
+                    paymentStatus = request.ConfirmTestPayment
+                        ? "Đã thanh toán"
+                        : "Chưa thanh toán",
+                    emailSent
                 });
             }
             catch (DbUpdateException)
