@@ -256,9 +256,304 @@
    CINEMA / SHOWTIMES
 ========================================================= */
 
+/* Bộ lọc chọn Rạp */
+/* =========================================================
+   BƯỚC 1 & BƯỚC 2: CHỌN LỊCH VÀ CHỌN RẠP
+========================================================= */
+
+.booking-step-block {
+  margin-bottom: 22px;
+}
+
+.booking-step-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: 0.2px;
+}
+
+.step-num-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+}
+
+.step-icon {
+  color: #a78bfa;
+  font-size: 14px;
+}
+
+/* Dropdown Chọn rạp chiếu */
+.cinema-dropdown-container {
+  position: relative;
+  width: 100%;
+}
+
+.cinema-dropdown-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  color: #f8fafc;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.cinema-dropdown-trigger:hover,
+.cinema-dropdown-trigger.open {
+  border-color: #a78bfa;
+  background: rgba(30, 41, 59, 0.85);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.22);
+}
+
+.cinema-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cinema-trigger-left .cinema-marker-icon {
+  color: #ec4899;
+  font-size: 18px;
+}
+
+.cinema-trigger-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.cinema-trigger-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cinema-count-badge {
+  background: rgba(168, 85, 247, 0.16);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #d8b4fe;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.cinema-arrow {
+  color: #94a3b8;
+  font-size: 13px;
+  transition: transform 0.25s ease;
+}
+
+.cinema-arrow.rotate {
+  transform: rotate(180deg);
+  color: #a78bfa;
+}
+
+/* Backdrop đóng khi bấm ra ngoài */
+.cinema-dropdown-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99;
+}
+
+/* Danh sách menu dropdown các rạp */
+.cinema-dropdown-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: #111827;
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 14px;
+  padding: 8px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), 0 0 20px rgba(139, 92, 246, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: dropdownSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dropdownSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cinema-dropdown-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+}
+
+.cinema-dropdown-option:hover {
+  background: rgba(139, 92, 246, 0.15);
+  color: #ffffff;
+  border-color: rgba(139, 92, 246, 0.25);
+  transform: translateX(4px);
+}
+
+.cinema-dropdown-option.selected {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(168, 85, 247, 0.25));
+  border-color: rgba(168, 85, 247, 0.5);
+  color: #ffffff;
+}
+
+.cinema-option-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.option-marker {
+  color: #ec4899;
+  font-size: 15px;
+}
+
+.option-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.option-selected-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  padding: 3px 9px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .booking-showtime-group {
   display: grid;
   gap: 18px;
+}
+
+/* Thẻ Rạp Chiếu Hiện Đại */
+.cinema-block-modern {
+  padding: 20px;
+  border: 1px solid rgba(181, 197, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.55);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  transition: border-color 0.2s ease;
+}
+
+.cinema-block-modern:hover {
+  border-color: rgba(167, 139, 250, 0.3);
+}
+
+.cinema-header-modern {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cinema-header-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f1f5f9;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.cinema-marker-icon {
+  color: #a78bfa;
+  font-size: 15px;
+}
+
+.cinema-header-badge {
+  background: rgba(139, 92, 246, 0.16);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: #c4b5fd;
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.cinema-rooms-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cinema-room-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.room-info-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-format-badge {
+  background: rgba(59, 130, 246, 0.18);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  letter-spacing: 0.5px;
+}
+
+.room-name-text {
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .cinema-block {

@@ -25,7 +25,7 @@ if not exist "%NODE_DIR%\npm.cmd" (
 set "PATH=%NODE_DIR%;%PATH%"
 
 echo [1/2] Starting ASP.NET Core Backend...
-start "Cinema Backend" cmd /k "cd /d %~dp0backend && dotnet run --urls http://localhost:5000"
+start "Cinema Backend" cmd /k "cd /d %~dp0backend && dotnet run --urls http://localhost:5050"
 
 echo.
 echo [2/2] Starting React Frontend...
@@ -35,12 +35,11 @@ echo.
 echo ==============================
 echo START COMMANDS SENT
 echo ==============================
-echo Backend:  http://localhost:5000
-echo Swagger:  http://localhost:5000/swagger
+echo Backend:  http://localhost:5050
+echo Swagger:  http://localhost:5050/swagger
 echo Frontend: http://localhost:5173
 echo.
 
-t
 timeout /t 5 /nobreak >nul
 
 start "" http://localhost:5173

@@ -6,6 +6,7 @@ import {
   FaCalendarAlt,
   FaChair,
   FaChevronLeft,
+  FaChevronDown,
   FaClock,
   FaMapMarkerAlt,
   FaTicketAlt,
@@ -196,6 +197,13 @@ function Booking() {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedCinema, setSelectedCinema] = useState("");
+  const [selectedShowtimeId, setSelectedShowtimeId] = useState(
+    Number.isInteger(selectedShowtimeIdFromUrl) && selectedShowtimeIdFromUrl > 0
+      ? selectedShowtimeIdFromUrl
+      : null
+  );
+  const [cinemaFilter, setCinemaFilter] = useState("all");
+  const [isCinemaDropdownOpen, setIsCinemaDropdownOpen] = useState(false);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [holdExpiresAt, setHoldExpiresAt] = useState(null);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
@@ -430,52 +438,142 @@ const [ticketTypeQuantities, setTicketTypeQuantities] = useState({});
     );
   }, [dates, movieShowtimes, selectedShowtimeIdFromUrl]);
 
-  const timeOptions = useMemo(() => {
+  // Danh sách các rạp chiếu có suất chiếu trong ngày đã chọn
+  const cinemaOptionsForDate = useMemo(() => {
     if (!selectedDate) return [];
 
     const filtered = movieShowtimes.filter(
       (item) => String(item.showDate).slice(0, 10) === selectedDate
     );
 
-    const grouped = filtered.reduce((acc, item) => {
-      const key = `${item.cinemaName || "Cinema"}-${
-        item.roomName || "Phòng"
-      }`;
+    const map = new Map();
+    filtered.forEach((item) => {
+      const name = item.cinemaName || "Cinema Pass";
+      if (!map.has(name)) {
+        map.set(name, {
+          cinemaId: item.cinemaId,
+          cinemaName: name,
+        });
+      }
+    });
 
-      if (!acc[key]) {
-        acc[key] = {
-          cinemaName: item.cinemaName || "Cinema Pass",
-          roomName: item.roomName || "Phòng chiếu",
+    return Array.from(map.values());
+  }, [movieShowtimes, selectedDate]);
+
+  // Nhóm suất chiếu theo từng Rạp, sau đó theo từng Phòng chiếu
+  const cinemaShowtimeGroups = useMemo(() => {
+    if (!selectedDate) return [];
+
+    const filtered = movieShowtimes.filter(
+      (item) => String(item.showDate).slice(0, 10) === selectedDate
+    );
+
+    const byCinema = {};
+
+    filtered.forEach((item) => {
+      const cName = item.cinemaName || "Cinema Pass";
+
+      if (!byCinema[cName]) {
+        byCinema[cName] = {
+          cinemaName: cName,
+          cinemaId: item.cinemaId,
+          rooms: {},
+        };
+      }
+
+      const rName = item.roomName || "Phòng chiếu";
+
+      if (!byCinema[cName].rooms[rName]) {
+        byCinema[cName].rooms[rName] = {
+          roomName: rName,
+          roomId: item.roomId,
           times: [],
         };
       }
 
-      acc[key].times.push({
+      byCinema[cName].rooms[rName].times.push({
         showtimeId: item.showtimeId,
         time: formatTime(item.startTime),
-        price: item.ticketPrice,
         endTime: formatTime(item.endTime),
+        price: item.ticketPrice,
       });
+    });
 
-      return acc;
-    }, {});
-
-    return Object.values(grouped).map((group) => ({
-      ...group,
-      times: group.times.sort((a, b) =>
-        a.time.localeCompare(b.time)
-      ),
+    return Object.values(byCinema).map((cinemaGroup) => ({
+      ...cinemaGroup,
+      rooms: Object.values(cinemaGroup.rooms).map((roomGroup) => ({
+        ...roomGroup,
+        times: roomGroup.times.sort((a, b) => a.time.localeCompare(b.time)),
+      })),
     }));
   }, [movieShowtimes, selectedDate]);
 
+  // Lọc theo rạp đang chọn (hoặc tất cả rạp)
+  const displayedCinemaGroups = useMemo(() => {
+    if (cinemaFilter === "all") {
+      return cinemaShowtimeGroups;
+    }
+    return cinemaShowtimeGroups.filter(
+      (g) => g.cinemaName === cinemaFilter
+    );
+  }, [cinemaShowtimeGroups, cinemaFilter]);
+
+  // Rạp chiếu hiện tại đang được chọn
+  const activeCinemaGroup = useMemo(() => {
+    if (!cinemaShowtimeGroups.length) return null;
+    return (
+      cinemaShowtimeGroups.find((g) => g.cinemaName === selectedCinema) ||
+      cinemaShowtimeGroups[0] ||
+      null
+    );
+  }, [cinemaShowtimeGroups, selectedCinema]);
+
+  const handleSelectCinema = (cinemaName) => {
+    setSelectedCinema(cinemaName);
+    setIsCinemaDropdownOpen(false);
+
+    const cinemaGrp = cinemaShowtimeGroups.find(
+      (g) => g.cinemaName === cinemaName
+    );
+    const firstSlot = cinemaGrp?.rooms?.[0]?.times?.[0];
+    if (firstSlot) {
+      setSelectedTime(firstSlot.time);
+      setSelectedShowtimeId(firstSlot.showtimeId);
+    } else {
+      setSelectedTime("");
+      setSelectedShowtimeId(null);
+    }
+  };
+
+  // Giữ timeOptions cho tương thích các luồng khác nếu có
+  const timeOptions = useMemo(() => {
+    return cinemaShowtimeGroups.flatMap((g) =>
+      g.rooms.map((r) => ({
+        cinemaName: g.cinemaName,
+        roomName: r.roomName,
+        times: r.times,
+      }))
+    );
+  }, [cinemaShowtimeGroups]);
+
+  // Tự động điều chỉnh rạp filter nếu ngày đổi
   useEffect(() => {
-    if (!timeOptions.length) {
+    if (
+      cinemaFilter !== "all" &&
+      !cinemaOptionsForDate.some((c) => c.cinemaName === cinemaFilter)
+    ) {
+      setCinemaFilter("all");
+    }
+  }, [cinemaOptionsForDate, cinemaFilter]);
+
+  useEffect(() => {
+    if (!cinemaShowtimeGroups.length) {
       setSelectedCinema("");
       setSelectedTime("");
       return;
     }
 
-    const firstGroup = timeOptions[0];
+    const firstGroup = cinemaShowtimeGroups[0];
 
     const requestedShowtime = movieShowtimes.find(
       (item) =>
@@ -487,11 +585,11 @@ const [ticketTypeQuantities, setTicketTypeQuantities] = useState({});
 
     const preferredCinema =
       requestedCinema &&
-      timeOptions.some((group) => group.cinemaName === requestedCinema)
+      cinemaShowtimeGroups.some((group) => group.cinemaName === requestedCinema)
         ? requestedCinema
         : "";
 
-    const currentCinemaIsAvailable = timeOptions.some(
+    const currentCinemaIsAvailable = cinemaShowtimeGroups.some(
       (group) => group.cinemaName === selectedCinema
     );
 
@@ -502,10 +600,12 @@ const [ticketTypeQuantities, setTicketTypeQuantities] = useState({});
     setSelectedCinema(nextCinema);
 
     const currentGroup =
-      timeOptions.find((group) => group.cinemaName === nextCinema) ||
+      cinemaShowtimeGroups.find((group) => group.cinemaName === nextCinema) ||
       firstGroup;
 
-    const firstTime = currentGroup?.times[0]?.time || "";
+    const allTimesInGroup =
+      currentGroup?.rooms?.flatMap((r) => r.times) || [];
+    const firstTime = allTimesInGroup[0]?.time || "";
 
     const requestedTime = requestedShowtime
       ? formatTime(requestedShowtime.startTime)
@@ -513,9 +613,9 @@ const [ticketTypeQuantities, setTicketTypeQuantities] = useState({});
 
     setSelectedTime((value) =>
       requestedTime &&
-      currentGroup?.times.some((item) => item.time === requestedTime)
+      allTimesInGroup.some((item) => item.time === requestedTime)
         ? requestedTime
-        : currentGroup?.times.some((item) => item.time === value)
+        : allTimesInGroup.some((item) => item.time === value)
           ? value
           : firstTime
     );
@@ -524,12 +624,22 @@ const [ticketTypeQuantities, setTicketTypeQuantities] = useState({});
     selectedCinema,
     selectedDate,
     selectedShowtimeIdFromUrl,
-    timeOptions,
+    cinemaShowtimeGroups,
   ]);
 
   const selectedShowtime = useMemo(() => {
     if (!selectedDate || !selectedCinema || !selectedTime) {
       return null;
+    }
+
+    if (selectedShowtimeId) {
+      const directMatch = movieShowtimes.find(
+        (item) =>
+          Number(item.showtimeId) === Number(selectedShowtimeId) &&
+          String(item.showDate).slice(0, 10) === selectedDate &&
+          (item.cinemaName || "Cinema Pass") === selectedCinema
+      );
+      if (directMatch) return directMatch;
     }
 
     const requestedShowtime = movieShowtimes.find(
@@ -554,6 +664,7 @@ const [ticketTypeQuantities, setTicketTypeQuantities] = useState({});
     movieShowtimes,
     selectedCinema,
     selectedDate,
+    selectedShowtimeId,
     selectedShowtimeIdFromUrl,
     selectedTime,
   ]);
@@ -1385,72 +1496,161 @@ setBookingSuccess(true);
                   <h2>Chọn suất chiếu</h2>
                 </div>
 
-                <div className="booking-date-list">
-                  {dates.length ? (
-                    dates.map((date) => (
-                      <button
-                        key={date}
-                        type="button"
-                        className={`date-button ${
-                          selectedDate === date ? "active" : ""
-                        }`}
-                        onClick={() => setSelectedDate(date)}
-                      >
-                        {formatDate(date)}
-                      </button>
-                    ))
-                  ) : (
-                    <p className="booking-empty-text">
-                      Hiện chưa có suất chiếu cho phim này.
-                    </p>
-                  )}
+                {/* Bước 1: Lịch chiếu */}
+                <div className="booking-step-block">
+                  <div className="booking-step-title">
+                    <span className="step-num-badge">1</span>
+                    <FaCalendarAlt className="step-icon" />
+                    <span>Lịch chiếu</span>
+                  </div>
+
+                  <div className="booking-date-list">
+                    {dates.length ? (
+                      dates.map((date) => (
+                        <button
+                          key={date}
+                          type="button"
+                          className={`date-button ${
+                            selectedDate === date ? "active" : ""
+                          }`}
+                          onClick={() => {
+                            setSelectedDate(date);
+                            setIsCinemaDropdownOpen(false);
+                          }}
+                        >
+                          {formatDate(date)}
+                        </button>
+                      ))
+                    ) : (
+                      <p className="booking-empty-text">
+                        Hiện chưa có suất chiếu cho phim này.
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                <div className="booking-showtime-group">
-                  {timeOptions.length ? (
-                    timeOptions.map((group) => (
-                      <div
-                        key={`${group.cinemaName}-${group.roomName}`}
-                        className="cinema-block"
+                {/* Bước 2: Chọn rạp */}
+                {cinemaOptionsForDate.length > 0 && (
+                  <div className="booking-step-block">
+                    <div className="booking-step-title">
+                      <span className="step-num-badge">2</span>
+                      <FaMapMarkerAlt className="step-icon" />
+                      <span>Chọn rạp chiếu</span>
+                    </div>
+
+                    <div className="cinema-dropdown-container">
+                      <button
+                        type="button"
+                        className={`cinema-dropdown-trigger ${isCinemaDropdownOpen ? "open" : ""}`}
+                        onClick={() => setIsCinemaDropdownOpen((prev) => !prev)}
                       >
-                        <div className="cinema-header">
-                          <span>
-                            <FaMapMarkerAlt />
-                            {group.cinemaName}
+                        <div className="cinema-trigger-left">
+                          <FaMapMarkerAlt className="cinema-marker-icon" />
+                          <span className="cinema-trigger-text">
+                            {selectedCinema || activeCinemaGroup?.cinemaName || "Chọn rạp chiếu"}
                           </span>
-
-                          <small>{group.roomName}</small>
                         </div>
-
-                        <div className="time-list">
-                          {group.times.map((slot) => (
-                            <button
-                              key={`${group.cinemaName}-${slot.time}-${slot.showtimeId}`}
-                              type="button"
-                              className={`time-button ${
-                                selectedCinema === group.cinemaName &&
-                                selectedTime === slot.time
-                                  ? "active"
-                                  : ""
-                              }`}
-                              onClick={() => {
-                                setSelectedCinema(group.cinemaName);
-                                setSelectedTime(slot.time);
-                                setBookingStep(1);
-                              }}
-                            >
-                              <span>{slot.time}</span>
-                              <small>{currency(slot.price)}</small>
-                            </button>
-                          ))}
+                        <div className="cinema-trigger-right">
+                          <span className="cinema-count-badge">
+                            {cinemaOptionsForDate.length} rạp khả dụng
+                          </span>
+                          <FaChevronDown className={`cinema-arrow ${isCinemaDropdownOpen ? "rotate" : ""}`} />
                         </div>
+                      </button>
+
+                      {isCinemaDropdownOpen && (
+                        <>
+                          <div
+                            className="cinema-dropdown-backdrop"
+                            onClick={() => setIsCinemaDropdownOpen(false)}
+                          />
+                          <div className="cinema-dropdown-list">
+                            {cinemaOptionsForDate.map((c) => {
+                              const isSelected =
+                                (selectedCinema || activeCinemaGroup?.cinemaName) === c.cinemaName;
+                              return (
+                                <button
+                                  key={c.cinemaName}
+                                  type="button"
+                                  className={`cinema-dropdown-option ${isSelected ? "selected" : ""}`}
+                                  onClick={() => handleSelectCinema(c.cinemaName)}
+                                >
+                                  <div className="cinema-option-info">
+                                    <FaMapMarkerAlt className="option-marker" />
+                                    <span className="option-name">{c.cinemaName}</span>
+                                  </div>
+                                  {isSelected && (
+                                    <span className="option-selected-tag">
+                                      <FaCheckCircle /> Đang chọn
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Danh sách suất chiếu của rạp đã chọn */}
+                <div className="booking-showtime-group">
+                  {activeCinemaGroup ? (
+                    <div className="cinema-block-modern">
+                      <div className="cinema-header-modern">
+                        <div className="cinema-header-name">
+                          <FaMapMarkerAlt className="cinema-marker-icon" />
+                          <span>{activeCinemaGroup.cinemaName}</span>
+                        </div>
+                        <span className="cinema-header-badge">
+                          {activeCinemaGroup.rooms.length} phòng chiếu
+                        </span>
                       </div>
-                    ))
+
+                      <div className="cinema-rooms-container">
+                        {activeCinemaGroup.rooms.map((roomGroup) => (
+                          <div key={roomGroup.roomName} className="cinema-room-row">
+                            <div className="room-info-label">
+                              <span className="room-format-badge">2D Phụ Đề</span>
+                              <span className="room-name-text">{roomGroup.roomName}</span>
+                            </div>
+
+                            <div className="time-list">
+                              {roomGroup.times.map((slot) => {
+                                const isSelected =
+                                  (selectedShowtime?.showtimeId &&
+                                    selectedShowtime.showtimeId === slot.showtimeId) ||
+                                  (selectedCinema === activeCinemaGroup.cinemaName &&
+                                    selectedTime === slot.time);
+
+                                return (
+                                  <button
+                                    key={`${slot.showtimeId}-${slot.time}`}
+                                    type="button"
+                                    className={`time-button ${isSelected ? "active" : ""}`}
+                                    onClick={() => {
+                                      setSelectedCinema(activeCinemaGroup.cinemaName);
+                                      setSelectedTime(slot.time);
+                                      setSelectedShowtimeId(slot.showtimeId);
+                                      setBookingStep(1);
+                                    }}
+                                  >
+                                    <span>{slot.time}</span>
+                                    <small>{currency(slot.price)}</small>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   ) : (
                     <div className="booking-empty-state">
                       <FaClock />
                       <p>
-                        Chưa có suất chiếu phù hợp với ngày bạn chọn.
+                        Chưa có suất chiếu phù hợp với rạp bạn chọn.
                       </p>
                     </div>
                   )}

@@ -68,7 +68,7 @@ export default defineConfig(({ mode }) => {
   const apiBase = (
     env.VITE_API_URL ||
     (mode === 'development'
-      ? 'http://localhost:5000'
+      ? 'http://localhost:5050'
       : 'https://cinemapass.onrender.com')
   ).replace(/\/+$/, '')
 

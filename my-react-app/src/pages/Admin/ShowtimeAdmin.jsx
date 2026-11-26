@@ -7,6 +7,7 @@ import "./ShowtimeAdmin.css";
 const API_URL = `${API_BASE}/api/showtimes`;
 const MOVIE_API_URL = `${API_BASE}/api/movies`;
 const CINEMA_API_URL = `${API_BASE}/api/cinemas`;
+const ROOM_API_URL = `${API_BASE}/api/rooms`;
 const TICKET_TYPES_API_URL = `${API_BASE}/api/tickettypes`;
 
 // Chuẩn hóa trạng thái suất chiếu
@@ -124,6 +125,7 @@ function ShowtimeAdmin() {
   const [showtimes, setShowtimes] = useState([]);
   const [movies, setMovies] = useState([]);
   const [cinemas, setCinemas] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [ticketTypes, setTicketTypes] = useState([]);
 
   const [notification, setNotification] = useState({
@@ -166,6 +168,13 @@ function ShowtimeAdmin() {
     (ticketType) => !(isT18Movie && isChildTicket(ticketType))
   );
 
+  // Danh sách phòng chiếu theo rạp đang chọn
+  const availableRooms = rooms.filter(
+    (room) =>
+      Boolean(formData.cinemaId) &&
+      Number(room.cinemaId) === Number(formData.cinemaId)
+  );
+
   // Thông báo
   const showNotification = (
     type,
@@ -195,6 +204,7 @@ function ShowtimeAdmin() {
     loadShowtimes();
     loadMovies();
     loadCinemas();
+    loadRooms();
     loadTicketTypes();
 
     const refreshInterval = window.setInterval(loadShowtimes, 30000);
@@ -205,7 +215,9 @@ function ShowtimeAdmin() {
   // Tải danh sách suất chiếu
   const loadShowtimes = async () => {
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(`${API_URL}?_t=${Date.now()}`, {
+        cache: "no-store",
+      });
 
       if (!response.ok) {
         throw new Error("Không thể tải danh sách suất chiếu");
@@ -272,6 +284,28 @@ function ShowtimeAdmin() {
         "error",
         "Lỗi tải dữ liệu",
         "Không thể tải danh sách rạp"
+      );
+    }
+  };
+
+  // Tải danh sách phòng chiếu
+  const loadRooms = async () => {
+    try {
+      const response = await fetch(ROOM_API_URL);
+
+      if (!response.ok) {
+        throw new Error("Không thể tải danh sách phòng chiếu");
+      }
+
+      const data = await response.json();
+      setRooms(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error(error);
+
+      showNotification(
+        "error",
+        "Lỗi tải dữ liệu",
+        "Không thể tải danh sách phòng chiếu"
       );
     }
   };
@@ -397,9 +431,16 @@ function ShowtimeAdmin() {
         }))
       : [];
 
+    // Tìm rạp chiếu tương ứng với phòng hiện tại nếu showtime chưa có
+    const matchedRoom = rooms.find(
+      (r) => Number(r.roomId) === Number(showtime.roomId)
+    );
+    const resolvedCinemaId =
+      showtime.cinemaId || matchedRoom?.cinemaId || "";
+
     setFormData({
       movieId: showtime.movieId?.toString() || "",
-      cinemaId: showtime.cinemaId?.toString() || "",
+      cinemaId: resolvedCinemaId ? String(resolvedCinemaId) : "",
       roomId: showtime.roomId?.toString() || "",
       startTime: startDateTime,
       endTime:
@@ -429,6 +470,16 @@ function ShowtimeAdmin() {
         ...previous,
         [name]: value,
       };
+
+      // Khi đổi rạp, nếu phòng chiếu hiện tại không thuộc rạp mới thì reset phòng
+      if (name === "cinemaId") {
+        const currentRoom = rooms.find(
+          (r) => Number(r.roomId) === Number(previous.roomId)
+        );
+        if (!currentRoom || Number(currentRoom.cinemaId) !== Number(value)) {
+          next.roomId = "";
+        }
+      }
 
       // Tự động tính giờ kết thúc khi đổi phim hoặc giờ bắt đầu
       if (name === "movieId" || name === "startTime") {
@@ -512,6 +563,7 @@ function ShowtimeAdmin() {
     // Kiểm tra thông tin bắt buộc
     if (
       !formData.movieId ||
+      !formData.cinemaId ||
       !formData.roomId ||
       !formData.startTime ||
       !formData.endTime ||
@@ -520,7 +572,7 @@ function ShowtimeAdmin() {
       showNotification(
         "warning",
         "Thiếu thông tin",
-        "Vui lòng nhập đầy đủ thông tin và chọn ít nhất một loại vé."
+        "Vui lòng nhập đầy đủ thông tin, chọn rạp, chọn phòng chiếu và ít nhất một loại vé."
       );
 
       return;
@@ -840,7 +892,7 @@ function ShowtimeAdmin() {
         <table className="showtime-table">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>STT</th>
               <th>Phim</th>
               <th>Rạp</th>
               <th>Thời gian</th>
@@ -859,9 +911,9 @@ function ShowtimeAdmin() {
                 </td>
               </tr>
             ) : (
-              filteredShowtimes.map((showtime) => (
+              filteredShowtimes.map((showtime, index) => (
                 <tr key={showtime.showtimeId}>
-                  <td>#{showtime.showtimeId}</td>
+                  <td>{index + 1}</td>
 
                   <td>{showtime.movieTitle || "-"}</td>
 
@@ -1059,21 +1111,33 @@ function ShowtimeAdmin() {
               </div>
 
               {/* Phòng */}
-              <div className="showtime-form-row">
-                <div className="showtime-form-group">
-                  <label>Phòng *</label>
+              <div className="showtime-form-group">
+                <label>Phòng *</label>
 
-                  <input
-                    type="number"
-                    name="roomId"
-                    placeholder="Nhập Room ID, ví dụ: 4"
-                    min="1"
-                    step="1"
-                    value={formData.roomId}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+                <select
+                  name="roomId"
+                  value={formData.roomId}
+                  onChange={handleChange}
+                  required
+                  disabled={!formData.cinemaId}
+                >
+                  <option value="">
+                    {formData.cinemaId
+                      ? "-- Chọn phòng chiếu --"
+                      : "-- Vui lòng chọn rạp trước --"}
+                  </option>
+                  {availableRooms.map((room) => (
+                    <option key={room.roomId} value={room.roomId}>
+                      {room.roomName} ({room.capacity || 100} ghế)
+                    </option>
+                  ))}
+                </select>
+
+                {formData.cinemaId && availableRooms.length === 0 && (
+                  <small className="showtime-rating-hint" style={{ color: "#f87171" }}>
+                    Rạp này chưa có phòng chiếu nào. Vui lòng tạo phòng chiếu trước tại Quản lý phòng chiếu.
+                  </small>
+                )}
               </div>
 
               {/* Chính sách và giá riêng từng loại vé */}
