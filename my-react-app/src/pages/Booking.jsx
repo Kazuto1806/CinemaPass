@@ -1551,9 +1551,6 @@ setBookingSuccess(true);
                           </span>
                         </div>
                         <div className="cinema-trigger-right">
-                          <span className="cinema-count-badge">
-                            {cinemaOptionsForDate.length} rạp khả dụng
-                          </span>
                           <FaChevronDown className={`cinema-arrow ${isCinemaDropdownOpen ? "rotate" : ""}`} />
                         </div>
                       </button>
@@ -1580,9 +1577,7 @@ setBookingSuccess(true);
                                     <span className="option-name">{c.cinemaName}</span>
                                   </div>
                                   {isSelected && (
-                                    <span className="option-selected-tag">
-                                      <FaCheckCircle /> Đang chọn
-                                    </span>
+                                    <FaCheckCircle className="option-check-icon" />
                                   )}
                                 </button>
                               );
@@ -1603,16 +1598,12 @@ setBookingSuccess(true);
                           <FaMapMarkerAlt className="cinema-marker-icon" />
                           <span>{activeCinemaGroup.cinemaName}</span>
                         </div>
-                        <span className="cinema-header-badge">
-                          {activeCinemaGroup.rooms.length} phòng chiếu
-                        </span>
                       </div>
 
                       <div className="cinema-rooms-container">
                         {activeCinemaGroup.rooms.map((roomGroup) => (
                           <div key={roomGroup.roomName} className="cinema-room-row">
                             <div className="room-info-label">
-                              <span className="room-format-badge">2D Phụ Đề</span>
                               <span className="room-name-text">{roomGroup.roomName}</span>
                             </div>
 
