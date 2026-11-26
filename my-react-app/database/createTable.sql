@@ -20,6 +20,7 @@ CREATE TABLE Movies
     Genre NVARCHAR(100) NULL,
     Duration INT NOT NULL,
     ReleaseDate DATE NULL,
+    ReleaseEndDate DATETIME2 NULL,
     Director NVARCHAR(150) NULL,
     AgeRating VARCHAR(10) NULL,
     PosterUrl NVARCHAR(500) NULL,

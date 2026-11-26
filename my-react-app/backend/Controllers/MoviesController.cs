@@ -153,6 +153,7 @@ public MoviesController(
                 EnglishGenre = movie.EnglishGenre,
                 Duration = movie.Duration,
                 ReleaseDate = movie.ReleaseDate,
+                ReleaseEndDate = movie.ReleaseEndDate,
                 Director = movie.Director,
                 EnglishDirector = movie.EnglishDirector,
                 AgeRating = movie.AgeRating,
@@ -232,6 +233,7 @@ public MoviesController(
             existingMovie.EnglishGenre = movie.EnglishGenre;
             existingMovie.Duration = movie.Duration;
             existingMovie.ReleaseDate = movie.ReleaseDate;
+            existingMovie.ReleaseEndDate = movie.ReleaseEndDate;
             existingMovie.Director = movie.Director;
             existingMovie.EnglishDirector = movie.EnglishDirector;
             existingMovie.AgeRating = movie.AgeRating;
@@ -458,6 +460,7 @@ private static Transformation CreatePosterTransformation(int width)
             public string? EnglishGenre { get; set; }
             public int Duration { get; set; }
             public DateTime? ReleaseDate { get; set; }
+            public DateTime? ReleaseEndDate { get; set; }
             public string? Director { get; set; }
             public string? EnglishDirector { get; set; }
             public string? AgeRating { get; set; }

@@ -218,6 +218,9 @@ namespace CinemaBackend.Migrations
                     b.Property<DateTime?>("ReleaseDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("ReleaseEndDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

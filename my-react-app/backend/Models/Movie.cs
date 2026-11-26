@@ -20,6 +20,8 @@ namespace CinemaBackend.Models
 
         public DateTime? ReleaseDate { get; set; }
 
+        public DateTime? ReleaseEndDate { get; set; }
+
         public string? Director { get; set; }
 
         public string? EnglishDirector { get; set; }

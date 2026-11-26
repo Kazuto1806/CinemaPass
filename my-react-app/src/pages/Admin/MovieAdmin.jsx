@@ -139,6 +139,7 @@ function MovieAdmin() {
     englishGenre: "",
     duration: "",
     releaseDate: "",
+    releaseEndDate: "",
     director: "",
     englishDirector: "",
     ageRating: "T13",
@@ -343,6 +344,9 @@ function MovieAdmin() {
       releaseDate: movie.releaseDate
         ? movie.releaseDate.substring(0, 10)
         : "",
+      releaseEndDate: movie.releaseEndDate
+        ? movie.releaseEndDate.substring(0, 16)
+        : "",
       director: movie.director || "",
       englishDirector: movie.englishDirector || "",
       ageRating: movie.ageRating || "T13",
@@ -414,6 +418,10 @@ function MovieAdmin() {
 
     if (form.releaseDate) {
       formData.append("ReleaseDate", form.releaseDate);
+    }
+
+    if (form.releaseEndDate) {
+      formData.append("ReleaseEndDate", form.releaseEndDate);
     }
 
     formData.append("Director", form.director.trim());
@@ -601,6 +609,13 @@ function MovieAdmin() {
     return d.toLocaleDateString("vi-VN");
   };
 
+  const formatDateTime = (date) => {
+    if (!date) return "Chưa cập nhật";
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) return date;
+    return d.toLocaleString("vi-VN");
+  };
+
   // =====================================================
   // TRẠNG THÁI
   // =====================================================
@@ -720,6 +735,7 @@ function MovieAdmin() {
               <th>Thể loại</th>
               <th>Thời lượng</th>
               <th>Khởi chiếu</th>
+              <th>Kết thúc khởi chiếu</th>
               <th>Độ tuổi</th>
               <th>Trạng thái</th>
               <th>Thao tác</th>
@@ -729,7 +745,7 @@ function MovieAdmin() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="8" className="movie-empty">
+                <td colSpan="9" className="movie-empty">
                   Đang tải dữ liệu phim...
                 </td>
               </tr>
@@ -770,6 +786,7 @@ function MovieAdmin() {
                   <td>{movie.genre || "Chưa cập nhật"}</td>
                   <td>{movie.duration} phút</td>
                   <td>{formatDate(movie.releaseDate)}</td>
+                  <td>{formatDateTime(movie.releaseEndDate)}</td>
                   <td>
                     <span className="age-badge">
                       {movie.ageRating || "P"}
@@ -813,7 +830,7 @@ function MovieAdmin() {
               ))
             ) : (
               <tr>
-                <td colSpan="8" className="movie-empty">
+                <td colSpan="9" className="movie-empty">
                   Không có phim trong cơ sở dữ liệu.
                 </td>
               </tr>
@@ -1009,6 +1026,16 @@ function MovieAdmin() {
                     type="date"
                     name="releaseDate"
                     value={form.releaseDate}
+                    onChange={handleFormChange}
+                  />
+                </div>
+
+                <div className="movie-form-field">
+                  <label>Ngày kết thúc khởi chiếu</label>
+                  <input
+                    type="datetime-local"
+                    name="releaseEndDate"
+                    value={form.releaseEndDate}
                     onChange={handleFormChange}
                   />
                 </div>

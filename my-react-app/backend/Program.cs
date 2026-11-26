@@ -351,6 +351,14 @@ using (var scope = app.Services.CreateScope())
     db.Database.ExecuteSqlRaw(@"
         IF OBJECT_ID(N'dbo.Movies', N'U') IS NOT NULL
         BEGIN
+            IF COL_LENGTH(N'dbo.Movies', N'ReleaseEndDate') IS NULL
+            BEGIN
+                ALTER TABLE dbo.Movies ADD ReleaseEndDate datetime2 NULL;
+                UPDATE dbo.Movies
+                SET ReleaseEndDate = '2026-11-30T23:59:00'
+                WHERE ReleaseEndDate IS NULL;
+            END;
+
             IF COL_LENGTH(N'dbo.Movies', N'EnglishTitle') IS NULL
                 ALTER TABLE dbo.Movies ADD EnglishTitle nvarchar(max) NULL;
 
