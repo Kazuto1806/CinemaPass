@@ -98,6 +98,7 @@ function MovieAdmin() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [editingMovie, setEditingMovie] = useState(null);
+  const [previewPoster, setPreviewPoster] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -139,6 +140,21 @@ function MovieAdmin() {
   };
 
   const [form, setForm] = useState(emptyForm);
+
+  useEffect(() => {
+    if (!previewPoster) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setPreviewPoster(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [previewPoster]);
 
   // =====================================================
   // HIỂN THỊ POPUP
@@ -636,8 +652,18 @@ function MovieAdmin() {
                   <td>{index + 1}</td>
                   <td>
                     <div className="movie-name-cell">
-                      <div className="movie-mini-poster">
-                        {movie.posterUrl ? (
+                      {movie.posterUrl ? (
+                        <button
+                          type="button"
+                          className="movie-mini-poster movie-mini-poster-button"
+                          onClick={() =>
+                            setPreviewPoster({
+                              url: getPosterUrl(movie.posterUrl),
+                              title: movie.title,
+                            })
+                          }
+                          aria-label={`Xem poster: ${movie.title}`}
+                        >
                           <img
                             src={getPosterUrl(movie.posterUrl)}
                             alt={movie.title}
@@ -645,10 +671,12 @@ function MovieAdmin() {
                               e.currentTarget.style.display = "none";
                             }}
                           />
-                        ) : (
+                        </button>
+                      ) : (
+                        <div className="movie-mini-poster">
                           <FaFilm />
-                        )}
-                      </div>
+                        </div>
+                      )}
                       <strong>{movie.title}</strong>
                     </div>
                   </td>
@@ -706,6 +734,35 @@ function MovieAdmin() {
           </tbody>
         </table>
       </div>
+
+      {previewPoster && (
+        <div
+          className="movie-poster-preview-overlay"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setPreviewPoster(null);
+            }
+          }}
+        >
+          <div
+            className="movie-poster-preview"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Poster phim ${previewPoster.title}`}
+          >
+            <button
+              type="button"
+              className="movie-poster-preview-close"
+              onClick={() => setPreviewPoster(null)}
+              aria-label="Đóng poster"
+            >
+              <FaTimes />
+            </button>
+            <img src={previewPoster.url} alt={`Poster phim ${previewPoster.title}`} />
+            <p>{previewPoster.title}</p>
+          </div>
+        </div>
+      )}
 
       {/* =================================================
           FORM THÊM / SỬA
