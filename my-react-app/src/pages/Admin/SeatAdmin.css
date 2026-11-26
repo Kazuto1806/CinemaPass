@@ -4,6 +4,10 @@
 
 .seat-admin {
   width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 35px 40px 60px;
+  box-sizing: border-box;
   color: #ffffff;
 }
 
@@ -214,7 +218,7 @@
 
 .seat-stat-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
   gap: 16px;
   margin-bottom: 22px;
@@ -222,6 +226,7 @@
 
 .seat-stat-card {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 14px;
 
@@ -429,10 +434,9 @@
 ========================================================= */
 
 .seat-map {
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
-
-  margin: 0 auto;
+  overflow-x: auto;
 
   padding: 10px 25px 25px;
 
@@ -441,10 +445,13 @@
 
 .seat-row {
   display: flex;
+  width: max-content;
   align-items: center;
 
   gap: 14px;
   margin-bottom: 10px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .seat-row-label {
@@ -1048,6 +1055,10 @@
 ========================================================= */
 
 @media (max-width: 1100px) {
+  .seat-admin {
+    padding: 28px 24px 48px;
+  }
+
   .seat-stat-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1075,6 +1086,10 @@
 ========================================================= */
 
 @media (max-width: 700px) {
+  .seat-admin {
+    padding: 24px 18px 40px;
+  }
+
   .seat-admin-header {
     flex-direction: column;
     align-items: stretch;
@@ -1123,14 +1138,8 @@
     width: 100%;
     max-width: 100%;
 
-    overflow-x: auto;
-
     padding-left: 15px;
     padding-right: 15px;
-  }
-
-  .seat-row {
-    width: max-content;
   }
 
   .seat-legend {
