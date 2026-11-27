@@ -35,6 +35,10 @@ if (!string.IsNullOrWhiteSpace(platformPort))
 
 builder.Services.AddHttpClient<TmdbService>();
 builder.Services.AddScoped<ITicketEmailService, TicketEmailService>();
+builder.Services.AddSingleton<PaidTicketEmailQueue>();
+builder.Services.AddHostedService(
+    serviceProvider =>
+        serviceProvider.GetRequiredService<PaidTicketEmailQueue>());
 builder.Services.AddHostedService<MovieReleaseEndBackgroundService>();
 
 builder.Services.AddControllers();

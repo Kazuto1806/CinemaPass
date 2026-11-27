@@ -1243,7 +1243,11 @@ setBookingSuccess(true);
     } catch (error) {
       console.error("Lỗi thanh toán:", error);
 
-      notify(error.message || "Có lỗi xảy ra khi thanh toán.");
+      notify(
+        error instanceof TypeError
+          ? "Không nhận được phản hồi từ máy chủ. Vé có thể đã được ghi nhận; vui lòng kiểm tra Lịch sử vé trước khi thử lại."
+          : error.message || "Có lỗi xảy ra khi thanh toán."
+      );
     } finally {
       setPaymentLoading(false);
     }

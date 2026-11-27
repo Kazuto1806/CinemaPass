@@ -60,17 +60,20 @@ namespace CinemaBackend.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ITicketEmailService _ticketEmailService;
+        private readonly PaidTicketEmailQueue _paidTicketEmailQueue;
         private readonly ILogger<TicketsController> _logger;
         private readonly IConfiguration _configuration;
 
         public TicketsController(
             AppDbContext context,
             ITicketEmailService ticketEmailService,
+            PaidTicketEmailQueue paidTicketEmailQueue,
             ILogger<TicketsController> logger,
             IConfiguration configuration)
         {
             _context = context;
             _ticketEmailService = ticketEmailService;
+            _paidTicketEmailQueue = paidTicketEmailQueue;
             _logger = logger;
             _configuration = configuration;
         }
@@ -576,35 +579,28 @@ namespace CinemaBackend.Controllers
                 await transaction.CommitAsync();
 
                 bool? emailSent = null;
+                bool? emailQueued = null;
                 var responseMessage = "Đặt vé thành công.";
 
                 if (request.ConfirmTestPayment)
                 {
-                    emailSent = true;
-                    responseMessage =
-                        "Đặt vé thành công và đã xác nhận thanh toán thử.";
+                    emailQueued = true;
 
                     foreach (var ticket in createdTickets)
                     {
-                        try
+                        if (!_paidTicketEmailQueue.Enqueue(ticket.TicketId))
                         {
-                            await _ticketEmailService.SendPaidTicketAsync(
-                                ticket.TicketId);
-                        }
-                        catch (TicketEmailException exception)
-                        {
+                            emailQueued = false;
                             _logger.LogError(
-                                exception,
-                                "Không gửi được email vé cho TicketId {TicketId}.",
+                                "Không thể xếp hàng gửi email vé cho TicketId {TicketId}.",
                                 ticket.TicketId);
-                            emailSent = false;
                         }
                     }
 
-                    responseMessage = emailSent.Value
-                        ? "Thanh toán thử thành công, mã vé đã được gửi qua email."
-                        : "Đã xác nhận thanh toán thử nhưng chưa gửi được email vé. " +
-                            "Hãy kiểm tra cấu hình Gmail SMTP.";
+                    responseMessage = emailQueued == true
+                        ? "Đã xác nhận thanh toán thử. Email vé đang được gửi."
+                        : "Đã xác nhận thanh toán thử nhưng chưa xếp hàng gửi được email. " +
+                            "Vé đã được lưu trong lịch sử.";
                 }
 
                 // Trả về thông tin thực tế của từng vé vừa tạo.
@@ -644,6 +640,7 @@ namespace CinemaBackend.Controllers
                     paymentStatus = request.ConfirmTestPayment
                         ? "Đã thanh toán"
                         : "Chưa thanh toán",
+                    emailQueued,
                     emailSent
                 });
             }
