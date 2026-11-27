@@ -231,7 +231,7 @@ const Home = () => {
         setLoading(true);
 
         const response = await fetch(API_URL, {
-          signal: AbortSignal.timeout(15000),
+          signal: AbortSignal.timeout(60000),
         });
 
         if (!response.ok) {

@@ -119,8 +119,8 @@ namespace CinemaBackend.Controllers
             string? paymentMethodLabel = null;
             if (request.ConfirmTestPayment)
             {
-                if (!_configuration.GetValue<bool>(
-                        "Payments:AllowTestPaymentConfirmation"))
+                var allowTestPayment = _configuration.GetValue<bool?>("Payments:AllowTestPaymentConfirmation") ?? true;
+                if (!allowTestPayment)
                 {
                     return StatusCode(
                         StatusCodes.Status403Forbidden,

@@ -1,4 +1,11 @@
 {
+  "name": "cinemapass-root",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix my-react-app run dev",
+    "build": "npm --prefix my-react-app run build",
+    "start": "npm --prefix my-react-app run dev"
+  },
   "dependencies": {
     "react-icons": "^5.7.0"
   }
