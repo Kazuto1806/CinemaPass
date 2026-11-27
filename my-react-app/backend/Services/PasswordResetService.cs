@@ -1,6 +1,4 @@
 using System.Globalization;
-using System.Net;
-using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text.Encodings.Web;
 using CinemaBackend.Data;
@@ -17,25 +15,32 @@ namespace CinemaBackend.Services
         private const int MaximumFailedAttempts = 5;
 
         private readonly AppDbContext _context;
-        private readonly IConfiguration _configuration;
-        private readonly HttpClient _httpClient;
+        private readonly ISendGridEmailSender _emailSender;
         private readonly PasswordHasher<User> _passwordHasher = new();
 
         public PasswordResetService(
             AppDbContext context,
-            IConfiguration configuration,
-            HttpClient httpClient)
+            ISendGridEmailSender emailSender)
         {
             _context = context;
-            _configuration = configuration;
-            _httpClient = httpClient;
+            _emailSender = emailSender;
         }
 
         public async Task RequestCodeAsync(
             string email,
             CancellationToken cancellationToken)
         {
-            var emailSettings = GetSendGridSettings();
+            try
+            {
+                _emailSender.EnsureConfigured();
+            }
+            catch (SendGridEmailException exception)
+            {
+                throw new PasswordResetEmailException(
+                    exception.Message,
+                    exception);
+            }
+
             var user = await _context.Users
                 .FirstOrDefaultAsync(
                     item => item.Email == email.Trim(),
@@ -64,11 +69,7 @@ namespace CinemaBackend.Services
             user.PasswordResetFailedAttempts = 0;
             await _context.SaveChangesAsync(cancellationToken);
 
-            await SendCodeEmailAsync(
-                user,
-                code,
-                emailSettings,
-                cancellationToken);
+            await SendCodeEmailAsync(user, code, cancellationToken);
         }
 
         public async Task<bool> ResetPasswordAsync(
@@ -118,7 +119,6 @@ namespace CinemaBackend.Services
         private async Task SendCodeEmailAsync(
             User user,
             string code,
-            (string ApiKey, string FromAddress, string FromName) emailSettings,
             CancellationToken cancellationToken)
         {
             var safeName = HtmlEncoder.Default.Encode(user.FullName);
@@ -134,77 +134,22 @@ namespace CinemaBackend.Services
                 "<p>Mã có hiệu lực trong 10 phút và chỉ sử dụng được một lần.</p>" +
                 "<p>Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.</p>";
 
-            using var request = new HttpRequestMessage(
-                HttpMethod.Post,
-                "https://api.sendgrid.com/v3/mail/send");
-            request.Headers.Authorization =
-                new AuthenticationHeaderValue("Bearer", emailSettings.ApiKey);
-            request.Content = System.Net.Http.Json.JsonContent.Create(new
-            {
-                personalizations = new[]
-                {
-                    new
-                    {
-                        to = new[]
-                        {
-                            new { email = user.Email, name = user.FullName }
-                        }
-                    }
-                },
-                from = new
-                {
-                    email = emailSettings.FromAddress,
-                    name = emailSettings.FromName
-                },
-                subject = "Mã đặt lại mật khẩu CinemaPass",
-                content = new[]
-                {
-                    new { type = "text/plain", value = textBody },
-                    new { type = "text/html", value = htmlBody }
-                }
-            });
-
             try
             {
-                using var response = await _httpClient.SendAsync(
-                    request,
+                await _emailSender.SendAsync(
+                    user.Email,
+                    user.FullName,
+                    "Mã đặt lại mật khẩu CinemaPass",
+                    textBody,
+                    htmlBody,
                     cancellationToken);
-                if (response.StatusCode != HttpStatusCode.Accepted)
-                {
-                    throw new PasswordResetEmailException(
-                        $"SendGrid từ chối gửi email (HTTP {(int)response.StatusCode}).");
-                }
             }
-            catch (HttpRequestException exception)
+            catch (SendGridEmailException exception)
             {
                 throw new PasswordResetEmailException(
-                    "Không kết nối được SendGrid để gửi email đặt lại mật khẩu.",
+                    "SendGrid không gửi được email đặt lại mật khẩu.",
                     exception);
             }
-        }
-
-        private (string ApiKey, string FromAddress, string FromName)
-            GetSendGridSettings()
-        {
-            var apiKey = _configuration["SendGrid:ApiKey"];
-            if (string.IsNullOrWhiteSpace(apiKey))
-            {
-                apiKey = _configuration["SENDGRID_API_KEY"];
-            }
-
-            var fromAddress = _configuration["Email:FromAddress"];
-            if (string.IsNullOrWhiteSpace(apiKey) ||
-                string.IsNullOrWhiteSpace(fromAddress))
-            {
-                throw new PasswordResetEmailException(
-                    "Chưa cấu hình SendGrid. Hãy thiết lập " +
-                    "SendGrid__ApiKey và Email__FromAddress.");
-            }
-
-            return (
-                apiKey,
-                fromAddress,
-                _configuration["Email:FromName"] ?? "CinemaPass");
         }
 
         private static void ClearResetCode(User user)

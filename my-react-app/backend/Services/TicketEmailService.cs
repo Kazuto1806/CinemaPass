@@ -1,11 +1,7 @@
 using System.Globalization;
-using System.Net.Sockets;
 using System.Text.Encodings.Web;
 using CinemaBackend.Data;
-using MailKit.Net.Smtp;
-using MailKit.Security;
 using Microsoft.EntityFrameworkCore;
-using MimeKit;
 
 namespace CinemaBackend.Services
 {
@@ -13,13 +9,16 @@ namespace CinemaBackend.Services
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly ISendGridEmailSender _emailSender;
 
         public TicketEmailService(
             AppDbContext context,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ISendGridEmailSender emailSender)
         {
             _context = context;
             _configuration = configuration;
+            _emailSender = emailSender;
         }
 
         public async Task SendPaidTicketAsync(
@@ -51,64 +50,30 @@ namespace CinemaBackend.Services
                     "Tài khoản đặt vé chưa có email nhận vé.");
             }
 
-            var smtpHost = _configuration["Email:Smtp:Host"] ?? "smtp.gmail.com";
-            var smtpPort = _configuration.GetValue<int?>("Email:Smtp:Port") ?? 587;
-            var smtpUsername = _configuration["Email:Smtp:Username"];
-            var smtpPassword = _configuration["Email:Smtp:Password"]
-                ?? _configuration["Email:Smtp:AppPassword"]
-                ?.Replace(" ", string.Empty);
-            var fromAddress = _configuration["Email:FromAddress"] ?? smtpUsername;
-            var fromName = _configuration["Email:FromName"] ?? "CinemaPass";
             var frontendUrl = _configuration["Email:FrontendUrl"]?.TrimEnd('/');
 
-            if (string.IsNullOrWhiteSpace(smtpUsername) ||
-                string.IsNullOrWhiteSpace(smtpPassword) ||
-                string.IsNullOrWhiteSpace(fromAddress))
-            {
-                throw new TicketEmailException(
-                    "Chưa cấu hình SMTP. Hãy thiết lập " +
-                    "Email__Smtp__Username và Email__Smtp__Password.");
-            }
-
-            var message = CreateMessage(
-                ticket,
-                fromAddress,
-                fromName,
-                frontendUrl);
+            var message = CreateMessage(ticket, frontendUrl);
 
             try
             {
-                using var smtp = new SmtpClient();
-                await smtp.ConnectAsync(
-                    smtpHost,
-                    smtpPort,
-                    SecureSocketOptions.StartTls,
+                await _emailSender.SendAsync(
+                    ticket.User.Email,
+                    ticket.User.FullName,
+                    message.Subject,
+                    message.TextBody,
+                    message.HtmlBody,
                     cancellationToken);
-                await smtp.AuthenticateAsync(
-                    smtpUsername,
-                    smtpPassword,
-                    cancellationToken);
-                await smtp.SendAsync(message, cancellationToken);
-                await smtp.DisconnectAsync(true, cancellationToken);
             }
-            catch (Exception exception) when (
-                exception is System.Security.Authentication.AuthenticationException ||
-                exception is MailKit.Security.AuthenticationException ||
-                exception is IOException ||
-                exception is SocketException ||
-                exception is SmtpCommandException ||
-                exception is SmtpProtocolException)
+            catch (SendGridEmailException exception)
             {
                 throw new TicketEmailException(
-                    "SMTP relay không gửi được email vé. Hãy kiểm tra cấu hình SMTP.",
+                    "SendGrid không gửi được email vé.",
                     exception);
             }
         }
 
-        private static MimeMessage CreateMessage(
+        private static (string Subject, string TextBody, string HtmlBody) CreateMessage(
             Models.Ticket ticket,
-            string fromAddress,
-            string fromName,
             string? frontendUrl)
         {
             var safeName = HtmlEncoder.Default.Encode(
@@ -137,32 +102,22 @@ namespace CinemaBackend.Services
                 ? null
                 : $"{frontendUrl}/verify-ticket/{Uri.EscapeDataString(ticket.QrCodeToken)}";
 
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(fromName, fromAddress));
-            message.To.Add(new MailboxAddress(
-                ticket.User?.FullName ?? string.Empty,
-                ticket.User!.Email));
-            message.Subject = $"Mã vé CinemaPass - {ticket.Movie?.Title ?? "Vé xem phim"}";
+            var textBody =
+                $"Xin chào {ticket.User?.FullName ?? "Quý khách"},\n\n" +
+                $"Thanh toán vé xem phim {ticket.Movie?.Title ?? "Phim"} đã được xác nhận.\n" +
+                $"Rạp: {ticket.Showtime?.Room?.Cinema?.Name ?? "Chưa cập nhật"}\n" +
+                $"Phòng: {ticket.Showtime?.Room?.RoomName ?? "Chưa cập nhật"}\n" +
+                $"Suất chiếu: {showDate} - {startTime}\n" +
+                $"Ghế: {ticket.Seat?.SeatCode ?? "Chưa cập nhật"}\n" +
+                $"Loại vé: {ticket.TicketType?.Name ?? "Vé xem phim"}\n" +
+                $"Giá vé: {price} đ\n" +
+                $"Mã vé: {ticket.QrCodeToken}\n" +
+                (verificationUrl == null
+                    ? string.Empty
+                    : $"Xem vé: {verificationUrl}\n") +
+                "\nVui lòng xuất trình mã vé cho nhân viên rạp.";
 
-            var body = new BodyBuilder
-            {
-                TextBody =
-                    $"Xin chào {ticket.User?.FullName ?? "Quý khách"},\n\n" +
-                    $"Thanh toán vé xem phim {ticket.Movie?.Title ?? "Phim"} đã được xác nhận.\n" +
-                    $"Rạp: {ticket.Showtime?.Room?.Cinema?.Name ?? "Chưa cập nhật"}\n" +
-                    $"Phòng: {ticket.Showtime?.Room?.RoomName ?? "Chưa cập nhật"}\n" +
-                    $"Suất chiếu: {showDate} - {startTime}\n" +
-                    $"Ghế: {ticket.Seat?.SeatCode ?? "Chưa cập nhật"}\n" +
-                    $"Loại vé: {ticket.TicketType?.Name ?? "Vé xem phim"}\n" +
-                    $"Giá vé: {price} đ\n" +
-                    $"Mã vé: {ticket.QrCodeToken}\n" +
-                    (verificationUrl == null
-                        ? string.Empty
-                        : $"Xem vé: {verificationUrl}\n") +
-                    "\nVui lòng xuất trình mã vé cho nhân viên rạp."
-            };
-
-            body.HtmlBody =
+            var htmlBody =
                 $"<p>Xin chào {safeName},</p>" +
                 $"<p>Thanh toán vé xem phim <strong>{safeMovieTitle}</strong> đã được xác nhận.</p>" +
                 "<ul>" +
@@ -179,8 +134,10 @@ namespace CinemaBackend.Services
                     : $"<p><a href=\"{HtmlEncoder.Default.Encode(verificationUrl)}\">Mở vé điện tử</a></p>") +
                 "<p>Vui lòng xuất trình mã vé cho nhân viên rạp.</p>";
 
-            message.Body = body.ToMessageBody();
-            return message;
+            return (
+                $"Mã vé CinemaPass - {ticket.Movie?.Title ?? "Vé xem phim"}",
+                textBody,
+                htmlBody);
         }
     }
 }
