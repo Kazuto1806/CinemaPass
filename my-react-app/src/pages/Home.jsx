@@ -230,7 +230,9 @@ const Home = () => {
       try {
         setLoading(true);
 
-        const response = await fetch(API_URL);
+        const response = await fetch(API_URL, {
+          signal: AbortSignal.timeout(15000),
+        });
 
         if (!response.ok) {
           throw new Error("Không thể lấy danh sách phim");
@@ -253,7 +255,9 @@ const Home = () => {
         if (!cancelled) {
           setMovies([]);
           setMovieDataError(
-            error instanceof Error
+            error instanceof Error && error.name === "TimeoutError"
+              ? "Máy chủ phản hồi quá lâu. Vui lòng thử lại sau."
+              : error instanceof Error
               ? error.message
               : "Không thể tải danh sách phim"
           );
@@ -527,6 +531,14 @@ const Home = () => {
               <div className="movie-skeleton-card" key={`now-${index}`} />
             ))}
           </div>
+        ) : movieDataError ? (
+          <div className="movie-empty">
+            <div className="movie-empty-content" role="alert">
+              <div className="movie-empty-icon">⚠️</div>
+              <h2>Không thể tải danh sách phim</h2>
+              <p>{movieDataError} Vui lòng tải lại trang sau.</p>
+            </div>
+          </div>
         ) : nowShowingMovies.length === 0 ? (
           <div className="movie-empty">
             <div className="movie-empty-content">
@@ -549,7 +561,7 @@ const Home = () => {
           </div>
         )}
 
-        {!loading && (
+        {!loading && !movieDataError && (
           <div className="movie-more-container">
             <Link
               to="/movies/now-showing"
@@ -571,7 +583,7 @@ const Home = () => {
               <div className="movie-skeleton-card" key={`soon-${index}`} />
             ))}
           </div>
-        ) : comingSoonMovies.length === 0 ? (
+        ) : movieDataError ? null : comingSoonMovies.length === 0 ? (
           <div className="movie-empty">
             <div className="movie-empty-content">
               <div className="movie-empty-icon">🎬</div>
@@ -594,7 +606,7 @@ const Home = () => {
           </div>
         )}
 
-        {!loading && (
+        {!loading && !movieDataError && (
           <div className="movie-more-container">
             <Link
               to="/movies/coming-soon"

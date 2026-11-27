@@ -18,6 +18,17 @@ using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var platformPort = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(platformPort))
+{
+    if (!int.TryParse(platformPort, out var port) || port is < 1 or > 65535)
+    {
+        throw new InvalidOperationException("Biến môi trường PORT không hợp lệ.");
+    }
+
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
 // =====================================================
 // SERVICES
 // =====================================================

@@ -47,16 +47,6 @@ function apiResourceHints(apiBase) {
             attrs: { rel: 'dns-prefetch', href: apiOrigin },
             injectTo: 'head-prepend',
           },
-          {
-            tag: 'link',
-            attrs: {
-              rel: 'preload',
-              as: 'fetch',
-              href: `${apiBase}/api/movies`,
-              crossorigin: 'anonymous',
-            },
-            injectTo: 'head-prepend',
-          },
         ]
       },
     },
