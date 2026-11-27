@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 
 namespace CinemaBackend.Services
 {
@@ -28,9 +29,19 @@ namespace CinemaBackend.Services
             string subject,
             string textBody,
             string htmlBody,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            IReadOnlyList<SendGridEmailAttachment>? attachments = null)
         {
             var settings = GetSettings();
+            var sendGridAttachments = attachments?
+                .Select(attachment => new SendGridAttachmentPayload(
+                    Convert.ToBase64String(attachment.Content),
+                    attachment.ContentType,
+                    attachment.FileName,
+                    "inline",
+                    attachment.ContentId))
+                .ToArray() ?? Array.Empty<SendGridAttachmentPayload>();
+
             using var request = new HttpRequestMessage(
                 HttpMethod.Post,
                 "https://api.sendgrid.com/v3/mail/send");
@@ -54,7 +65,8 @@ namespace CinemaBackend.Services
                 {
                     new { type = "text/plain", value = textBody },
                     new { type = "text/html", value = htmlBody }
-                }
+                },
+                attachments = sendGridAttachments
             });
 
             try
@@ -97,5 +109,12 @@ namespace CinemaBackend.Services
                 fromAddress,
                 _configuration["Email:FromName"] ?? "CinemaPass");
         }
+
+        private sealed record SendGridAttachmentPayload(
+            string Content,
+            string Type,
+            string Filename,
+            string Disposition,
+            [property: JsonPropertyName("content_id")] string ContentId);
     }
 }

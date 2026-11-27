@@ -10,8 +10,15 @@ namespace CinemaBackend.Services
             string subject,
             string textBody,
             string htmlBody,
-            CancellationToken cancellationToken);
+            CancellationToken cancellationToken,
+            IReadOnlyList<SendGridEmailAttachment>? attachments = null);
     }
+
+    public sealed record SendGridEmailAttachment(
+        string FileName,
+        string ContentType,
+        string ContentId,
+        byte[] Content);
 
     public sealed class SendGridEmailException : Exception
     {
