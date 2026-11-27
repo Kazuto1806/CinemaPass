@@ -35,6 +35,7 @@ if (!string.IsNullOrWhiteSpace(platformPort))
 
 builder.Services.AddHttpClient<TmdbService>();
 builder.Services.AddScoped<ITicketEmailService, TicketEmailService>();
+builder.Services.AddHttpClient<IPasswordResetService, PasswordResetService>();
 builder.Services.AddSingleton<PaidTicketEmailQueue>();
 builder.Services.AddHostedService(
     serviceProvider =>

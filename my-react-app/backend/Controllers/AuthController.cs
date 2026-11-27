@@ -2,8 +2,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.ComponentModel.DataAnnotations;
 using CinemaBackend.Data;
 using CinemaBackend.Models;
+using CinemaBackend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -18,14 +20,20 @@ namespace CinemaBackend.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IPasswordResetService _passwordResetService;
+        private readonly ILogger<AuthController> _logger;
         private readonly PasswordHasher<User> _passwordHasher = new();
 
         public AuthController(
             AppDbContext context,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IPasswordResetService passwordResetService,
+            ILogger<AuthController> logger)
         {
             _context = context;
             _configuration = configuration;
+            _passwordResetService = passwordResetService;
+            _logger = logger;
         }
 
         // =====================================================
@@ -212,6 +220,66 @@ namespace CinemaBackend.Controllers
             });
         }
 
+        [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+        public async Task<IActionResult> RequestPasswordResetCode(
+            [FromBody] RequestPasswordResetCodeRequest request,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _passwordResetService.RequestCodeAsync(
+                    request.Email,
+                    cancellationToken);
+            }
+            catch (PasswordResetEmailException exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Không gửi được mã đặt lại mật khẩu.");
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    message = "Hiện không thể gửi email. Vui lòng thử lại sau."
+                });
+            }
+
+            return Ok(new
+            {
+                message =
+                    "Nếu email đã đăng ký, mã đặt lại mật khẩu sẽ được gửi đến hộp thư."
+            });
+        }
+
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ResetPassword(
+            [FromBody] ResetPasswordRequest request,
+            CancellationToken cancellationToken)
+        {
+            var reset = await _passwordResetService.ResetPasswordAsync(
+                request.Email,
+                request.Code,
+                request.NewPassword,
+                cancellationToken);
+
+            if (!reset)
+            {
+                return BadRequest(new
+                {
+                    message = "Mã không hợp lệ, đã hết hạn hoặc đã vượt quá số lần thử."
+                });
+            }
+
+            return Ok(new
+            {
+                message = "Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại."
+            });
+        }
+
         private string GenerateJwtToken(User user)
         {
             var key = _configuration["Jwt:Key"]
@@ -356,5 +424,29 @@ namespace CinemaBackend.Controllers
         public string Email { get; set; } = string.Empty;
 
         public string Password { get; set; } = string.Empty;
+    }
+
+    /// <summary>Requests a one-time password reset code by email.</summary>
+    public sealed record RequestPasswordResetCodeRequest
+    {
+        [Required]
+        [EmailAddress]
+        public required string Email { get; init; }
+    }
+
+    /// <summary>Resets an account password using its emailed one-time code.</summary>
+    public sealed record ResetPasswordRequest
+    {
+        [Required]
+        [EmailAddress]
+        public required string Email { get; init; }
+
+        [Required]
+        [RegularExpression(@"^\d{6}$")]
+        public required string Code { get; init; }
+
+        [Required]
+        [MinLength(8)]
+        public required string NewPassword { get; init; }
     }
 }

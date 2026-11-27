@@ -54,19 +54,20 @@ namespace CinemaBackend.Services
             var smtpHost = _configuration["Email:Smtp:Host"] ?? "smtp.gmail.com";
             var smtpPort = _configuration.GetValue<int?>("Email:Smtp:Port") ?? 587;
             var smtpUsername = _configuration["Email:Smtp:Username"];
-            var smtpAppPassword = _configuration["Email:Smtp:AppPassword"]
+            var smtpPassword = _configuration["Email:Smtp:Password"]
+                ?? _configuration["Email:Smtp:AppPassword"]
                 ?.Replace(" ", string.Empty);
             var fromAddress = _configuration["Email:FromAddress"] ?? smtpUsername;
             var fromName = _configuration["Email:FromName"] ?? "CinemaPass";
             var frontendUrl = _configuration["Email:FrontendUrl"]?.TrimEnd('/');
 
             if (string.IsNullOrWhiteSpace(smtpUsername) ||
-                string.IsNullOrWhiteSpace(smtpAppPassword) ||
+                string.IsNullOrWhiteSpace(smtpPassword) ||
                 string.IsNullOrWhiteSpace(fromAddress))
             {
                 throw new TicketEmailException(
-                    "Chưa cấu hình Gmail SMTP. Hãy thiết lập Email__Smtp__Username, " +
-                    "Email__Smtp__AppPassword.");
+                    "Chưa cấu hình SMTP. Hãy thiết lập " +
+                    "Email__Smtp__Username và Email__Smtp__Password.");
             }
 
             var message = CreateMessage(
@@ -85,7 +86,7 @@ namespace CinemaBackend.Services
                     cancellationToken);
                 await smtp.AuthenticateAsync(
                     smtpUsername,
-                    smtpAppPassword,
+                    smtpPassword,
                     cancellationToken);
                 await smtp.SendAsync(message, cancellationToken);
                 await smtp.DisconnectAsync(true, cancellationToken);
@@ -99,7 +100,7 @@ namespace CinemaBackend.Services
                 exception is SmtpProtocolException)
             {
                 throw new TicketEmailException(
-                    "Gmail không gửi được email vé. Hãy kiểm tra cấu hình SMTP.",
+                    "SMTP relay không gửi được email vé. Hãy kiểm tra cấu hình SMTP.",
                     exception);
             }
         }

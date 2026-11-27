@@ -86,6 +86,14 @@ function Login() {
   const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [rememberLogin, setRememberLogin] = useState(false);
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const [resetPasswordStep, setResetPasswordStep] = useState("email");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetCode, setResetCode] = useState("");
+  const [resetNewPassword, setResetNewPassword] = useState("");
+  const [resetConfirmPassword, setResetConfirmPassword] = useState("");
+  const [resetPasswordBusy, setResetPasswordBusy] = useState(false);
+  const [resetPasswordMessage, setResetPasswordMessage] = useState("");
 
   // =========================
   // REGISTER
@@ -103,6 +111,99 @@ function Login() {
 
   const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] =
     useState(false);
+
+  const requestPasswordResetCode = async (e) => {
+    e.preventDefault();
+
+    if (!EMAIL_REGEX.test(resetEmail.trim())) {
+      setResetPasswordMessage("Vui lòng nhập địa chỉ email hợp lệ.");
+      return;
+    }
+
+    setResetPasswordBusy(true);
+    setResetPasswordMessage("");
+
+    try {
+      const response = await fetch(`${API_URL}/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail.trim() }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setResetPasswordMessage(
+          data.message || "Không gửi được mã. Vui lòng thử lại sau."
+        );
+        return;
+      }
+
+      setResetPasswordStep("code");
+      setResetPasswordMessage(
+        data.message ||
+          "Nếu email đã đăng ký, mã đặt lại mật khẩu sẽ được gửi đến hộp thư."
+      );
+    } catch (error) {
+      console.error("Lỗi yêu cầu mã đặt lại mật khẩu:", error);
+      setResetPasswordMessage(
+        "Không kết nối được máy chủ. Vui lòng thử lại sau."
+      );
+    } finally {
+      setResetPasswordBusy(false);
+    }
+  };
+
+  const resetPassword = async (e) => {
+    e.preventDefault();
+
+    if (resetNewPassword.length < 8) {
+      setResetPasswordMessage("Mật khẩu mới phải có ít nhất 8 ký tự.");
+      return;
+    }
+
+    if (resetNewPassword !== resetConfirmPassword) {
+      setResetPasswordMessage("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+
+    setResetPasswordBusy(true);
+    setResetPasswordMessage("");
+
+    try {
+      const response = await fetch(`${API_URL}/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: resetEmail.trim(),
+          code: resetCode.trim(),
+          newPassword: resetNewPassword,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setResetPasswordMessage(
+          data.message || "Không đặt lại được mật khẩu."
+        );
+        return;
+      }
+
+      setResetPasswordOpen(false);
+      setResetPasswordStep("email");
+      setResetEmail("");
+      setResetCode("");
+      setResetNewPassword("");
+      setResetConfirmPassword("");
+      showPopup("success", "Thành công", data.message);
+    } catch (error) {
+      console.error("Lỗi đặt lại mật khẩu:", error);
+      setResetPasswordMessage(
+        "Không kết nối được máy chủ. Vui lòng thử lại sau."
+      );
+    } finally {
+      setResetPasswordBusy(false);
+    }
+  };
 
   // =========================
   // LOGIN
@@ -535,13 +636,11 @@ function Login() {
                 <button
                   type="button"
                   className="forgot-password"
-                  onClick={() =>
-                    showPopup(
-                      "warning",
-                      "Thông báo",
-                      "Chức năng quên mật khẩu đang được phát triển."
-                    )
-                  }
+                  onClick={() => {
+                    setResetPasswordOpen(true);
+                    setResetPasswordStep("email");
+                    setResetPasswordMessage("");
+                  }}
                 >
                   Quên mật khẩu?
                 </button>
@@ -833,6 +932,147 @@ function Login() {
         )}
 
       </div>
+
+      {resetPasswordOpen && (
+        <div
+          className="reset-password-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !resetPasswordBusy) {
+              setResetPasswordOpen(false);
+            }
+          }}
+        >
+          <section
+            className="reset-password-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reset-password-title"
+          >
+            <button
+              type="button"
+              className="reset-password-close"
+              aria-label="Đóng"
+              disabled={resetPasswordBusy}
+              onClick={() => setResetPasswordOpen(false)}
+            >
+              ×
+            </button>
+            <h2 id="reset-password-title">Đặt lại mật khẩu</h2>
+            <p>
+              {resetPasswordStep === "email"
+                ? "Nhập email tài khoản để nhận mã đặt lại mật khẩu."
+                : "Nhập mã 6 chữ số trong email và tạo mật khẩu mới."}
+            </p>
+
+            <form
+              onSubmit={
+                resetPasswordStep === "email"
+                  ? requestPasswordResetCode
+                  : resetPassword
+              }
+            >
+              {resetPasswordStep === "email" ? (
+                <div className="login-field">
+                  <label htmlFor="reset-email">Email</label>
+                  <input
+                    id="reset-email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={resetEmail}
+                    onChange={(event) => setResetEmail(event.target.value)}
+                    placeholder="name@example.com"
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="login-field">
+                    <label htmlFor="reset-code">Mã xác minh</label>
+                    <input
+                      id="reset-code"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      pattern="[0-9]{6}"
+                      maxLength={6}
+                      required
+                      value={resetCode}
+                      onChange={(event) =>
+                        setResetCode(event.target.value.replace(/\D/g, ""))
+                      }
+                      placeholder="Nhập mã 6 chữ số"
+                    />
+                  </div>
+                  <div className="login-field">
+                    <label htmlFor="reset-new-password">Mật khẩu mới</label>
+                    <input
+                      id="reset-new-password"
+                      type="password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      required
+                      value={resetNewPassword}
+                      onChange={(event) =>
+                        setResetNewPassword(event.target.value)
+                      }
+                      placeholder="Ít nhất 8 ký tự"
+                    />
+                  </div>
+                  <div className="login-field">
+                    <label htmlFor="reset-confirm-password">
+                      Xác nhận mật khẩu mới
+                    </label>
+                    <input
+                      id="reset-confirm-password"
+                      type="password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      required
+                      value={resetConfirmPassword}
+                      onChange={(event) =>
+                        setResetConfirmPassword(event.target.value)
+                      }
+                      placeholder="Nhập lại mật khẩu mới"
+                    />
+                  </div>
+                </>
+              )}
+
+              {resetPasswordMessage && (
+                <p className="reset-password-message" role="status">
+                  {resetPasswordMessage}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                className="login-submit"
+                disabled={resetPasswordBusy}
+              >
+                {resetPasswordBusy
+                  ? "ĐANG XỬ LÝ..."
+                  : resetPasswordStep === "email"
+                    ? "GỬI MÃ"
+                    : "ĐẶT LẠI MẬT KHẨU"}
+              </button>
+
+              {resetPasswordStep === "code" && (
+                <button
+                  type="button"
+                  className="reset-password-back"
+                  disabled={resetPasswordBusy}
+                  onClick={() => {
+                    setResetPasswordStep("email");
+                    setResetPasswordMessage("");
+                  }}
+                >
+                  Đổi email hoặc gửi lại mã
+                </button>
+              )}
+            </form>
+          </section>
+        </div>
+      )}
 
       {/* =========================
           NOTIFICATION POPUP

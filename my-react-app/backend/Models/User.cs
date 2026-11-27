@@ -12,5 +12,13 @@ namespace CinemaBackend.Models
         public string Phone { get; set; } = string.Empty;
 
         public string Role { get; set; } = "Customer";
+
+        public string? PasswordResetCodeHash { get; set; }
+
+        public DateTimeOffset? PasswordResetCodeExpiresAtUtc { get; set; }
+
+        public DateTimeOffset? PasswordResetLastSentAtUtc { get; set; }
+
+        public int PasswordResetFailedAttempts { get; set; }
     }
 }

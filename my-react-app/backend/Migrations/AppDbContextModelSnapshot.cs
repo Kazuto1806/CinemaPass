@@ -523,6 +523,18 @@ namespace CinemaBackend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTimeOffset?>("PasswordResetCodeExpiresAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PasswordResetCodeHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PasswordResetFailedAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("PasswordResetLastSentAtUtc")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
