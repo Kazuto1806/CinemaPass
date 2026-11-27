@@ -39,9 +39,10 @@ namespace CinemaBackend.Services
                     var emailService = scope.ServiceProvider
                         .GetRequiredService<ITicketEmailService>();
 
-                    await emailService.SendPaidTicketAsync(
-                        ticketId,
-                        stoppingToken);
+                    await emailService.SendPaidTicketAsync(ticketId, stoppingToken);
+                    _logger.LogInformation(
+                        "Đã gửi email vé cho TicketId {TicketId}.",
+                        ticketId);
                 }
                 catch (OperationCanceledException)
                     when (stoppingToken.IsCancellationRequested)
