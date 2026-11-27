@@ -56,7 +56,9 @@ var connectionString =
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException(
-        "Chưa cấu hình ConnectionStrings:DefaultConnection."
+        "Chưa cấu hình ConnectionStrings:DefaultConnection. " +
+        "Hãy thiết lập biến môi trường ConnectionStrings__DefaultConnection " +
+        "hoặc .NET User Secrets."
     );
 }
 
