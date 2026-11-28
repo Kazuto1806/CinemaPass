@@ -40,16 +40,11 @@ namespace CinemaBackend.Services
                     attachment.FileName,
                     "inline",
                     attachment.ContentId))
-                .ToArray() ?? Array.Empty<SendGridAttachmentPayload>();
+                .ToArray();
 
-            using var request = new HttpRequestMessage(
-                HttpMethod.Post,
-                "https://api.sendgrid.com/v3/mail/send");
-            request.Headers.Authorization =
-                new AuthenticationHeaderValue("Bearer", settings.ApiKey);
-            request.Content = JsonContent.Create(new
+            var payload = new Dictionary<string, object?>
             {
-                personalizations = new[]
+                ["personalizations"] = new[]
                 {
                     new
                     {
@@ -59,15 +54,26 @@ namespace CinemaBackend.Services
                         }
                     }
                 },
-                from = new { email = settings.FromAddress, name = settings.FromName },
-                subject,
-                content = new[]
+                ["from"] = new { email = settings.FromAddress, name = settings.FromName },
+                ["subject"] = subject,
+                ["content"] = new[]
                 {
                     new { type = "text/plain", value = textBody },
                     new { type = "text/html", value = htmlBody }
-                },
-                attachments = sendGridAttachments
-            });
+                }
+            };
+
+            if (sendGridAttachments is { Length: > 0 })
+            {
+                payload["attachments"] = sendGridAttachments;
+            }
+
+            using var request = new HttpRequestMessage(
+                HttpMethod.Post,
+                "https://api.sendgrid.com/v3/mail/send");
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue("Bearer", settings.ApiKey);
+            request.Content = JsonContent.Create(payload);
 
             try
             {
