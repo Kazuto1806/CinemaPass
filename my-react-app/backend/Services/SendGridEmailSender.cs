@@ -76,8 +76,18 @@ namespace CinemaBackend.Services
                     cancellationToken);
                 if (response.StatusCode != HttpStatusCode.Accepted)
                 {
+                    var errorBody = await response.Content.ReadAsStringAsync(
+                        cancellationToken);
+                    if (errorBody.Length > 2000)
+                    {
+                        errorBody = errorBody[..2000];
+                    }
+
+                    var details = string.IsNullOrWhiteSpace(errorBody)
+                        ? string.Empty
+                        : $" Response: {errorBody}";
                     throw new SendGridEmailException(
-                        $"SendGrid rejected the email (HTTP {(int)response.StatusCode}).");
+                        $"SendGrid rejected the email (HTTP {(int)response.StatusCode}).{details}");
                 }
             }
             catch (HttpRequestException exception)
