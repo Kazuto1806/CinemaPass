@@ -1,6 +1,6 @@
 
 import { lazy, Suspense } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -74,9 +74,9 @@ function App() {
         ========================= */}
 
                 <Route path="/verify-ticket/:token" element={<TicketVerify />} />
-<Route
+        <Route
           path="/tickets"
-          element={<TicketHistory />}
+          element={<Navigate to="/account?tab=history" replace />}
         />
 
         {/* =========================

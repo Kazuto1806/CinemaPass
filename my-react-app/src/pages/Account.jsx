@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   FaUserCircle,
   FaUser,
@@ -17,8 +17,36 @@ import "./Account.css";
 
 function Account() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activeSection, setActiveSection] = useState("account");
+  const getInitialSection = () => {
+    const tab = searchParams.get("tab");
+    if (tab === "history" || tab === "tickets") return "history";
+    if (tab === "membership") return "membership";
+    return "account";
+  };
+
+  const [activeSection, setActiveSection] = useState(getInitialSection);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "history" || tab === "tickets") {
+      setActiveSection("history");
+    } else if (tab === "membership") {
+      setActiveSection("membership");
+    } else if (tab === "account") {
+      setActiveSection("account");
+    }
+  }, [searchParams]);
+
+  const handleSelectSection = (section) => {
+    setActiveSection(section);
+    if (section === "account") {
+      setSearchParams({});
+    } else {
+      setSearchParams({ tab: section });
+    }
+  };
   const [userName, setUserName] = useState(
     localStorage.getItem("userName") || ""
   );
@@ -136,7 +164,7 @@ function Account() {
               className={`account-menu-item ${
                 activeSection === "account" ? "active" : ""
               }`}
-              onClick={() => setActiveSection("account")}
+              onClick={() => handleSelectSection("account")}
             >
               <FaUser />
               <span>Thông tin khách hàng</span>
@@ -147,7 +175,7 @@ function Account() {
               className={`account-menu-item ${
                 activeSection === "membership" ? "active" : ""
               }`}
-              onClick={() => setActiveSection("membership")}
+              onClick={() => handleSelectSection("membership")}
             >
               <FaUsers />
               <span>Thành viên CinemaPass</span>
@@ -158,7 +186,7 @@ function Account() {
               className={`account-menu-item ${
                 activeSection === "history" ? "active" : ""
               }`}
-              onClick={() => setActiveSection("history")}
+              onClick={() => handleSelectSection("history")}
             >
               <FaHistory />
               <span>Lịch sử mua hàng</span>

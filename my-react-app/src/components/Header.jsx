@@ -406,7 +406,7 @@ function Header() {
                     {language === "VN" ? "Tài khoản" : "Account"}
                   </Link>
 
-                  <Link to="/tickets">
+                  <Link to="/account?tab=history">
                     {language === "VN" ? "Vé của tôi" : "My Tickets"}
                   </Link>
 
